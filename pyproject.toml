@@ -3,17 +3,16 @@
 # --------------------------------------------------------------------------- #
 [build-system]
 requires = [
-  "poetry-core>=1.7.0",
-  "poetry-dynamic-versioning[plugin]>=1.0.0,<2.0.0"
+  "poetry-core>=1.7.0"
 ]
-build-backend = "poetry_dynamic_versioning.backend"
+build-backend = "poetry.core.masonry.api"
 
 # --------------------------------------------------------------------------- #
 #  PEP 621 project metadata                                                   #
 # --------------------------------------------------------------------------- #
 [project]
 name            = "krpsim"
-dynamic         = ["version"]
+version         = "0.1.0"
 description     = "Simulation et vérification de graphes de processus pour la gestion de ressources"
 readme          = "README.md"
 license         = { text = "MIT" }
@@ -185,9 +184,3 @@ rev  = "v1.8.0"
 hooks = [
   { id = "mypy" }
 ]
-
-# --------------------------------------------------------------------------- #
-#  Dynamic versioning plugin                                                   #
-# --------------------------------------------------------------------------- #
-[tool.poetry-dynamic-versioning]
-enable = true
