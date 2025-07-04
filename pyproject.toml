@@ -191,3 +191,7 @@ hooks = [
 # --------------------------------------------------------------------------- #
 [tool.poetry-dynamic-versioning]
 enable = true
+
+[tool.poetry]
+packages = [{ include = "krpsim", from = "src" }]
+version = "0.0.0"

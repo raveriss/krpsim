@@ -4,6 +4,6 @@
 
 > ⚡ Préparez votre environnement en un clin d’œil
 
-- **Installer les dépendances** :  
+- **Installer les dépendances** :
   ```bash
   poetry install
