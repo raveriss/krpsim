@@ -4,7 +4,8 @@
 [build-system]
 requires = [
   "poetry-core>=1.7.0",
-  "poetry-dynamic-versioning[plugin]>=1.0.0,<2.0.0"
+  "poetry-dynamic-versioning[plugin]>=1.0.0,<2.0.0",
+  "setuptools>=68"
 ]
 build-backend = "poetry_dynamic_versioning.backend"
 
@@ -54,6 +55,7 @@ bandit     = "^1.7.0"
 safety     = "^2.3.1"
 mypy       = "^1.8.0"
 pre-commit = "^3.6.0"
+setuptools = ">=68"
 
 # --------------------------------------------------------------------------- #
 #  Formatting & linting                                                       #
@@ -162,7 +164,7 @@ hooks = [
 repo = "https://github.com/psf/black"
 rev  = "24.1.1"
 hooks = [
-  { id = "black", language_version = "python3.10" }
+  { id = "black", language_version = "python3.12" }
 ]
 
 [[tool.pre-commit.repos]]
@@ -191,3 +193,7 @@ hooks = [
 # --------------------------------------------------------------------------- #
 [tool.poetry-dynamic-versioning]
 enable = true
+
+[tool.poetry]
+packages = [{ include = "krpsim", from = "src" }]
+version = "0.0.0"
