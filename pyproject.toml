@@ -1,60 +1,35 @@
+[build-system]
+requires = ["poetry-core>=1.7.0", "poetry-dynamic-versioning[plugin]>=1.0.0,<2.0.0"]
+build-backend = "poetry_dynamic_versioning.backend"
+
 [tool.poetry]
 name = "krpsim"
-version = "0.1.0"
-description = "Template repository for Python projects using Poetry"
-authors = ["Rafael Verissimo <raveriss@example.com>"]
+version = "0.1.0"  # Si tu utilises dynamic-versioning, tu peux virer cette ligne
+description = "Simulation et vérification de graphes de processus pour la gestion de ressources"
+authors = ["raveriss <raveriss@example.com>"]
 license = "MIT"
-packages = [
-    { include = "krpsim", from = "src" }
-]
+packages = [{ include = "krpsim" }]
+readme = "README.md"
+repository = "https://github.com/raveriss/krpsim"
+homepage = "https://github.com/raveriss/krpsim"
+keywords = ["simulation", "processus", "graphes", "ressources"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.10,<3.13"
 
 [tool.poetry.group.dev.dependencies]
-mypy = "*"
-black = "*"
-isort = "*"
-ruff = "*"
-radon = "*"
-bandit = "*"
-safety = "*"
-flake8 = "*"
-xenon = "*"
-coverage = "*"
-pytest = "*"
-pytest-cov = "*"
-codecov = "*"
-pre-commit = "^4.2.0"
-
-[build-system]
-requires = ["poetry>=1.5"]
-build-backend = "poetry.masonry.api"
-
-[tool.black]
-line-length = 88
-
-[tool.isort]
-profile = "black"
-
-[tool.mypy]
-python_version = "3.10"
-ignore_missing_imports = true
-explicit_package_bases = true
-
-[tool.ruff]
-line-length = 88
-
-[tool.ruff.lint]
-select = ["E", "W", "F", "I", "C", "B"]
-ignore = ["E501"]
-
-[tool.radon]
-cc_min = "C"
-
-[tool.flake8]
-max-line-length = 88
-extend-ignore = ["E203", "W503"]
+pytest     = "^8.2.0"
+pytest-cov = "^5.0.0"
+ruff       = "^0.0.281"
+radon      = "^5.1.0"
+bandit     = "^1.7.0"
+safety     = "^2.3.1"
+mypy       = "^1.8.0"
+pre-commit = "^3.6.0"
 
 [tool.poetry.scripts]
-rubix = "krpsim.main:main"
+krpsim = "krpsim.cli:main"
+krpsim-verif = "krpsim.verifier_cli:main"
+
+[tool.poetry-dynamic-versioning]
+enable = true
