@@ -1,0 +1,20 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environments
+.venv/
+
+# Coverage reports
+.coverage
+htmlcov/
+coverage.xml
+
+# Distribution / packaging
+build/
+dist/
+
+# Misc
+*.egg-info/
+
