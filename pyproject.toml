@@ -3,17 +3,29 @@
 # --------------------------------------------------------------------------- #
 [build-system]
 requires = [
-  "poetry-core>=1.7.0",
-  "poetry-dynamic-versioning[plugin]>=1.0.0,<2.0.0"
+  "poetry-core>=1.7.0"
 ]
-build-backend = "poetry_dynamic_versioning.backend"
+build-backend = "poetry.core.masonry.api"
+
+# --------------------------------------------------------------------------- #
+#  Poetry configuration                                                       #
+# --------------------------------------------------------------------------- #
+[tool.poetry]
+name    = "krpsim"
+version = "0.1.0"
+packages = [
+  { include = "krpsim" }
+]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
 
 # --------------------------------------------------------------------------- #
 #  PEP 621 project metadata                                                   #
 # --------------------------------------------------------------------------- #
 [project]
-name            = "krpsim"
-dynamic         = ["version"]
+name    = "krpsim"
+version = "0.1.0"
 description     = "Simulation et vérification de graphes de processus pour la gestion de ressources"
 readme          = "README.md"
 license         = { text = "MIT" }
@@ -29,8 +41,7 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3.10",
-  "Topic :: Software Development :: Simulation",
-  "Topic :: System :: Operations Research"
+  "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 
 [project.urls]
@@ -189,5 +200,3 @@ hooks = [
 # --------------------------------------------------------------------------- #
 #  Dynamic versioning plugin                                                   #
 # --------------------------------------------------------------------------- #
-[tool.poetry-dynamic-versioning]
-enable = true
