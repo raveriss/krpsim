@@ -39,8 +39,7 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3.10",
-  "Topic :: Software Development :: Simulation",
-  "Topic :: System :: Operations Research"
+  "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 
 [project.urls]
