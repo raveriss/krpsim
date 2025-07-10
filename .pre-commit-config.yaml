@@ -1,35 +1,46 @@
-# .pre-commit-config.yaml
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
-    hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
-      - id: check-added-large-files
-      - id: check-merge-conflict
-      - id: debug-statements
-
   - repo: https://github.com/psf/black
-    rev: 24.1.1
+    rev: 25.1.0
     hooks:
       - id: black
-        language_version: python3.10
-
   - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
+    rev: 6.0.1
     hooks:
       - id: isort
-        args: ["--profile", "black"]
-
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.281
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.3.0
+    hooks:
+      - id: flake8
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.12.2
     hooks:
       - id: ruff
-        args: ["--fix"]
-
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
+    rev: v1.16.1
     hooks:
       - id: mypy
-        additional_dependencies: ["types-requests"]  # ajustez si besoin
+        pass_filenames: false
+        args: ["--config-file=pyproject.toml", "src", "tests"]
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.8.6
+    hooks:
+      - id: bandit
+        pass_filenames: false
+        args: ["-r", "src"]
+  - repo: local
+    hooks:
+      - id: radon
+        name: radon
+        entry: radon cc src --min C
+        language: system
+        pass_filenames: false
+      - id: xenon
+        name: xenon
+        entry: xenon --max-absolute B --max-modules A --max-average A src
+        language: system
+        pass_filenames: false
+      - id: safety
+        name: safety
+        entry: safety scan --key $SAFETY_API_KEY
+        language: system
+        pass_filenames: false
