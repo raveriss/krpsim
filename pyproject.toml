@@ -8,7 +8,7 @@ version = "0.1.0"  # Si tu utilises dynamic-versioning, tu peux virer cette lign
 description = "Simulation et vérification de graphes de processus pour la gestion de ressources"
 authors = ["raveriss <raveriss@example.com>"]
 license = "MIT"
-packages = [{ include = "krpsim" }]
+packages = [{ include = "krpsim", from = "src" }]
 readme = "README.md"
 repository = "https://github.com/raveriss/krpsim"
 homepage = "https://github.com/raveriss/krpsim"
@@ -26,6 +26,8 @@ bandit     = "^1.7.0"
 safety     = "^2.3.1"
 mypy       = "^1.8.0"
 pre-commit = "^3.6.0"
+packaging = ">=23.1"
+xenon = "^0.9.3"
 
 [tool.poetry.scripts]
 krpsim = "krpsim.cli:main"
