@@ -141,4 +141,52 @@ Chaque tâche est liée à un risque identifié et validée contre le corpus de 
 - [ ] **Documentation** : mise à jour du `README.md`
 - [ ] **Revue finale** : s’assurer que tous les tests passent & charte qualité respectée
 
+---
 
+## 🤝 Phase 5 — Politique de Contribution et Pull Requests (PR)
+
+Pour garantir que chaque ajout au projet respecte la charte de qualité et l'architecture définie, toute modification du code doit obligatoirement passer par une Pull Request. Ce processus assure la revue par les pairs, la validation automatisée et la traçabilité.
+
+### Principes Directeurs
+-   **PRs de petite taille** : Chaque PR doit être aussi petite que possible et se concentrer sur une seule tâche atomique du WBS (Phase 4). Une PR plus petite est plus rapide à réviser et moins risquée à intégrer.
+-   **Le créateur est le premier validateur** : Ne soumettez une PR que si vous êtes convaincu qu'elle respecte tous les critères de qualité. Exécutez l'ensemble des tests en local avant de demander une revue.
+-   **La CI est reine** : Une PR ne peut être fusionnée que si la CI (GitHub Actions) est au vert. Aucune exception.
+
+### Cycle de Vie d'une Pull Request
+
+Chaque contributeur doit suivre ces étapes :
+
+#### 1. ✅ Avant la Création (en local)
+Avant de pousser votre branche et de créer une PR, vous **devez** lancer les commandes suivantes pour vous assurer que tout est conforme :
+```bash
+make format  # Formate le code avec black et isort
+make lint    # Vérifie la qualité du code avec ruff
+make test    # Lance les tests et vérifie la couverture de 100%
+```
+Assurez-vous également que votre branche est à jour avec la branche principale (main ou develop) pour éviter les conflits.
+
+### 2. 📝 Création de la Pull Request
+-   **Titre clair et concis** : Utilisez des préfixes comme feat:, fix:, refactor:, test:.
+
+Exemple : feat(parser): Ajout de la validation des stocks initiaux
+-   **Description détaillée :**
+        - **Quoi ?** Un résumé des changements.
+        - **Pourquoi ?** La raison de ces changements (ex: "Implémente la tâche X du WBS").
+        - **Comment ?** Une brève explication de l'approche technique si nécessaire.
+        - **Lien vers le WBS** : Mentionnez l'ID de la tâche de la Phase 4 que cette PR résout.
+
+### 3. 🤖 Validation Automatisée (CI)
+Dès sa création, la PR déclenche le workflow défini dans `.github/workflows/ci.yml`. Ce dernier exécute automatiquement les mêmes vérifications que celles que vous avez faites en local (`lint`, `mypy`, `pytest --cov`).
+
+### 4. 🧑‍💻 Revue par les Pairs (Peer Review)
+    - Au moins une **approbation** d'un autre membre de l'équipe est requise.
+    - Le réviseur doit vérifier :
+        - 1. Le **respect de la** `Charte de Qualité des Tests` (Phase 2).
+        - 2. La **logique métier** et la pertinence de l'implémentation.
+        - 3. La **clarté** et la **lisibilité** du code.
+        - 4. L'absence de code commenté ou de `print()` de débogage.
+
+### 5. 🚀 Fusion (Merge)
+-    **Conditions** : La CI doit être au vert (✅) ET la PR doit avoir reçu au moins une approbation.
+-    **Méthode** : Privilégier le `Squash and merge` pour conserver un historique `git` propre sur la branche principale. Le message de commit doit être soigné et résumer l'apport de la PR.
+-    Nettoyage : La branche de la PR doit être supprimée après la fusion.
