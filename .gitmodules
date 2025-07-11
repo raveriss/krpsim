@@ -1,0 +1,3 @@
+[submodule "src/krpsim"]
+path = src/krpsim
+url = https://github.com/raveriss/krpsim.git
