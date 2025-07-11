@@ -41,6 +41,6 @@ repos:
         pass_filenames: false
       - id: safety
         name: safety
-        entry: safety scan --key $SAFETY_API_KEY
+        entry: safety check --key $SAFETY_API_KEY
         language: system
         pass_filenames: false
