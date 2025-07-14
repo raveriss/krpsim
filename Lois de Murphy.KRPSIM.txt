@@ -1,0 +1,116 @@
+## **Lois de Murphy — Problèmes Potentiels dans KRPSIM**
+
+### 1. **Problèmes de Fichiers et Lecture**
+
+1. Fichier de config inexistant, renommé, déplacé, ou non lisible (droits).
+2. Fichier vide, corrompu, ou binaire au lieu de texte.
+3. Encodage non-UTF8 ou caractères non supportés.
+4. Présence de caractères invisibles (BOM, CRLF, tabulations).
+5. Ligne trop longue (> buffer ou stack overflow).
+6. Mauvais format : absence des sections requises (stocks, process, optimize).
+7. Mauvaise extension de fichier ou mauvais nommage.
+
+### 2. **Parsing & Validation du Format**
+
+8. Ligne de commentaire sans `#` reconnue comme donnée.
+9. Stock sans nom, ou sans quantité.
+10. Quantité négative, non numérique, décimale.
+11. Dédoublonnage : même stock/procès déclaré plusieurs fois.
+12. Process sans parenthèse ou séparateur manquant.
+13. Champs optionnels ou valeurs manquantes.
+14. Process dépendant de stocks non déclarés.
+15. Optimisation portant sur un stock inexistant.
+16. Utilisation de mots réservés (time, optimize) comme noms.
+
+### 3. **Gestion Mémoire & Allocation**
+
+17. Explosion mémoire : nombre de processus ou stocks très élevés (>10000).
+18. Allocation dynamique échouée (RAM saturée).
+19. Fuite mémoire sur parsing itératif.
+20. Double-free ou corruption de pointeur en cas d’erreur.
+21. Utilisation de variables globales non réinitialisées entre tests.
+
+### 4. **Simulation — Exécution**
+
+22. Boucle infinie (processus auto-soutenu sans critère d’arrêt).
+23. Deadlock : deux processus s’attendent l’un l’autre.
+24. Starvation : ressource jamais accessible à un processus donné.
+25. Calcul overflow (int ou float trop grand, dépassement de capacité).
+26. Mauvais incrément de temps/cycle (précision, float vs int).
+27. Mauvaise gestion des cycles simultanés (plusieurs process possibles au même cycle).
+28. Condition d’arrêt non-détectée (simulation qui ne s’arrête jamais même sans process possible).
+29. Erreur logique sur la consommation/production (stock négatif autorisé ou jamais mis à jour).
+30. Mauvais rollback en cas d’annulation partielle (interruption/ctrl+C…).
+31. Ressources utilisées alors que process non déclenché ou partiellement appliqué.
+
+### 5. **Affichage et Traces**
+
+32. Fichier de sortie non accessible (droits, disque plein).
+33. Erreur de format dans la sortie attendue pour `krpsim_verif` (ex : `:` manquant, mauvais ordre).
+34. Ligne de log trop longue (overflow, coupe).
+35. Mauvais mapping cycle/process dans la sortie (cycle mal aligné, process absent ou dupliqué).
+36. Mauvais flush/fermeture de fichier (logs incomplets en cas de crash).
+
+### 6. **Vérification et Tests**
+
+37. Fichier de trace inexistant ou non lisible pour `krpsim_verif`.
+38. Incohérence entre la trace et la config (process inconnu dans la trace).
+39. Vérif échouée silencieusement (aucun message d’erreur explicite).
+40. Erreur de calcul dans la vérif (stocks finaux faux, mauvais cycle final).
+41. Non-reproductibilité : pour une même entrée, résultat aléatoire ou non déterministe sans raison.
+
+### 7. **Gestion des Erreurs et Messages**
+
+42. Message d’erreur non explicite, non coloré, non localisé (anglais/français, UTF-8).
+43. Crash sans message (segfault, exit code != 0 sans cause affichée).
+44. Exit code non conforme (pas de 0/1).
+45. Stacktrace non désactivée en prod ou non logguée en debug.
+
+### 8. **Performance et Scalabilité**
+
+46. Temps d’exécution non borné pour gros fichiers (scalabilité nulle).
+47. Utilisation CPU/RAM anormale (fuite, spinning, memory leak).
+48. Non-gestion du paramètre `<delay>` : attente réelle, trop longue ou ignorée.
+49. Mauvaise gestion multi-thread/process si implémenté (race, deadlock, starvation).
+50. Pas de gestion des signaux système (SIGINT/SIGTERM).
+
+### 9. **Sécurité**
+
+51. Injection de code via noms de stocks/process (ex : shell injection, unicode piégé).
+52. Accès en écriture non voulu sur d’autres fichiers (path traversal, symlink).
+53. Crash volontaire avec fichier malicieux (fuzzing, chars exotiques).
+54. Fichiers temporaires non nettoyés.
+55. Non-fermeture de file descriptors.
+
+### 10. **Utilisabilité / UX**
+
+56. Paramètres de lancement mal validés (`krpsim <file> <delay>` avec trop/pas assez d’args).
+57. Help/usage absent ou incomplet.
+58. Version non affichée ou traçable.
+59. Pas de test automatique intégré.
+60. Non-détection d’exécution sur plateforme non supportée (OS, version Python…).
+
+---
+
+## **Bonus — Niveau “Extrême”**
+
+* **Multi-utilisateur** : deux utilisateurs lancent krpsim sur le même fichier, écrasement.
+* **Fichiers ouverts pendant édition** : lecture partielle, lock, EOF inattendu.
+* **Données corrompues volontairement en cours de run (disk unplug, permissions modifiées)**.
+* **Changement de fuseau horaire/locale pendant l’exécution** (affichage date/heure faussé).
+* **Processus system-level** : OOM killer, swap, limitation cgroup.
+
+---
+
+### **Conclusion**
+
+> Si ton programme ne crash pas, ne fait pas d’erreur silencieuse, ne tourne pas en boucle infinie, ne consomme pas toute la RAM, gère tous les cas tordus ci-dessus, ET affiche un résultat lisible et vérifiable même sur des entrées pourries :
+> **tu bats la loi de Murphy et tu as un KRPSIM bulletproof**.
+
+**Tu veux le meilleur ?**
+**Teste chaque cas, automatise tout, log tout, et n’aie aucune pitié pour la moindre faille.**
+
+Besoin d’une **WBS** à granularité équivalente ou d’un plan de tests pour couvrir ces points ? Dis-le et je te le construis.
+Tu avances, tu sécurises, tu délivres. **On vise l’excellence, pas la moyenne.**
+
+```

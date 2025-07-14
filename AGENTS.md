@@ -1,192 +1,176 @@
-# AGENTS.md — Plan de Développement TDD, Architecture et WBS pour krpsim
 
-Ce document définit les fondations techniques, l’architecture logicielle, la stratégie TDD et le plan d’exécution détaillé (WBS) pour le projet **krpsim**, tout en intégrant la mitigation des risques.
+# AGENTS.md — Blueprint de Développement, Qualité, Checklist et Loi de Murphy (KRPSIM)
 
----
-
-## 🔧 Phase 0 — Fondations Techniques & Outillage
-
-Cette phase pose l’environnement de développement professionnel et automatisé.
-
-### Gestion de version (`git`)
-- [ ] Initialiser le dépôt **Git**
-- [ ] Créer un `README.md` détaillé (description, usage, badges CI/CD)
-- [ ] Ajouter un fichier `LICENSE` (ex: MIT)
-- [ ] Créer le fichier `author` si requis
-
-### Environnement & Dépendances (`poetry`)
-- [ ] Initialiser le projet avec `poetry init`
-- [ ] Ajouter les dépendances de dev : `pytest`, `pytest-cov`, `black`, `ruff`, `isort`, `mypy`
-
-### Qualité, Formatage, Linting
-- [ ] Configurer `black`, `isort`, `ruff` et `mypy` dans `pyproject.toml`
-- [ ] Créer un `Makefile` avec des commandes standard : `install`, `test`, `lint`, `format`, `run`
-
-### Tests & Assurance Qualité
-- [ ] Configurer `pytest` et `pytest-cov` pour exiger 100% de couverture de code (`--cov-fail-under=100`)
-
-### CI/CD (GitHub Actions)
-- [ ] Mettre en place un workflow `.github/workflows/ci.yml` qui exécute lint, mypy et pytest --cov à chaque `push` et `pull_request`
+Ce document est à la fois :
+- **Le plan d’action structuré** pour concevoir, coder et valider chaque module du projet.
+- **Une checklist exhaustive** pour résister à la Loi de Murphy, automatiser les tests, la CI/CD, et industrialiser la maintenance.
+- **Un guide pédagogique** traçable et exploitable par n’importe quelle IA ou dev humain.
 
 ---
 
-## 📂 Phase 1 — Architecture des Agents
+## 0. 🏗️ Fondations Techniques & Outillage
 
-Définition de la structure logique cible du projet.
+### 0.1 Gestion de version (`git`)
+- [ ] Initialiser dépôt **Git** et créer le `README.md` (description, usage, badges CI/CD)
+- [ ] Ajouter `LICENSE` (MIT) et fichier `author`
 
-### Arborescence
-```bash
+### 0.2 Environnement & Dépendances (`poetry`)
+- [ ] `poetry init` + dépendances dev : `pytest`, `pytest-cov`, `black`, `ruff`, `isort`, `mypy`, `flake8`
+
+### 0.3 Qualité, Formatage, Linting
+- [ ] Configurer : `black`, `isort`, `ruff`, `mypy` dans `pyproject.toml`
+- [ ] Créer `Makefile` : `install`, `test`, `lint`, `format`, `run`
+
+### 0.4 CI/CD (GitHub Actions)
+- [ ] `.github/workflows/ci.yml` avec : lint, mypy, pytest --cov à chaque `push`/`pull_request`
+- [ ] Couverture de code 100% obligatoire (`--cov-fail-under=100`)
+
+---
+
+## 1. 📂 Architecture des Agents (Blueprint)
+
+> **Le projet est découpé en agents spécialisés, pour une séparation stricte des responsabilités.**
+
+### Arborescence cible
+```
+
 krpsim/
 ├── krpsim.py
-├── krpsim_verif.py
+├── krpsim\_verif.py
 ├── resources/
-│   ├── ikea
-│   ├── inception
-│   ├── pomme
-│   ├── recre
-│   ├── simple
-│   ├── steak
-│   └── (vos_fichiers_personnels.txt)
+│   ├── simple, ikea, steak, pomme, recre, inception, (fichiers extrêmes/crash)
 ├── src/
-│   ├── init.py
-│   ├── parser.py
-│   ├── simulator.py
-│   ├── optimizer.py
-│   └── display.py
+│   ├── **init**.py
+│   ├── parser.py        # Agent 1 : Analyseur
+│   ├── simulator.py     # Agent 2 : Simulateur
+│   ├── optimizer.py     # Agent 3 : Optimiseur
+│   └── display.py       # Agent 6 : Présentateur
 └── tests/
-    ├── init.py
-    ├── test_parser.py
-    ├── test_simulator.py
-    └── test_verifier.py
+├── **init**.py
+├── test\_parser.py
+├── test\_simulator.py
+└── test\_verifier.py  # Agent 5 : QA
+
 ```
-### Rôle des Agents
-- 🤖 **Agent 1 — L’Analyseur (`src/parser.py`)** : lit et valide le fichier de config
-- ⚙️ **Agent 2 — Le Simulateur (`src/simulator.py`)** : gère l’état et l’exécution
-- 🧠 **Agent 3 — L’Optimiseur (`src/optimizer.py`)** : décide quels processus lancer à chaque cycle
-- ✅ **Agent 4 — Le Vérificateur (`krpsim_verif.py`)** : valide une trace de sortie
-- 🧪 **Agent 5 — Assurance Qualité (`tests/`)** : garantit la fiabilité via des tests (100% couverture)
-- 🎨 **Agent 6 — Présentateur (`src/display.py`)** : gère l’affichage utilisateur (distinct de la trace machine)
+
+#### **Rôles**
+- 🤖 **Agent 1 (parser.py)** : lecture, parsing, validation stricte du fichier de config.
+- ⚙️ **Agent 2 (simulator.py)** : gestion des cycles, états, logique de simulation.
+- 🧠 **Agent 3 (optimizer.py)** : décision/exécution optimisée, respect du paramètre `optimize:`.
+- ✅ **Agent 4 (krpsim_verif.py)** : vérification de la conformité des traces.
+- 🧪 **Agent 5 (tests/)** : couverture des cas extrêmes, robustesse (TDD, fuzzing).
+- 🎨 **Agent 6 (display.py)** : affichage utilisateur, sortie machine.
 
 ---
 
-## 🎯 Phase 2 — Charte de Qualité des Tests (Définition du Fait, 100% utile)
+## 2. 🧪 Charte de Qualité et Plan de Tests
 
-Une fonctionnalité n’est considérée “Done” que si l’ensemble des tests associés respecte ces règles.
+> **Tout module/fonction est validé par TDD, 100% de couverture, cas extrêmes, et fuzzing.**
 
-### 🧪 Couverture Fonctionnelle
-- [ ] Chaque fonction a un test unitaire dédié
-- [ ] Chaque fonction testée avec :
-  - [ ] Au moins 1 entrée valide
-  - [ ] Au moins 1 entrée invalide
-  - [ ] Tous les cas limites (vide, extrême, None, etc.)
-- [ ] Tous les chemins if/else couverts
-- [ ] Toutes les boucles testées (0, 1, N itérations)
-
-### 💥 Gestion des Erreurs & Exceptions
-- [ ] Chaque bloc try/except est couvert (cas nominal ET exception)
-- [ ] Tous les messages d’erreur personnalisés sont testés
-- [ ] Les assertions d’erreur (`pytest.raises`) sont systématiques
-
-### 🧠 Logique Métier
-- [ ] Chaque règle métier des specs est testée
-- [ ] Chaque contrainte métier vérifiée (formats, limites)
-
-### 🧪 Taux de Couverture
-- [ ] Objectif : 100% (`--cov-fail-under=100`)
-
-### 🧼 Nettoyage des Tests
-- [ ] Aucun `# pragma: no cover` injustifié
-- [ ] Aucun test sans assert
+- [ ] **Couverture fonctionnelle** : entrées valides, invalides, limites, edge-cases.
+- [ ] **Couverture logique** : tous chemins (if/else, boucles 0/1/N itérations).
+- [ ] **Gestion des erreurs** : `try/except`, messages d’erreur, crash test.
+- [ ] **Taux de couverture** : 100% strict (`--cov-fail-under=100`).
+- [ ] **Fuzzing** : injection unicode, binaire, logs longs, permissions.
+- [ ] **Tests crash/disque plein/SIGINT**.
 
 ---
 
-## 📚 Phase 3 — Corpus de Test de Référence
+## 3. 📚 Corpus de Test de Référence
 
-Tous les agents s’appuient sur le corpus de fichiers de configuration de `resources/`, en respectant la charte de qualité.
-
-- `simple` : scénario linéaire de base
-- `ikea` : graphe de dépendances simple
-- `steak` : chemins multiples pour un même objectif
-- `pomme` : graphe complexe
-- `recre` : processus variés (conso/gain/perte)
-- `inception` : système auto-soutenable (test de boucles)
+- [ ] Utilisation de tous les fichiers : `simple`, `ikea`, `steak`, `pomme`, `recre`, `inception`, **et fichiers de stress/crash**.
+- [ ] Générer 2 fichiers custom : un qui termine, un “boucle infinie”.
 
 ---
 
-## 📋 Phase 4 — Plan d’Exécution (WBS) en TDD
+## 4. 📋 WBS Structuré & Checklists (Plan d’Action + Checklist)
 
-Chaque tâche est liée à un risque identifié et validée contre le corpus de test.
+### **Epic 1 : Parsing & Validation (Agent 1)**
+  - [ ] Vérifier existence, droits, type texte, UTF8, CRLF, BOM, chars spéciaux
+  - [ ] Valider sections, extension, dédoublonnage, overflow lignes >255 chars
+  - [ ] Parsing : ignorer commentaires/vides [cite: 110], parser stocks [cite: 111], process [cite: 113], optimize [cite: 115]
+  - [ ] Validation stricte : unicité, quantités positives, dépendances, erreurs format (parenthèses, séparateurs)
 
-### **Module 1 : L’Analyseur (Agent 1)**
-- [ ] **Test (Rouge)** : tests unitaires sur chaque fichier du corpus (cas valides)
-- [ ] **Implémentation (Vert)** : parsing & validation
-- [ ] **Test (Rouge)** : tests sur cas invalides, limites (fichier vide, erreur lecture) *(Mitige: Risk-1, Risk-3)*
-- [ ] **Implémentation (Vert)** : renforcer validation & gestion erreurs
-- [ ] **Refactoring** : amélioration structure code parsing
+### **Epic 2 : Simulation & Optimisation (Agents 2 & 3)**
+  - [ ] Implémenter un modèle à temps discret (cycles)
+  - [ ] Gérer l’état des stocks à chaque cycle (consommation/production)
+  - [ ] Détecter processus exécutables, exécution simultanée [cite: 114]
+  - [ ] Logique d’optimisation : stratégie de base et avancée [cite: 102]
+  - [ ] Conditions d’arrêt : fin de simulation, détection boucle infinie (watchdog, deadlock, starvation) [cite: 128, 129]
+  - [ ] Gestion du paramètre `<delay>` : validation, timeout strict, message si excès
 
-### **Module 2 : Le Simulateur (Agent 2)**
-- [ ] **Test (Rouge)** : tests sur `steak`/`inception` (simultanéité, boucles) *(Mitige: Risk-2)*
-- [ ] **Implémentation (Vert)** : logique du simulateur
+### **Epic 3 : Affichage, Traces, Vérification (Agents 4 & 6)**
+  - [ ] Affichage clair des actions et de l’état final [cite: 126]
+  - [ ] Générer sortie machine `<cycle>:<process_name>` [cite: 127]
+  - [ ] Vérifier la trace (cohérence, format, logs flush, crash, disque plein) [cite: 134, 135, 136, 137]
 
-### **Module 3 : Intégration & Application Principale**
-- [ ] **Test (Rouge)** : tests d’intégration (trace vs résultat attendu) *(Mitige: Risk-7)*
-- [ ] **Implémentation (Vert)** : orchestration agents dans `krpsim.py`
-
-### **Module 4 : Le Vérificateur (Agent 4)**
-- [ ] **Test (Rouge)** : vérification sur trace valide/invalide (`ikea`) *(Mitige: Risk-8)*
-- [ ] **Implémentation (Vert)** : logique finale du vérificateur
-
-### **Module 5 : Finalisation**
-- [ ] **Optimiseur** : implémenter/tester stratégies (Agent 3, objectifs variés du corpus) *(Mitige: Risk-5)*
-- [ ] **Documentation** : mise à jour du `README.md`
-- [ ] **Revue finale** : s’assurer que tous les tests passent & charte qualité respectée
+### **Epic 4 : Sécurité, Robustesse & Maintenance**
+  - [ ] Gestion des erreurs : messages clairs, codes sortie ≠0, crash tests
+  - [ ] Protection path traversal, injection shell, unicode dangereux
+  - [ ] Fuzzing sur entrées, logs, permissions, fichiers binaires
+  - [ ] Instrumentation mémoire (profiling, valgrind, memory leak)
+  - [ ] Cross-platform : Linux/Mac/Windows, Python ≥3.10
+  - [ ] Gestion SIGINT/SIGTERM, rollback
+  - [ ] Documentation à jour : README, docstrings, guide utilisateur, changelog, roadmap, guide contributeur
 
 ---
 
-## 🤝 Phase 5 — Politique de Contribution et Pull Requests (PR)
+## 5. 🛡️ Table des Risques (Loi de Murphy) — Mapping actionnable
 
-Pour garantir que chaque ajout au projet respecte la charte de qualité et l'architecture définie, toute modification du code doit obligatoirement passer par une Pull Request. Ce processus assure la revue par les pairs, la validation automatisée et la traçabilité.
+| ID  | Domaine       | Description synthétique                                     | Mitigation prévue                         |
+|-----|--------------|-------------------------------------------------------------|-------------------------------------------|
+| R01 | Fichier/IO   | Fichier absent, corrompu, droits insuffisants               | Try/Except, message clair, exit 1         |
+| R02 | Parsing      | Encodage, format, champs manquants, lignes trop longues     | Validation stricte, tests, logs, exit     |
+| R03 | Simulation   | Boucle infinie, deadlock, starvation, overflow              | Watchdog, détection, tests limites        |
+| R04 | Mémoire      | Explosion RAM, fuite, corruption, double-free               | Profiling, valgrind, gestion stricte      |
+| R05 | Vérif/Tests  | Trace incohérente ou inexploitable, logs non flushés        | Tests auto, checker, flush                |
+| R06 | Sécurité     | Path traversal, injection shell, crash volontaire           | Sanity check, sandboxing, fuzzing         |
+| R07 | Performance  | Débordement temps, CPU/RAM, non-respect `<delay>`           | Timeout, monitoring, logs                 |
+| R08 | UX/CLI       | Mauvais args, absence d’aide, version non traçable          | Help complet, --version, validation       |
+| R09 | Logging      | Logs inexploitables, logs trop longs, disque plein           | Flush, tests crash, checker logs          |
+| R10 | Maintenance  | Docs absentes, code non commenté, pas de roadmap            | docstring, README, roadmap, guide contrib |
+| ... | ...          | (cf. fichier “Lois de Murphy” pour liste exhaustive)        | ...                                       |
 
-### Principes Directeurs
--   **PRs de petite taille** : Chaque PR doit être aussi petite que possible et se concentrer sur une seule tâche atomique du WBS (Phase 4). Une PR plus petite est plus rapide à réviser et moins risquée à intégrer.
--   **Le créateur est le premier validateur** : Ne soumettez une PR que si vous êtes convaincu qu'elle respecte tous les critères de qualité. Exécutez l'ensemble des tests en local avant de demander une revue.
--   **La CI est reine** : Une PR ne peut être fusionnée que si la CI (GitHub Actions) est au vert. Aucune exception.
+> **Chaque tâche, chaque test, chaque mitigation dans le WBS est mappée à cette table.**
 
-### Cycle de Vie d'une Pull Request
+---
 
-Chaque contributeur doit suivre ces étapes :
+## 6. 🤝 Politique de Contribution et Pull Requests (PR) — Processus qualité
 
-#### 1. ✅ Avant la Création (en local)
-Avant de pousser votre branche et de créer une PR, vous **devez** lancer les commandes suivantes pour vous assurer que tout est conforme :
-```bash
-make format  # Formate le code avec black et isort
-make lint    # Vérifie la qualité du code avec ruff
-make test    # Lance les tests et vérifie la couverture de 100%
-```
-Assurez-vous également que votre branche est à jour avec la branche principale (main ou develop) pour éviter les conflits.
+- PRs atomiques, petites, reliées à une tâche/sous-tâche du WBS (liens [cite: 114] si pertinent)
+- CI/CD obligatoire au vert (lint, test, couverture 100%)
+- Description PR : quoi/pourquoi/comment, ID WBS, liens exigences sujet
+- **Cycle de vie PR** :
+    - [ ] Tests locaux (format, lint, test, coverage)
+    - [ ] Branche à jour/main
+    - [ ] Titre normé (`feat:`, `fix:`, `refactor:`, `test:`…)
+    - [ ] Revue pair, squash & merge, suppression branche
+- Toute fusion = ajout au changelog et checklist de maintenance à jour.
 
-### 2. 📝 Création de la Pull Request
--   **Titre clair et concis** : Utilisez des préfixes comme feat:, fix:, refactor:, test:.
+---
 
-Exemple : feat(parser): Ajout de la validation des stocks initiaux
--   **Description détaillée :**
-        - **Quoi ?** Un résumé des changements.
-        - **Pourquoi ?** La raison de ces changements (ex: "Implémente la tâche X du WBS").
-        - **Comment ?** Une brève explication de l'approche technique si nécessaire.
-        - **Lien vers le WBS** : Mentionnez l'ID de la tâche de la Phase 4 que cette PR résout.
+## 7. ⏱️ Gestion stricte du paramètre `<delay>`
 
-### 3. 🤖 Validation Automatisée (CI)
-Dès sa création, la PR déclenche le workflow défini dans `.github/workflows/ci.yml`. Ce dernier exécute automatiquement les mêmes vérifications que celles que vous avez faites en local (`lint`, `mypy`, `pytest --cov`).
+- **Validation CLI** : usage, 2 arguments obligatoires
+- **Vérification numérique** : delay = int positif
+- **Timeout global** : simulation doit respecter le délai
+- **Test automatique** : fichier forçant un dépassement de délai
+- **Message d’erreur** : clair, exit code ≠0
 
-### 4. 🧑‍💻 Revue par les Pairs (Peer Review)
-    - Au moins une **approbation** d'un autre membre de l'équipe est requise.
-    - Le réviseur doit vérifier :
-        - 1. Le **respect de la** `Charte de Qualité des Tests` (Phase 2).
-        - 2. La **logique métier** et la pertinence de l'implémentation.
-        - 3. La **clarté** et la **lisibilité** du code.
-        - 4. L'absence de code commenté ou de `print()` de débogage.
+---
 
-### 5. 🚀 Fusion (Merge)
--    **Conditions** : La CI doit être au vert (✅) ET la PR doit avoir reçu au moins une approbation.
--    **Méthode** : Privilégier le `Squash and merge` pour conserver un historique `git` propre sur la branche principale. Le message de commit doit être soigné et résumer l'apport de la PR.
--    Nettoyage : La branche de la PR doit être supprimée après la fusion.
+## 8. 📖 Maintenance, Documentation et Roadmap
+
+- Docstring systématiques, README à jour (structure, usage, FAQ, exemples)
+- Changelog, guide contributeur, plan de maintenance/monitoring
+- Roadmap pour évolutions futures (ex: support multi-thread, nouvelles stratégies)
+
+---
+
+## 9. 🧠 Synthèse — Pourquoi cette structure ?
+
+- **Hiérarchisation claire** : chaque agent, chaque Epic, chaque sous-tâche
+- **Mapping Loi de Murphy** : tout problème identifié = une case checklistée/testée
+- **Traçabilité** : chaque exigence du sujet est citée, chaque mitigation explicitée
+- **Scalabilité et automatisation** : idéal pour Codex, CI/CD, et future maintenance
+- **Explicatif et actionnable** : aussi lisible par un humain qu’exploitable par une IA
