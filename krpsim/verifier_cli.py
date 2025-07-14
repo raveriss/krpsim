@@ -1,10 +1,16 @@
 """Command line interface for krpsim verifier."""
 
+from __future__ import annotations
 
-def main() -> None:
-    """Entry point for verifier CLI."""
-    print("krpsim verifier placeholder")
+import sys
 
 
-if __name__ == "__main__":
-    main()
+def main(argv: list[str] | None = None) -> int:
+    """Entry point for the verifier CLI."""
+    argv = argv or sys.argv[1:]
+    print("krpsim verifier placeholder", argv)
+    return 0
+
+
+if __name__ == "__main__":  # pragma: no cover - manual execution
+    raise SystemExit(main())
