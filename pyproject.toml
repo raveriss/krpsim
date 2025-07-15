@@ -139,7 +139,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["krpsim"]
+source = ["src/krpsim"]
 omit   = [
   "tests/*",
   "krpsim/__main__.py"
