@@ -45,3 +45,32 @@ def test_parse_resources_edge_cases():
     with pytest.raises(parser.ParseError):
         parser._parse_resources("a:bad")
 
+    with pytest.raises(parser.ParseError):
+        parser._parse_resources("a:-1")
+    with pytest.raises(parser.ParseError):
+        parser._parse_resources("a:1;a:2")
+
+
+def test_parse_optimize():
+    cfg = parser.parse_file(Path("resources/simple"))
+    assert cfg.optimize == ["time", "client_content"]
+
+
+def test_parse_optimize_errors(tmp_path):
+    config = tmp_path / "opt.txt"
+    config.write_text("a:1\nproc:(a:1):(b:1):1\noptimize:(c)\n")
+    with pytest.raises(parser.ParseError):
+        parser.parse_file(config)
+
+    config.write_text(
+        "a:1\nproc:(a:1):(b:1):1\noptimize:(time;time)\n"
+    )
+    with pytest.raises(parser.ParseError):
+        parser.parse_file(config)
+
+    config.write_text(
+        "a:1\nproc:(a:1):(b:1):1\noptimize:(time)\noptimize:(time)\n"
+    )
+    with pytest.raises(parser.ParseError):
+        parser.parse_file(config)
+
