@@ -1,0 +1,176 @@
+Voici un **WBS (Work Breakdown Structure)** à granularité **extrême**, conçu pour couvrir **TOUS** les points de la loi de Murphy appliqués à ton projet **KRPSIM**. Ce plan exhaustif te permettra d’identifier, tracer et tester chaque facette du logiciel de simulation :
+
+---
+
+## 0. Projet KRPSIM – WBS niveau 0
+
+1. **Préparation**
+2. **Ingestion & Parsing**
+3. **Validation & Vérification**
+4. **Exécution de la simulation**
+5. **Gestion de la mémoire & performance**
+6. **Logging, Trace, Interface**
+7. **Résilience & erreurs**
+8. **Sécurité**
+9. **Packaging & déploiement**
+10. **Plan de tests & validation**
+11. **Maintenance & documentation**
+
+---
+
+## 1. Préparation
+
+1.1. Définir scope, objectifs (deliverable vs process) ([arxiv.org][1], [pmi.org][2])
+1.2. Définir granularité du WBS (niveau minimum requis)
+1.3. Établir conventions de nommage, encodage, ligne : max N caractères
+1.4. Créer répertoires test/ input/ output/ logs/ temp
+1.5. Initialiser repo Git, CI (flake8, mypy, coverage)
+
+---
+
+## 2. Ingestion & Parsing (Fichiers)
+
+2.1. Existence & accès au fichier (erreur si inaccessible)
+2.2. Format : UTF‑8, BOM, CRLF/CR/LF validation
+2.3. Nom fichier & extension corrects
+2.4. Fichier non vide, type text
+2.5. Lecture ligne par ligne avec gestion buffer overflow
+2.6. Gestion des commentaires/vides
+2.7. Encodage & caractères non imprimables
+2.8. Ligne > 255 chars : alerte ou erreur
+2.9. Sécurisation contre path traversal
+
+---
+
+## 3. Validation & Vérification
+
+3.1. Nombre minimum de sections (stocks, processus, optimise)
+3.2. Noms uniques (stocks, processus)
+3.3. Quantités format int ≥0, pas décimales
+3.4. Déclaration avant utilisation
+3.5. Références croisées validées
+3.6. Mots réservés non autorisés
+3.7. Erreurs en early exit.
+3.8. Rapport d’erreur clair, en FR.
+
+---
+
+## 4. Exécution de la simulation
+
+4.1. Modèle de temps rigoureux (int)
+4.2. Sécurité de boucle (pas de while(true) non-breakable)
+4.3. Deadlock/Starvation check
+4.4. Ressources non négatives
+4.5. Vérification d’overflow int/float
+4.6. Multiprocessing/threading safe (pas de contention)
+4.7. SIGINT/SIGTERM catch & rollback
+4.8. Timeout global & step limit
+
+---
+
+## 5. Mémoire & performance
+
+5.1. Conventions allocation/désallocation (pas fuite)
+5.2. Scénarios extrêmes (10k oks)
+5.3. Surveillance de la RAM/CPU (profiling)
+5.4. Évitement récursion profonde
+5.5. Tempfiles sécurisés, nettoyage automatique
+
+---
+
+## 6. Logging & trace
+
+6.1. Vérification de write de logs + flush à chaque cycle
+6.2. Sorting & format KRPSIM\_VERIF strict
+6.3. Cycles, temps, processus, stocks, messages
+6.4. Logs tronqués ou permutés => alerte
+6.5. Vue DEBUG/INFO/ERROR
+6.6. Gestion des sorties stdout/stderr
+
+---
+
+## 7. Résilience & erreurs
+
+7.1. Fichier de sortie non accessible → message & exit non-zero
+7.2. Entrée modifiée à chaud (fichier en cours d’écriture)
+7.3. Permissions changées pendant run
+7.4. Crash simulé : exemple crash disque
+7.5. Rollback en cas de SIGINT
+7.6. Mode dry-run without write
+
+---
+
+## 8. Sécurité
+
+8.1. Validation des noms (pas d’injection shell)
+8.2. Pas d’accès non-autorisés
+8.3. Fuzzing input (séquence bizarres, unicode)
+8.4. Path traversal protégé
+8.5. Pas d’open/tempfile sans cleanup
+8.6. Permissions files strictes
+
+---
+
+## 9. Packaging & déploiement
+
+9.1. Setup.py / pyproject ; installation pip
+9.2. Distribution tar/wheel ; README clair iconfi
+9.3. Version affichée (`krpsim –version`)
+9.4. Installation dans venv, clean uninstall
+9.5. Cross-platform support
+
+---
+
+## 10. Plan de tests & validation
+
+### 10.1 Tests unitaires
+
+* Parsing success/fail
+* Calculs overflow/underflow
+* Gestion SIGINT
+* Logging flush
+
+### 10.2 Tests d’intégration
+
+* Combinaisons cycles/stocks/process
+* Mode gros fichier, boucle infinie
+* Temps/delay, multithread
+
+### 10.3 Fuzzing / cas limites
+
+* Noms invalides, Unicode, injections
+* Permissions croisés
+* Fichier binaires
+
+### 10.4 Validation KRPSIM\_VERIF
+
+* Script qui compare logs attendus vs produits
+* Cas normal, erreur, et interruptions
+
+### 10.5 Tests de performance
+
+* Mémoire/CPU sur 1M d’éléments
+* Profiling, memory leak detection
+
+---
+
+## 11. Maintenance & Documentation
+
+11.1. **doc** par fonction
+11.2. Guide utilisateurs (70% besoin/buts)
+11.3. Rapport d’erreurs courants et solutions
+11.4. Roadmap et cas d’usage futurs
+11.5. Changelog
+11.6. Code comments explicites
+
+---
+
+### 🎯 Conclusion
+
+Avec cette WBS, tu couvres **absolument chaque point** de la loi de Murphy : les fichiers corrompus, les encodages tordus, la concurrence, le crash système, les interractions utilisateur, tout. Chaque sous-niveau est testable, traçable, et extensible.
+
+➡️ Si tu veux, je te prépare aussi un **plan de tests détaillé** couplé avec du code Python de test automatisé (pytest, fuzzing), dis‑le !
+
+[1]: https://arxiv.org/abs/1308.2876?utm_source=chatgpt.com "Work Breakdown Structure: A Tool for Software Project Scope Verification"
+[2]: https://www.pmi.org/learning/library/work-breakdown-structure-basics-5919?utm_source=chatgpt.com "The ABC basics of the WBS Paul Burek. - PMI"
+

@@ -11,6 +11,7 @@ on:
 env:
   PYTHON_VERSION: "3.10"
   POETRY_HOME: "${{ github.workspace }}/.poetry"
+  SAFETY_API_KEY: "${{ secrets.SAFETY_API_KEY }}"
 
 jobs:
   pre-commit:
@@ -51,6 +52,8 @@ jobs:
 
       - name: Run pre-commit
         run: poetry run pre-commit run --all-files
+        env:
+          SAFETY_API_KEY: ${{ secrets.SAFETY_API_KEY }} # <--- AJOUTÉ ICI
 
   static-analysis:
     name: Static Analysis
