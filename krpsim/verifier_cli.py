@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import sys
 
-
 def main(argv: list[str] | None = None) -> int:
     """Entry point for the verifier CLI."""
     argv = argv or sys.argv[1:]

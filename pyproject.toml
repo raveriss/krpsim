@@ -14,7 +14,6 @@ packages = [
   { include = "krpsim" }
 ]
 
-
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
 
@@ -64,8 +63,8 @@ bandit     = "^1.7.0"
 safety     = "^2.3.1"
 mypy       = "^1.8.0"
 pre-commit = "^3.6.0"
-packaging = ">=23.1"
-xenon = "^0.9.3"
+packaging  = ">=23.1"
+xenon      = "^0.9.3"
 
 # --------------------------------------------------------------------------- #
 #  Formatting & linting                                                       #
@@ -73,9 +72,9 @@ xenon = "^0.9.3"
 [tool.black]
 line-length    = 88
 target-version = ["py310"]
-include        = '\.pyi?$'
+include        = '\\.pyi?$'
 extend-exclude = '''
-/(
+/(  
   \.git
   | \.venv
   | build
@@ -198,3 +197,6 @@ hooks = [
   { id = "mypy" }
 ]
 
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203", "W503"]
