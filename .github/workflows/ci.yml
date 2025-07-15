@@ -11,6 +11,7 @@ on:
 env:
   PYTHON_VERSION: "3.10"
   POETRY_HOME: "${{ github.workspace }}/.poetry"
+  SAFETY_API_KEY: "${{ secrets.SAFETY_API_KEY }}"
 
 jobs:
   pre-commit:
