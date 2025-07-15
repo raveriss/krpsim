@@ -41,6 +41,6 @@ repos:
         pass_filenames: false
       - id: safety
         name: safety
-        entry: bash -c 'safety check --key "$SAFETY_API_KEY"'
+        entry: safety scan --key $SAFETY_API_KEY_KRPSIM
         language: system
         pass_filenames: false
