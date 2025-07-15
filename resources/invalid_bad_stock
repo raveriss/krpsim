@@ -1,0 +1,3 @@
+# invalid stock quantity
+stock:-1
+process_good:(stock:1):(out:1):10
