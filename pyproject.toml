@@ -1,12 +1,10 @@
+
 [build-system]
 requires = [
   "poetry-core>=1.7.0"
 ]
 build-backend = "poetry.core.masonry.api"
 
-# --------------------------------------------------------------------------- #
-#  Poetry configuration                                                       #
-# --------------------------------------------------------------------------- #
 [tool.poetry]
 name    = "krpsim"
 version = "0.1.0"
