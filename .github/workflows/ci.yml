@@ -11,7 +11,7 @@ on:
 env:
   PYTHON_VERSION: "3.10"
   POETRY_HOME: "${{ github.workspace }}/.poetry"
-  SAFETY_API_KEY: "${{ secrets.SAFETY_API_KEY }}"
+  SAFETY_API_KEY: "${{ secrets.SAFETY_API_KEY_KRPSIM }}"
 
 jobs:
   pre-commit:
@@ -53,7 +53,7 @@ jobs:
       - name: Run pre-commit
         run: poetry run pre-commit run --all-files
         env:
-          SAFETY_API_KEY: ${{ secrets.SAFETY_API_KEY }} # <--- AJOUTÉ ICI
+          SAFETY_API_KEY: ${{ secrets.SAFETY_API_KEY_KRPSIM}} # <--- AJOUTÉ ICI
 
   static-analysis:
     name: Static Analysis
