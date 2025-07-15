@@ -15,5 +15,7 @@ test:
 	poetry run pytest
 
 ARGS ?=
+
+
 run:
 	poetry run krpsim $(ARGS)
