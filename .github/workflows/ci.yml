@@ -52,6 +52,8 @@ jobs:
 
       - name: Run pre-commit
         run: poetry run pre-commit run --all-files
+        env:
+          SAFETY_API_KEY: ${{ secrets.SAFETY_API_KEY }} # <--- AJOUTÉ ICI
 
   static-analysis:
     name: Static Analysis
