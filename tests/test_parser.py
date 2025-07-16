@@ -67,3 +67,28 @@ def test_parse_optimize_errors(tmp_path):
     config.write_text("a:1\nproc:(a:1):(b:1):1\noptimize:(time)\noptimize:(time)\n")
     with pytest.raises(parser.ParseError):
         parser.parse_file(config)
+
+
+def test_internal_parser_functions(tmp_path):
+    with pytest.raises(parser.ParseError):
+        parser._parse_stock("bad")
+    with pytest.raises(parser.ParseError):
+        parser._parse_stock("a:-1")
+    with pytest.raises(parser.ParseError):
+        parser._parse_process("bad")
+    with pytest.raises(parser.ParseError):
+        parser._parse_optimize("bad")
+
+    empty = tmp_path / "empty.txt"
+    empty.write_text("")
+    with pytest.raises(parser.ParseError):
+        parser.parse_file(empty)
+
+    config = tmp_path / "tmp.txt"
+    config.write_text("a:1\nproc:(a:1):(b:1):1\noptimize:(time;time)\n")
+    with pytest.raises(parser.ParseError):
+        parser.parse_file(config)
+
+    config.write_text("a:1\nproc:(a:1):(b:1):1\noptimize:(time)\noptimize:(time)\n")
+    with pytest.raises(parser.ParseError):
+        parser.parse_file(config)
