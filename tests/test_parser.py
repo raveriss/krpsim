@@ -125,18 +125,18 @@ def test_parse_long_line_rejected(tmp_path):
 
 
 class _FakeQty(str):
-    def isdigit(self) -> bool:  # type: ignore[override]
+    def isdigit(self) -> bool:
         return True
 
 
 class _FakeLine:
-    def split(self, sep: str, maxsplit: int = 1):  # type: ignore[override]
+    def split(self, sep: str, maxsplit: int = 1) -> list[str]:
         return ["a", _FakeQty("-1")]
 
 
 def test_parse_stock_negative() -> None:
     with pytest.raises(parser.ParseError):
-        parser._parse_stock(_FakeLine())
+        parser._parse_stock(_FakeLine())  # type: ignore[arg-type]
 
 
 def test_parse_resources_edge_cases_continued():
