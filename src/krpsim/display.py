@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Display utilities producing human messages and machine trace."""
+
+from __future__ import annotations
 
 import os
 from pathlib import Path
@@ -13,7 +13,9 @@ def print_header(config: Config) -> None:
     """Print introduction lines about the config."""
     optimize_count = len(config.optimize or [])
     print(
-        f"Nice file! {len(config.processes)} processes, {len(config.stocks)} stocks, {optimize_count} to optimize"
+        "Nice file! "
+        f"{len(config.processes)} processes, {len(config.stocks)} stocks, "
+        f"{optimize_count} to optimize"
     )
     print("Evaluating ... done.")
     print("Main walk")

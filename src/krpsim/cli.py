@@ -6,8 +6,9 @@ import argparse
 from pathlib import Path
 
 from . import parser as parser_mod
-from .display import print_header, save_trace, format_trace
+from .display import format_trace, print_header, save_trace
 from .simulator import Simulator
+
 
 def build_parser() -> argparse.ArgumentParser:
     """Return the CLI argument parser."""

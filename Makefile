@@ -16,6 +16,6 @@ test:
 
 ARGS ?=
 
-
 run:
 	poetry run krpsim $(ARGS)
+
