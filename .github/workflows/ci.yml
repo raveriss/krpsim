@@ -11,7 +11,7 @@ on:
 env:
   PYTHON_VERSION: "3.10"
   POETRY_HOME: "${{ github.workspace }}/.poetry"
-  SAFETY_API_KEY: "${{ secrets.SAFETY_API_KEY }}"
+  SAFETY_API_KEY_KRPSIM: "${{ secrets.SAFETY_API_KEY_KRPSIM }}"
 
 jobs:
   pre-commit:
@@ -36,7 +36,7 @@ jobs:
           virtualenvs-create: true
           virtualenvs-in-project: true
 
-      - name: Cache venv
+      - name: Cache virtualenv
         id: cache-poetry
         uses: actions/cache@v3
         with:
@@ -52,8 +52,6 @@ jobs:
 
       - name: Run pre-commit
         run: poetry run pre-commit run --all-files
-        env:
-          SAFETY_API_KEY: ${{ secrets.SAFETY_API_KEY }} # <--- AJOUTÉ ICI
 
   static-analysis:
     name: Static Analysis
@@ -126,7 +124,7 @@ jobs:
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
-      - name: Install deps (cache miss)
+      - name: Install dependencies (cache miss)
         if: steps.cache-poetry.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root
       - name: Install project

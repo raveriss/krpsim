@@ -42,6 +42,6 @@ repos:
         pass_filenames: false
       - id: safety
         name: safety
-        entry: safety check --key $SAFETY_API_KEY_KRPSIM
+        entry: safety check --full-report --key "$SAFETY_API_KEY_KRPSIM"
         language: system
         pass_filenames: false
