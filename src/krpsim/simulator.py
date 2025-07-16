@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .parser import Config, Process
+from .optimizer import order_processes
 
 
 @dataclass
@@ -36,7 +37,7 @@ class Simulator:
 
     def _start_processes(self) -> bool:
         started = False
-        for process in sorted(self.config.processes.values(), key=lambda p: p.name):
+        for process in order_processes(self.config):
             if all(
                 self.stocks.get(name, 0) >= qty for name, qty in process.needs.items()
             ):

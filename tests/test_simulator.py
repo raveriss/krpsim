@@ -39,3 +39,31 @@ def test_no_process_possible():
     trace = sim.run(3)
     assert trace == []
     assert sim.stocks["a"] == 1
+
+
+def test_optimize_time_priority():
+    cfg = parser.Config(
+        stocks={"a": 1},
+        processes={
+            "p1": parser.Process("p1", {"a": 1}, {"b": 1}, 5),
+            "p2": parser.Process("p2", {"a": 1}, {"c": 1}, 3),
+        },
+        optimize=["time"],
+    )
+    sim = Simulator(cfg)
+    trace = sim.run(10)
+    assert trace[0] == (0, "p2")
+
+
+def test_optimize_stock_priority():
+    cfg = parser.Config(
+        stocks={"a": 1},
+        processes={
+            "p1": parser.Process("p1", {"a": 1}, {"b": 1}, 5),
+            "p2": parser.Process("p2", {"a": 1}, {"c": 1}, 3),
+        },
+        optimize=["b"],
+    )
+    sim = Simulator(cfg)
+    trace = sim.run(10)
+    assert trace[0] == (0, "p1")
