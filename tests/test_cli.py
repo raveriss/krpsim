@@ -29,3 +29,11 @@ def test_verifier_cli_main(capsys):
     assert verifier_cli.main([]) == 0
     captured = capsys.readouterr()
     assert "krpsim verifier placeholder" in captured.out
+
+
+def test_cli_valid(tmp_path, capsys):
+    config = tmp_path / "conf.txt"
+    config.write_text("a:1\nproc:(a:1):(b:1):1\n")
+    assert cli.main([str(config), "5"]) == 0
+    captured = capsys.readouterr()
+    assert "krpsim" in captured.out
