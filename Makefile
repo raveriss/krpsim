@@ -4,7 +4,7 @@ install:
 	poetry install
 
 lint:
-	poetry run ruff src tests
+	poetry run ruff check src tests
 	poetry run mypy src tests
 
 format:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 
 from .optimizer import order_processes
@@ -37,6 +38,7 @@ class Simulator:
 
     def _start_processes(self) -> bool:
         started = False
+        logger = logging.getLogger(__name__)
         for process in order_processes(self.config):
             if all(
                 self.stocks.get(name, 0) >= qty for name, qty in process.needs.items()
@@ -45,6 +47,7 @@ class Simulator:
                     self.stocks[name] -= qty
                 self._running.append(_RunningProcess(process, process.delay))
                 self.trace.append((self.time, process.name))
+                logger.info("%d:%s", self.time, process.name)
                 started = True
         return started
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 from pathlib import Path
 
 from . import parser as parser_mod
@@ -25,6 +26,16 @@ def build_parser() -> argparse.ArgumentParser:
         default="trace.txt",
         help="path of the file to write machine trace to",
     )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="enable verbose logging",
+    )
+    parser.add_argument(
+        "--log",
+        help="path to write logs to",
+    )
     return parser
 
 
@@ -33,6 +44,16 @@ def main(argv: list[str] | None = None) -> int:
 
     parser = build_parser()
     args = parser.parse_args(argv)
+
+    handlers: list[logging.Handler] = [logging.StreamHandler()]
+    if args.log:
+        handlers.append(logging.FileHandler(args.log))
+    logging.basicConfig(
+        level=logging.INFO if args.verbose else logging.WARNING,
+        format="%(message)s",
+        handlers=handlers,
+        force=True,
+    )
 
     config_path = Path(args.config)
     if not config_path.is_file():

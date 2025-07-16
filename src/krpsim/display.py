@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
 from typing import Iterable
@@ -34,4 +35,5 @@ def save_trace(trace: Iterable[tuple[int, str]], path: Path) -> None:
             fh.write(line + "\n")
         fh.flush()
         os.fsync(fh.fileno())
+    logging.getLogger(__name__).info("trace saved to %s", path)
 

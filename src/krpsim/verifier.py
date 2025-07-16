@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -22,6 +23,7 @@ class TraceEntry:
 def parse_trace(path: Path) -> list[TraceEntry]:
     """Return trace entries parsed from ``path``."""
 
+    logger = logging.getLogger(__name__)
     lines = path.read_text().splitlines()
     entries: list[TraceEntry] = []
     for idx, line in enumerate(lines, start=1):
@@ -32,7 +34,9 @@ def parse_trace(path: Path) -> list[TraceEntry]:
         cycle_str, name = line.split(":", 1)
         if not cycle_str.isdigit():
             raise TraceError(f"invalid trace line {idx}: '{line}'")
-        entries.append(TraceEntry(int(cycle_str), name))
+        entry = TraceEntry(int(cycle_str), name)
+        logger.info("%d:%s", entry.cycle, entry.process)
+        entries.append(entry)
     return entries
 
 
@@ -48,6 +52,7 @@ def verify_trace(config: Config, trace: list[TraceEntry]) -> None:
     Raises :class:`TraceError` at the first mismatch.
     """
 
+    logger = logging.getLogger(__name__)
     expected = _expected_trace(config)
     for idx, (got, exp) in enumerate(zip(trace, expected), start=1):
         if got != exp:
@@ -68,10 +73,14 @@ def verify_trace(config: Config, trace: list[TraceEntry]) -> None:
             f"trace has extra events starting at line {len(expected)+1}"
         )
 
+    logger.info("trace validated successfully")
+
 
 def verify_files(config_path: Path, trace_path: Path) -> None:
     """Convenience wrapper verifying files."""
 
+    logger = logging.getLogger(__name__)
     config = parse_file(config_path)
     trace = parse_trace(trace_path)
+    logger.info("verifying trace against %s", config_path)
     verify_trace(config, trace)
