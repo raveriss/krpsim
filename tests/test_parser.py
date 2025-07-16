@@ -122,3 +122,29 @@ def test_parse_long_line_rejected(tmp_path):
     cfg.write_bytes(long_line)
     with pytest.raises(parser.ParseError):
         parser.parse_file(cfg)
+
+
+class _FakeQty(str):
+    def isdigit(self) -> bool:  # type: ignore[override]
+        return True
+
+
+class _FakeLine:
+    def split(self, sep: str, maxsplit: int = 1):  # type: ignore[override]
+        return ["a", _FakeQty("-1")]
+
+
+def test_parse_stock_negative() -> None:
+    with pytest.raises(parser.ParseError):
+        parser._parse_stock(_FakeLine())
+
+
+def test_parse_resources_edge_cases_continued():
+    assert parser._parse_resources("a:1;;b:1") == {"a": 1, "b": 1}
+    with pytest.raises(parser.ParseError):
+        parser._parse_resources("a:0")
+
+
+def test_parse_optimize_empty():
+    with pytest.raises(parser.ParseError):
+        parser._parse_optimize("optimize:()")
