@@ -34,6 +34,9 @@ def test_verifier_cli_main(capsys):
 def test_cli_valid(tmp_path, capsys):
     config = tmp_path / "conf.txt"
     config.write_text("a:1\nproc:(a:1):(b:1):1\n")
-    assert cli.main([str(config), "5"]) == 0
+    trace_path = tmp_path / "trace.txt"
+    assert cli.main([str(config), "5", "--trace", str(trace_path)]) == 0
     captured = capsys.readouterr()
-    assert "krpsim" in captured.out
+    assert "Main walk" in captured.out
+    assert "0:proc" in captured.out
+    assert trace_path.read_text().splitlines() == ["0:proc"]
