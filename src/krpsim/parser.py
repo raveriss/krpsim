@@ -149,6 +149,7 @@ def parse_file(path: Path) -> Config:
     stocks: dict[str, int] = {}
     processes: dict[str, Process] = {}
     optimize: list[str] | None = None
+
     for line in lines:
         line = line.strip()
         if not line or line.startswith("#"):
