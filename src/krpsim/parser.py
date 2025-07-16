@@ -6,6 +6,8 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+UTF8_BOM = b"\xef\xbb\xbf"
+
 
 @dataclass
 class Process:
@@ -130,11 +132,24 @@ def _validate_optimize(
 def parse_file(path: Path) -> Config:
     """Parse a configuration file and return a :class:`Config`."""
 
-    text = path.read_text().splitlines()
+    raw = path.read_bytes()
+    if raw.startswith(UTF8_BOM):
+        raise ParseError("BOM detected in file")
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise ParseError("file must be UTF-8 encoded") from exc
+    if b"\r" in raw:
+        raise ParseError("CRLF line endings are not allowed")
+    lines = text.splitlines()
+    for raw_line in lines:
+        if len(raw_line) > 255:
+            raise ParseError("line exceeds 255 characters")
+
     stocks: dict[str, int] = {}
     processes: dict[str, Process] = {}
     optimize: list[str] | None = None
-    for line in text:
+    for line in lines:
         line = line.strip()
         if not line or line.startswith("#"):
             continue

@@ -92,3 +92,33 @@ def test_internal_parser_functions(tmp_path):
     config.write_text("a:1\nproc:(a:1):(b:1):1\noptimize:(time)\noptimize:(time)\n")
     with pytest.raises(parser.ParseError):
         parser.parse_file(config)
+
+def test_parse_non_utf8_file(tmp_path):
+    bad = tmp_path / "bad.txt"
+    bad.write_bytes(b"\x80\xa0")
+    with pytest.raises(parser.ParseError):
+        parser.parse_file(bad)
+
+
+def test_parse_bom_rejected(tmp_path):
+    data = b"\xef\xbb\xbf" + b"a:1\nproc:(a:1):(b:1):1\n"
+    cfg = tmp_path / "bom.txt"
+    cfg.write_bytes(data)
+    with pytest.raises(parser.ParseError):
+        parser.parse_file(cfg)
+
+
+def test_parse_crlf_rejected(tmp_path):
+    data = b"a:1\r\nproc:(a:1):(b:1):1\r\n"
+    cfg = tmp_path / "crlf.txt"
+    cfg.write_bytes(data)
+    with pytest.raises(parser.ParseError):
+        parser.parse_file(cfg)
+
+
+def test_parse_long_line_rejected(tmp_path):
+    long_line = b"a" * 256 + b"\n"
+    cfg = tmp_path / "long.txt"
+    cfg.write_bytes(long_line)
+    with pytest.raises(parser.ParseError):
+        parser.parse_file(cfg)
