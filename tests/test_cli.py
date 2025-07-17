@@ -143,3 +143,27 @@ def test_verifier_cli_log(tmp_path):
         == 0
     )
     assert "trace is valid" in log_file.read_text()
+
+
+@pytest.mark.parametrize(
+    "resource,delay",
+    [
+        ("ikea", 100),
+        ("steak", 100),
+        ("pomme", 100),
+        ("recre", 100),
+        ("inception", 100),
+        ("custom_finite", 100),
+        ("custom_infinite", 5),
+    ],
+)
+def test_cli_run_resources(
+    resource: str, delay: int, capsys: pytest.CaptureFixture[str]
+) -> None:
+    res = Path("resources") / resource
+    exit_code = cli.main([str(res), str(delay)])
+    captured = capsys.readouterr()
+    assert exit_code in (0, 1)
+    if resource == "custom_infinite":
+        assert exit_code == 1
+        assert "max time reached" in captured.out
