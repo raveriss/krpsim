@@ -70,8 +70,13 @@ def main(argv: list[str] | None = None) -> int:
     for line in format_trace(trace):
         print(line)
 
+    exit_code = 0
     if sim.time >= args.delay:
         print(f"max time reached at time {sim.time}")
+        exit_code = 1
+    elif sim.deadlock:
+        print(f"deadlock detected at time {sim.time}")
+        exit_code = 1
     else:
         print(f"no more process doable at time {sim.time}")
     print("Stock:")
@@ -79,7 +84,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{name} => {qty}")
 
     save_trace(trace, Path(args.trace))
-    return 0
+    return exit_code
 
 
 if __name__ == "__main__":

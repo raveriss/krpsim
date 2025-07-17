@@ -24,6 +24,7 @@ class Simulator:
         self.time = 0
         self._running: list[_RunningProcess] = []
         self.trace: list[tuple[int, str]] = []
+        self.deadlock = False
 
     def _complete_running(self) -> None:
         completed: list[_RunningProcess] = []
@@ -58,6 +59,9 @@ class Simulator:
         return started or bool(self._running)
 
     def run(self, max_time: int) -> list[tuple[int, str]]:
+        self.deadlock = False
         while self.time < max_time and self.step():
             pass
+        if not self.trace and self.config.processes:
+            self.deadlock = True
         return self.trace
