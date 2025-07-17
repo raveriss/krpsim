@@ -43,6 +43,17 @@ def test_no_process_possible():
     assert sim.stocks["a"] == 1
 
 
+def test_deadlock_flag() -> None:
+    cfg = parser.Config(
+        stocks={"a": 0},
+        processes={"p": parser.Process("p", {"a": 1}, {"a": 1}, 1)},
+    )
+    sim = Simulator(cfg)
+    trace = sim.run(5)
+    assert trace == []
+    assert sim.deadlock is True
+
+
 def test_optimize_time_priority():
     cfg = parser.Config(
         stocks={"a": 1},

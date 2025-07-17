@@ -68,9 +68,18 @@ def test_cli_max_time(tmp_path, capsys):
     config = tmp_path / "conf.txt"
     config.write_text("a:1\nproc:(a:1):(b:1):1\n")
     trace_path = tmp_path / "trace.txt"
-    assert cli.main([str(config), "1", "--trace", str(trace_path)]) == 0
+    assert cli.main([str(config), "1", "--trace", str(trace_path)]) == 1
     captured = capsys.readouterr()
     assert "max time reached" in captured.out
+
+
+def test_cli_deadlock(tmp_path, capsys):
+    config = tmp_path / "conf.txt"
+    config.write_text("a:0\nproc:(a:1):(a:1):1\n")
+    trace_path = tmp_path / "trace.txt"
+    assert cli.main([str(config), "5", "--trace", str(trace_path)]) == 1
+    captured = capsys.readouterr()
+    assert "deadlock detected" in captured.out
 
 
 def test_cli_verbose_and_log(tmp_path):
