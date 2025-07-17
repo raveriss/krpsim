@@ -40,6 +40,33 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _validate_args(args: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
+    """Validate CLI arguments."""
+
+    config_path = Path(args.config)
+    if ".." in config_path.parts:
+        parser.error("path traversal detected in config path")
+    if not config_path.is_file():
+        parser.error(f"invalid config path: '{args.config}'")
+    if not os.access(config_path, os.R_OK):
+        parser.error(f"config file is not readable: '{args.config}'")
+    if args.delay <= 0:
+        parser.error("delay must be a positive integer")
+
+
+def _run_simulation(args: argparse.Namespace) -> Simulator:
+    """Run the simulation and return the simulator instance."""
+
+    config = parser_mod.parse_file(Path(args.config))
+    sim = Simulator(config)
+    print_header(config)
+    trace = sim.run(args.delay)
+    for line in format_trace(trace):
+        print(line)
+    save_trace(trace, Path(args.trace))
+    return sim
+
+
 def main(argv: list[str] | None = None) -> int:
     """Entry point for the krpsim CLI."""
 
@@ -56,24 +83,9 @@ def main(argv: list[str] | None = None) -> int:
         force=True,
     )
 
-    config_path = Path(args.config)
-    if ".." in config_path.parts:
-        parser.error("path traversal detected in config path")
-    if not config_path.is_file():
-        parser.error(f"invalid config path: '{args.config}'")
-    if not os.access(config_path, os.R_OK):
-        parser.error(f"config file is not readable: '{args.config}'")
+    _validate_args(args, parser)
 
-    if args.delay <= 0:
-        parser.error("delay must be a positive integer")
-
-    config = parser_mod.parse_file(config_path)
-    sim = Simulator(config)
-
-    print_header(config)
-    trace = sim.run(args.delay)
-    for line in format_trace(trace):
-        print(line)
+    sim = _run_simulation(args)
 
     exit_code = 0
     if sim.time >= args.delay:
@@ -88,7 +100,6 @@ def main(argv: list[str] | None = None) -> int:
     for name, qty in sim.stocks.items():
         print(f"{name} => {qty}")
 
-    save_trace(trace, Path(args.trace))
     return exit_code
 
 
