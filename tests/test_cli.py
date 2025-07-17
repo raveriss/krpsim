@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 import pytest
 
 from krpsim import cli, verifier_cli
@@ -102,6 +105,31 @@ def test_cli_verbose_and_log(tmp_path):
         == 0
     )
     assert "0:proc" in log_path.read_text()
+
+
+def test_cli_path_traversal(tmp_path):
+    config = tmp_path / "conf.txt"
+    config.write_text("a:1\nproc:(a:1):(b:1):1\n")
+    bad_path = config.parent / ".." / config.name
+    with pytest.raises(SystemExit) as exc:
+        cli.main([str(bad_path), "1"])
+    assert exc.value.code == 2
+
+
+def test_cli_unreadable_file(tmp_path, monkeypatch):
+    config = tmp_path / "conf.txt"
+    config.write_text("a:1\nproc:(a:1):(b:1):1\n")
+    original = os.access
+
+    def fake_access(path: os.PathLike[str] | str, mode: int) -> bool:
+        if Path(path) == config:
+            return False
+        return original(path, mode)
+
+    monkeypatch.setattr(os, "access", fake_access)
+    with pytest.raises(SystemExit) as exc:
+        cli.main([str(config), "1"])
+    assert exc.value.code == 2
 
 
 def test_verifier_cli_log(tmp_path):
