@@ -69,9 +69,7 @@ def verify_trace(config: Config, trace: list[TraceEntry]) -> None:
         )
 
     if len(trace) > len(expected):
-        raise TraceError(
-            f"trace has extra events starting at line {len(expected)+1}"
-        )
+        raise TraceError(f"trace has extra events starting at line {len(expected)+1}")
 
     logger.info("trace validated successfully")
 

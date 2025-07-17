@@ -93,6 +93,7 @@ def test_internal_parser_functions(tmp_path):
     with pytest.raises(parser.ParseError):
         parser.parse_file(config)
 
+
 def test_parse_non_utf8_file(tmp_path):
     bad = tmp_path / "bad.txt"
     bad.write_bytes(b"\x80\xa0")
