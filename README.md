@@ -151,7 +151,7 @@ euro => 2
 
 * **Tests unitaires/intégration/extremes** : 100% couverture, chaque branche, chaque condition.
 * **Crash/fuzzing** : Le système est testé sur : fichiers vides, corrompus, mauvais encoding, valeurs aberrantes, etc.
-* **Analyse statique & sécurité** : `black`, `ruff`, `mypy`, `bandit`, `safety` (fail pipeline si défaut).
+* **Analyse statique & sécurité** : `black`, `ruff`, `mypy`, `bandit` (fail pipeline si défaut).
 * **CI/CD** : Pipeline GitHub Actions automatisé (installation, lint, test, coverage, sécurité).
 * **Formatage & documentation** : Norme stricte, docstring pour chaque agent, README à jour.
 

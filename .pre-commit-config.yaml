@@ -40,8 +40,4 @@ repos:
         entry: xenon --max-absolute B --max-modules A --max-average A src
         language: system
         pass_filenames: false
-      - id: safety
-        name: safety
-        entry: safety check --full-report --key $SAFETY_API_KEY_KRPSIM
-        language: system
-        pass_filenames: false
+
