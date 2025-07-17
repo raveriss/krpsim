@@ -132,6 +132,21 @@ def test_cli_unreadable_file(tmp_path, monkeypatch):
     assert exc.value.code == 2
 
 
+@pytest.mark.parametrize(
+    "file",
+    [
+        Path("resources/invalid_bad_stock"),
+        Path("resources/invalid_bad_process"),
+    ],
+)
+def test_cli_invalid_config(file: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit) as exc:
+        cli.main([str(file), "10"])
+    assert exc.value.code == 1
+    captured = capsys.readouterr()
+    assert "invalid config" in captured.out.lower()
+
+
 def test_verifier_cli_log(tmp_path):
     cfg = tmp_path / "conf.txt"
     cfg.write_text("a:1\nproc:(a:1):(b:1):1\n")

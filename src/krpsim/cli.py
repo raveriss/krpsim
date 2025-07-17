@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 
 from . import parser as parser_mod
+from .parser import ParseError
 from .display import format_trace, print_header, save_trace
 from .simulator import Simulator
 
@@ -85,7 +86,11 @@ def main(argv: list[str] | None = None) -> int:
 
     _validate_args(args, parser)
 
-    sim = _run_simulation(args)
+    try:
+        sim = _run_simulation(args)
+    except ParseError as exc:
+        print(f"invalid config: {exc}")
+        raise SystemExit(1)
 
     exit_code = 0
     if sim.time >= args.delay:
