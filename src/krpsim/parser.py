@@ -65,12 +65,17 @@ def _parse_resources(block: str) -> dict[str, int]:
 
 
 def _parse_process(line: str) -> Process:
-    match = re.match(r"^([^:]+):\(([^)]*)\):\(([^)]*)\):(\d+)$", line)
+    """Return a :class:`Process` parsed from ``line``.
+
+    The ``results`` section may be omitted (``::delay``).
+    """
+
+    match = re.match(r"^([^:]+):\(([^)]*)\):(?:\(([^)]*)\))?:(\d+)$", line)
     if not match:
         raise ParseError(f"invalid process line: '{line}'")
     name, needs_block, results_block, delay_str = match.groups()
     needs = _parse_resources(needs_block)
-    results = _parse_resources(results_block)
+    results = _parse_resources(results_block or "")
     return Process(
         name=name,
         needs=needs,
@@ -129,8 +134,8 @@ def _validate_optimize(
             raise ParseError(f"unknown stock '{item}' in optimize line")
 
 
-def parse_file(path: Path) -> Config:
-    """Parse a configuration file and return a :class:`Config`."""
+def _read_lines(path: Path) -> list[str]:
+    """Return validated lines from ``path``."""
 
     raw = path.read_bytes()
     if raw.startswith(UTF8_BOM):
@@ -145,6 +150,13 @@ def parse_file(path: Path) -> Config:
     for raw_line in lines:
         if len(raw_line) > 255:
             raise ParseError("line exceeds 255 characters")
+    return lines
+
+
+def _parse_lines(
+    lines: list[str],
+) -> tuple[dict[str, int], dict[str, Process], list[str] | None]:
+    """Return stocks, processes and optimize parts parsed from ``lines``."""
 
     stocks: dict[str, int] = {}
     processes: dict[str, Process] = {}
@@ -162,6 +174,14 @@ def parse_file(path: Path) -> Config:
             _handle_stock(line, stocks)
         else:
             raise ParseError(f"unrecognized line: '{line}'")
+    return stocks, processes, optimize
+
+
+def parse_file(path: Path) -> Config:
+    """Parse a configuration file and return a :class:`Config`."""
+
+    lines = _read_lines(path)
+    stocks, processes, optimize = _parse_lines(lines)
     if not stocks or not processes:
         raise ParseError("configuration must define at least one stock and process")
     if optimize:

@@ -102,9 +102,7 @@ def test_verifier_cli_log(tmp_path):
     trace.write_text("0:proc\n")
     log_file = tmp_path / "verif.log"
     assert (
-        verifier_cli.main(
-            [str(cfg), str(trace), "--verbose", "--log", str(log_file)]
-        )
+        verifier_cli.main([str(cfg), str(trace), "--verbose", "--log", str(log_file)])
         == 0
     )
     assert "trace is valid" in log_file.read_text()

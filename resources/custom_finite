@@ -1,0 +1,4 @@
+# custom config that terminates normally
+start:1
+finish:(start:1):(done:1):1
+

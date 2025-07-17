@@ -1,0 +1,4 @@
+# custom config leading to infinite loop
+item:1
+loop:(item:1):(item:1):1
+

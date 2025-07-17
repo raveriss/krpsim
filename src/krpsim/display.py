@@ -36,4 +36,3 @@ def save_trace(trace: Iterable[tuple[int, str]], path: Path) -> None:
         fh.flush()
         os.fsync(fh.fileno())
     logging.getLogger(__name__).info("trace saved to %s", path)
-
