@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pytest
@@ -16,6 +17,11 @@ def test_parse_valid_simple():
 def test_parse_invalid_files(fname):
     with pytest.raises(parser.ParseError):
         parser.parse_file(Path("resources") / fname)
+
+
+def test_parse_nonexistent_path(tmp_path):
+    with pytest.raises(parser.ParseError):
+        parser.parse_file(tmp_path / "doesnotexist")
 
 
 def test_parse_duplicate_entries(tmp_path):
@@ -149,3 +155,27 @@ def test_parse_resources_edge_cases_continued():
 def test_parse_optimize_empty():
     with pytest.raises(parser.ParseError):
         parser._parse_optimize("optimize:()")
+
+
+def test_parse_path_traversal(tmp_path):
+    cfg = tmp_path / "conf.txt"
+    cfg.write_text("a:1\nproc:(a:1):(b:1):1\n")
+    bad = cfg.parent / ".." / cfg.name
+    with pytest.raises(parser.ParseError):
+        parser.parse_file(bad)
+
+
+def test_parse_unreadable_file(tmp_path, monkeypatch):
+    cfg = tmp_path / "conf.txt"
+    cfg.write_text("a:1\nproc:(a:1):(b:1):1\n")
+
+    original = os.access
+
+    def fake_access(path: os.PathLike[str] | str, mode: int) -> bool:
+        if Path(path) == cfg:
+            return False
+        return original(path, mode)
+
+    monkeypatch.setattr(os, "access", fake_access)
+    with pytest.raises(parser.ParseError):
+        parser.parse_file(cfg)

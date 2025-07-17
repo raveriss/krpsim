@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 from pathlib import Path
 
 from . import parser as parser_mod
@@ -56,8 +57,12 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     config_path = Path(args.config)
+    if ".." in config_path.parts:
+        parser.error("path traversal detected in config path")
     if not config_path.is_file():
         parser.error(f"invalid config path: '{args.config}'")
+    if not os.access(config_path, os.R_OK):
+        parser.error(f"config file is not readable: '{args.config}'")
 
     if args.delay <= 0:
         parser.error("delay must be a positive integer")

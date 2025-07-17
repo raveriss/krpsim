@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -179,6 +180,13 @@ def _parse_lines(
 
 def parse_file(path: Path) -> Config:
     """Parse a configuration file and return a :class:`Config`."""
+
+    if ".." in path.parts:
+        raise ParseError("path traversal detected")
+    if not path.is_file():
+        raise ParseError(f"invalid path: '{path}'")
+    if not os.access(path, os.R_OK):
+        raise ParseError(f"file is not readable: '{path}'")
 
     lines = _read_lines(path)
     stocks, processes, optimize = _parse_lines(lines)
