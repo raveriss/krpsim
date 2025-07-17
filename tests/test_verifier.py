@@ -52,3 +52,22 @@ def test_verify_trace_short_and_extra(tmp_path: Path) -> None:
     extra_file.write_text("\n".join(f"{c}:{n}" for c, n in extra_events))
     with pytest.raises(TraceError):
         verify_trace(cfg, parse_trace(extra_file))
+
+
+def test_verify_custom_finite(tmp_path: Path) -> None:
+    cfg = parser.parse_file(Path("resources/custom_finite"))
+    sim = Simulator(cfg)
+    events = sim.run(10)
+    trace_file = tmp_path / "trace.txt"
+    trace_file.write_text("\n".join(f"{c}:{n}" for c, n in events))
+    verify_trace(cfg, parse_trace(trace_file))
+
+
+def test_verify_custom_infinite(tmp_path: Path) -> None:
+    cfg = parser.parse_file(Path("resources/custom_infinite"))
+    sim = Simulator(cfg)
+    events = sim.run(5)
+    trace_file = tmp_path / "trace.txt"
+    trace_file.write_text("\n".join(f"{c}:{n}" for c, n in events))
+    with pytest.raises(TraceError):
+        verify_trace(cfg, parse_trace(trace_file))

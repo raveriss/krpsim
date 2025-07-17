@@ -65,12 +65,17 @@ def _parse_resources(block: str) -> dict[str, int]:
 
 
 def _parse_process(line: str) -> Process:
-    match = re.match(r"^([^:]+):\(([^)]*)\):\(([^)]*)\):(\d+)$", line)
+    """Return a :class:`Process` parsed from ``line``.
+
+    The ``results`` section may be omitted (``::delay``).
+    """
+
+    match = re.match(r"^([^:]+):\(([^)]*)\):(?:\(([^)]*)\))?:(\d+)$", line)
     if not match:
         raise ParseError(f"invalid process line: '{line}'")
     name, needs_block, results_block, delay_str = match.groups()
     needs = _parse_resources(needs_block)
-    results = _parse_resources(results_block)
+    results = _parse_resources(results_block or "")
     return Process(
         name=name,
         needs=needs,

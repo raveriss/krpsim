@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from krpsim import parser
 from krpsim.simulator import Simulator
 
@@ -67,3 +69,33 @@ def test_optimize_stock_priority():
     sim = Simulator(cfg)
     trace = sim.run(10)
     assert trace[0] == (0, "p1")
+
+
+@pytest.mark.parametrize(
+    "resource",
+    ["ikea", "steak", "pomme", "recre", "inception"],
+)
+def test_run_resources(resource: str) -> None:
+    cfg = parser.parse_file(Path("resources") / resource)
+    sim = Simulator(cfg)
+    trace = sim.run(50)
+    assert trace  # at least one process started
+    assert sim.time <= 50
+
+
+def test_custom_finite() -> None:
+    cfg = parser.parse_file(Path("resources/custom_finite"))
+    sim = Simulator(cfg)
+    trace = sim.run(10)
+    assert trace == [(0, "finish")]
+    assert sim.stocks["done"] == 1
+    assert sim.time == 2
+
+
+def test_custom_infinite() -> None:
+    cfg = parser.parse_file(Path("resources/custom_infinite"))
+    sim = Simulator(cfg)
+    trace = sim.run(5)
+    # the loop process runs every cycle until max time
+    assert trace == [(i, "loop") for i in range(5)]
+    assert sim.time == 5
