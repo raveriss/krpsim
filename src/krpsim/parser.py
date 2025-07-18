@@ -28,6 +28,14 @@ class Config:
     processes: dict[str, Process]
     optimize: list[str] | None = None
 
+    def all_stock_names(self) -> set[str]:
+        """Return the set of every stock referenced in the config."""
+        names: set[str] = set(self.stocks)
+        for process in self.processes.values():
+            names.update(process.needs)
+            names.update(process.results)
+        return names
+
 
 class ParseError(Exception):
     """Raised when the configuration is invalid."""

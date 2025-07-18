@@ -75,6 +75,18 @@ def test_cli_valid(tmp_path, capsys):
     assert trace_path.read_text().splitlines() == ["0:proc"]
 
 
+def test_cli_lists_all_stocks(capsys: pytest.CaptureFixture[str]) -> None:
+    exit_code = cli.main([str(Path("resources/simple")), "100"])
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    lines = captured.out.splitlines()
+    idx = lines.index("Stocks:")
+    stocks = {
+        line.split(" => ")[0] for line in lines[idx + 1 : idx + 5] if " => " in line
+    }
+    assert stocks == {"client_content", "euro", "materiel", "produit"}
+
+
 def test_cli_max_time(tmp_path, capsys):
     config = tmp_path / "conf.txt"
     config.write_text("a:1\nproc:(a:1):(b:1):1\n")
