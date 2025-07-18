@@ -118,11 +118,11 @@ Optimization criteria: time, happy_client
 10:product_creation
 40:delivery
 No more process doable at time 61
-Stock:
-happy_client => 1
-product => 0
-equipment => 0
-euro => 2
+Final Stocks:
+  happy_client  => 1
+  product       => 0
+  equipment     => 0
+  euro          => 2
 ```
 
 ⚠️ **Limite de délai** : le paramètre `<delai>` représente une borne supérieure

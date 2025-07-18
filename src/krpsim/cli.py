@@ -105,9 +105,10 @@ def main(argv: list[str] | None = None) -> int:
     else:
         print(f"No more process doable at time {sim.time}")
     stock_names = sorted(sim.config.all_stock_names())
-    print("Stock(s):")
+    max_len = max((len(name) for name in stock_names), default=0)
+    print("Final Stocks:")
     for name in stock_names:
-        print(f"{name} => {sim.stocks.get(name, 0)}")
+        print(f"  {name:<{max_len}}  => {sim.stocks.get(name, 0)}")
 
     return exit_code
 
