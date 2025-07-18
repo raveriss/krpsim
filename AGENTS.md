@@ -142,6 +142,7 @@ krpsim/
 - Description PR : quoi/pourquoi/comment, ID WBS, liens exigences sujet
 - **Cycle de vie PR** :
     - [ ] Tests locaux (format, lint, test, coverage)
+    - [ ] Exécuter `poetry run black .` avant chaque commit
     - [ ] Branche à jour/main
     - [ ] Titre normé (`feat:`, `fix:`, `refactor:`, `test:`…)
     - [ ] Revue pair, squash & merge, suppression branche
