@@ -9,10 +9,14 @@ from typing import Iterable
 
 from .parser import Config
 
+_IRREGULAR_PLURALS: dict[str, str] = {"process": "processes"}
+
 
 def _pluralize(word: str, count: int) -> str:
     """Return ``word`` in singular or plural form depending on ``count``."""
-    return word if count == 1 else word + "s"
+    if count == 1:
+        return word
+    return _IRREGULAR_PLURALS.get(word, word + "s")
 
 
 def print_header(config: Config) -> None:

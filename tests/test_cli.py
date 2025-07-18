@@ -70,7 +70,7 @@ def test_cli_valid(tmp_path, capsys):
     captured = capsys.readouterr()
     assert "Nice file! 1 process, 1 stock, 0 objectives" in captured.out
     assert "Main walk" in captured.out
-    assert "Stocks:" in captured.out
+    assert "Stock(s):" in captured.out
     assert "0:proc" in captured.out
     assert trace_path.read_text().splitlines() == ["0:proc"]
 
@@ -80,7 +80,7 @@ def test_cli_lists_all_stocks(capsys: pytest.CaptureFixture[str]) -> None:
     captured = capsys.readouterr()
     assert exit_code == 0
     lines = captured.out.splitlines()
-    idx = lines.index("Stocks:")
+    idx = lines.index("Stock(s):")
     stocks = {
         line.split(" => ")[0] for line in lines[idx + 1 : idx + 5] if " => " in line
     }

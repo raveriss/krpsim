@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 
 from . import parser as parser_mod
-from .display import _pluralize, format_trace, print_header, save_trace
+from .display import format_trace, print_header, save_trace
 from .parser import ParseError
 from .simulator import Simulator
 
@@ -105,7 +105,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         print(f"no more process doable at time {sim.time}")
     stock_names = sorted(sim.config.all_stock_names())
-    print(f"{_pluralize('stock', len(stock_names)).capitalize()}:")
+    print("Stock(s):")
     for name in stock_names:
         print(f"{name} => {sim.stocks.get(name, 0)}")
 
