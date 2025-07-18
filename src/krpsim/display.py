@@ -10,14 +10,20 @@ from typing import Iterable
 from .parser import Config
 
 
+def _pluralize(word: str, count: int) -> str:
+    """Return ``word`` in singular or plural form depending on ``count``."""
+    return word if count == 1 else word + "s"
+
+
 def print_header(config: Config) -> None:
     """Print introduction lines about the config."""
     optimize_count = len(config.optimize or [])
-    print(
-        "Nice file! "
-        f"{len(config.processes)} processes, {len(config.stocks)} stocks, "
-        f"{optimize_count} to optimize"
+    process_info = (
+        f"{len(config.processes)} {_pluralize('process', len(config.processes))}"
     )
+    stock_info = f"{len(config.stocks)} {_pluralize('stock', len(config.stocks))}"
+    objective_info = f"{optimize_count} {_pluralize('objective', optimize_count)}"
+    print("Nice file! " f"{process_info}, {stock_info}, {objective_info}")
     print("Evaluating ... done.")
     print("Main walk")
 
