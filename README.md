@@ -112,11 +112,12 @@ optimize:(time;happy_client)
 ```
 Nice file! 3 processes, 4 stocks, 1 to optimize
 Evaluating ... done.
-Main walk
+Main walk:
+Optimization criteria: time, happy_client
 0:equipment_purchase
 10:product_creation
 40:delivery
-no more process doable at time 61
+No more process doable at time 61
 Stock:
 happy_client => 1
 product => 0
