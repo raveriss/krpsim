@@ -130,6 +130,16 @@ exclusive. Les cycles s'exécutent tant que `time < delai`. Pour aller au bout
 de tous les processus, fournissez un délai strictement plus grand que la durée
 totale ou utilisez l'option `--run-all`.
 
+Par exemple :
+
+```bash
+$ poetry run krpsim resources/simple 10
+0:achat_materiel
+Max time reached at time 10
+```
+
+Le premier processus dure exactement dix cycles ; avec un délai égal à `10`, la simulation s'arrête juste après son démarrage et aucun autre processus n'apparaît dans la trace.
+
 ---
 
 ## 🖥️ Utilisation (Simulation & Vérification)
