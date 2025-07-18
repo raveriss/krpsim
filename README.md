@@ -124,6 +124,11 @@ equipment => 0
 euro => 2
 ```
 
+⚠️ **Limite de délai** : le paramètre `<delai>` représente une borne supérieure
+exclusive. Les cycles s'exécutent tant que `time < delai`. Pour aller au bout
+de tous les processus, fournissez un délai strictement plus grand que la durée
+totale ou utilisez l'option `--run-all`.
+
 ---
 
 ## 🖥️ Utilisation (Simulation & Vérification)
@@ -134,7 +139,9 @@ euro => 2
   poetry run krpsim <chemin_fichier_config> <delai_max>
   ```
 
-  Si le système est auto-suffisant, il s’arrête à la fin du délai ou si plus aucun process n’est possible.
+  `<delai_max>` est une borne exclusive : la simulation s'arrête dès que
+  `time` est supérieur ou égal à cette valeur. Pour exécuter tous les
+  processus, utilisez un délai supérieur à la durée totale ou passez `--run-all`.
 * **Vérification de trace :**
 
   ```bash

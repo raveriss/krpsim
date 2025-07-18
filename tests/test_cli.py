@@ -12,6 +12,7 @@ def test_cli_help(capsys):
     assert exc.value.code == 0
     captured = capsys.readouterr()
     assert "usage:" in captured.out.lower()
+    assert "exclusive upper bound" in captured.out
 
 
 def test_cli_invalid_path():
@@ -26,6 +27,11 @@ def test_cli_invalid_delay(tmp_path):
     with pytest.raises(SystemExit) as exc:
         cli.main([str(config), "0"])
     assert exc.value.code == 2
+
+
+def test_cli_delay_help_text() -> None:
+    parser = cli.build_parser()
+    assert "exclusive upper bound" in parser.format_help()
 
 
 def test_verifier_cli_help(capsys):
