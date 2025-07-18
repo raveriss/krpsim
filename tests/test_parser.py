@@ -13,6 +13,16 @@ def test_parse_valid_simple():
     assert "realisation_produit" in cfg.processes
 
 
+def test_config_all_stock_names() -> None:
+    cfg = parser.parse_file(Path("resources/simple"))
+    assert cfg.all_stock_names() == {
+        "client_content",
+        "euro",
+        "materiel",
+        "produit",
+    }
+
+
 @pytest.mark.parametrize("fname", ["invalid_bad_stock", "invalid_bad_process"])
 def test_parse_invalid_files(fname):
     with pytest.raises(parser.ParseError):

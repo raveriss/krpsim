@@ -104,9 +104,10 @@ def main(argv: list[str] | None = None) -> int:
         exit_code = 1
     else:
         print(f"no more process doable at time {sim.time}")
-    print(f"{_pluralize('stock', len(sim.stocks)).capitalize()}:")
-    for name, qty in sim.stocks.items():
-        print(f"{name} => {qty}")
+    stock_names = sorted(sim.config.all_stock_names())
+    print(f"{_pluralize('stock', len(stock_names)).capitalize()}:")
+    for name in stock_names:
+        print(f"{name} => {sim.stocks.get(name, 0)}")
 
     return exit_code
 
