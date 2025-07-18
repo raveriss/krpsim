@@ -125,20 +125,20 @@ Final Stocks:
   euro          => 2
 ```
 
-⚠️ **Limite de délai** : le paramètre `<delai>` représente une borne supérieure
-exclusive. Les cycles s'exécutent tant que `time < delai`. Pour aller au bout
-de tous les processus, fournissez un délai strictement plus grand que la durée
-totale ou utilisez l'option `--run-all`.
+⚠️ **Limite de délai** : le paramètre `<delai>` est une borne supérieure
+inclusive. La simulation se poursuit tant que `time ≤ delai`. Pour exécuter
+tous les processus sans limite, passez `--run-all`.
 
 Par exemple :
 
 ```bash
 $ poetry run krpsim resources/simple 10
 0:achat_materiel
+10:realisation_produit
 Max time reached at time 10
 ```
 
-Le premier processus dure exactement dix cycles ; avec un délai égal à `10`, la simulation s'arrête juste après son démarrage et aucun autre processus n'apparaît dans la trace.
+Le second processus démarre au cycle `10` car cette valeur est incluse dans la période d'exécution.
 
 ---
 
@@ -150,9 +150,9 @@ Le premier processus dure exactement dix cycles ; avec un délai égal à `10`
   poetry run krpsim <chemin_fichier_config> <delai_max>
   ```
 
-  `<delai_max>` est une borne exclusive : la simulation s'arrête dès que
-  `time` est supérieur ou égal à cette valeur. Pour exécuter tous les
-  processus, utilisez un délai supérieur à la durée totale ou passez `--run-all`.
+  `<delai_max>` est une borne inclusive : la simulation continue tant que
+  `time` est inférieur ou égal à cette valeur. Pour ignorer toute limite,
+  passez `--run-all`.
 * **Vérification de trace :**
 
   ```bash

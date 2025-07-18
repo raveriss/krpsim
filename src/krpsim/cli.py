@@ -22,8 +22,8 @@ def build_parser() -> argparse.ArgumentParser:
         "delay",
         type=int,
         help=(
-            "maximum delay allowed (exclusive upper bound, cycles run while "
-            "time < delay)"
+            "maximum delay allowed (inclusive upper bound, cycles run while "
+            "time \u2264 delay)"
         ),
     )
     parser.add_argument(
