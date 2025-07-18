@@ -21,7 +21,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "delay",
         type=int,
-        help="maximum delay allowed (positive integer)",
+        help=(
+            "maximum delay allowed (exclusive upper bound, cycles run while "
+            "time < delay)"
+        ),
     )
     parser.add_argument(
         "--trace",
