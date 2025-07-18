@@ -19,6 +19,20 @@ def test_run_simple(tmp_path):
     assert sim.stocks["client_content"] == 1
 
 
+def test_simple_full_run() -> None:
+    sim = Simulator(parser.parse_file(Path("resources/simple")))
+    trace = sim.run(100)
+    assert trace == [
+        (0, "achat_materiel"),
+        (10, "realisation_produit"),
+        (40, "livraison"),
+    ]
+    assert sim.stocks["euro"] == 2
+    assert sim.stocks["client_content"] == 1
+    assert sim.stocks["materiel"] == 0
+    assert sim.stocks["produit"] == 0
+
+
 def test_parallel_processes():
     cfg = parser.Config(
         stocks={"a": 2},
