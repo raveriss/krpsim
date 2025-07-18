@@ -60,7 +60,7 @@ class Simulator:
 
     def run(self, max_time: int) -> list[tuple[int, str]]:
         self.deadlock = False
-        while self.time < max_time and self.step():
+        while self.time <= max_time and self.step():
             pass
         if not self.trace and self.config.processes:
             self.deadlock = True

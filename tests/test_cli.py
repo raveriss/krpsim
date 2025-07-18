@@ -110,6 +110,7 @@ def test_cli_max_time(tmp_path, capsys):
     assert cli.main([str(config), "1", "--trace", str(trace_path)]) == 1
     captured = capsys.readouterr()
     assert "Max time reached" in captured.out
+    assert "b  => 1" in captured.out
 
 
 def test_cli_deadlock(tmp_path, capsys):
@@ -226,4 +227,4 @@ def test_cli_partial_execution_small_delay(capsys: pytest.CaptureFixture[str]) -
     assert exit_code == 1
     assert "Max time reached" in captured.out
     assert "0:achat_materiel" in captured.out
-    assert "realisation_produit" not in captured.out
+    assert "10:realisation_produit" in captured.out
