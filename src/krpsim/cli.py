@@ -105,7 +105,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         print(f"no more process doable at time {sim.time}")
     stock_names = sorted(sim.config.all_stock_names())
-    print(f"{_pluralize('stock', len(stock_names)).capitalize()}:")
+    print("Stock(s):")
     for name in stock_names:
         print(f"{name} => {sim.stocks.get(name, 0)}")
 
