@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 
 from . import parser as parser_mod
-from .display import _pluralize, format_trace, print_header, save_trace
+from .display import format_trace, print_header, save_trace
 from .parser import ParseError
 from .simulator import Simulator
 

@@ -9,7 +9,6 @@ from typing import Iterable
 
 from .parser import Config
 
-
 _IRREGULAR_PLURALS: dict[str, str] = {"process": "processes"}
 
 

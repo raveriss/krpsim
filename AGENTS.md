@@ -142,6 +142,10 @@ krpsim/
 - Description PR : quoi/pourquoi/comment, ID WBS, liens exigences sujet
 - **Cycle de vie PR** :
     - [ ] Tests locaux (format, lint, test, coverage)
+    - [ ] Exécuter toute la suite de tests avant chaque commit ;
+          si la modification d'un test implique un changement
+          d'implémentation, lancer ces tests en premier puis
+          relancer l'ensemble dans l'ordre logique
     - [ ] Branche à jour/main
     - [ ] Titre normé (`feat:`, `fix:`, `refactor:`, `test:`…)
     - [ ] Revue pair, squash & merge, suppression branche
