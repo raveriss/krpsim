@@ -97,13 +97,13 @@ def main(argv: list[str] | None = None) -> int:
 
     exit_code = 0
     if sim.time >= args.delay:
-        print(f"max time reached at time {sim.time}")
+        print(f"Max time reached at time {sim.time}")
         exit_code = 1
     elif sim.deadlock:
-        print(f"deadlock detected at time {sim.time}")
+        print(f"Deadlock detected at time {sim.time}")
         exit_code = 1
     else:
-        print(f"no more process doable at time {sim.time}")
+        print(f"No more process doable at time {sim.time}")
     stock_names = sorted(sim.config.all_stock_names())
     print("Stock(s):")
     for name in stock_names:

@@ -29,7 +29,9 @@ def print_header(config: Config) -> None:
     objective_info = f"{optimize_count} {_pluralize('objective', optimize_count)}"
     print("Nice file! " f"{process_info}, {stock_info}, {objective_info}")
     print("Evaluating ... done.")
-    print("Main walk")
+    print("Main walk:")
+    if config.optimize:
+        print(f"Optimization criteria: {', '.join(config.optimize)}")
 
 
 def format_trace(trace: Iterable[tuple[int, str]]) -> list[str]:

@@ -69,7 +69,7 @@ def test_cli_valid(tmp_path, capsys):
     assert cli.main([str(config), "5", "--trace", str(trace_path)]) == 0
     captured = capsys.readouterr()
     assert "Nice file! 1 process, 1 stock, 0 objectives" in captured.out
-    assert "Main walk" in captured.out
+    assert "Main walk:" in captured.out
     assert "Stock(s):" in captured.out
     assert "0:proc" in captured.out
     assert trace_path.read_text().splitlines() == ["0:proc"]
@@ -93,7 +93,7 @@ def test_cli_max_time(tmp_path, capsys):
     trace_path = tmp_path / "trace.txt"
     assert cli.main([str(config), "1", "--trace", str(trace_path)]) == 1
     captured = capsys.readouterr()
-    assert "max time reached" in captured.out
+    assert "Max time reached" in captured.out
 
 
 def test_cli_deadlock(tmp_path, capsys):
@@ -102,7 +102,7 @@ def test_cli_deadlock(tmp_path, capsys):
     trace_path = tmp_path / "trace.txt"
     assert cli.main([str(config), "5", "--trace", str(trace_path)]) == 1
     captured = capsys.readouterr()
-    assert "deadlock detected" in captured.out
+    assert "Deadlock detected" in captured.out
 
 
 def test_cli_verbose_and_log(tmp_path):
@@ -201,4 +201,4 @@ def test_cli_run_resources(
     assert exit_code in (0, 1)
     if resource == "custom_infinite":
         assert exit_code == 1
-        assert "max time reached" in captured.out
+        assert "Max time reached" in captured.out
