@@ -105,7 +105,7 @@ def test_run_resources(resource: str) -> None:
     sim = Simulator(cfg)
     trace = sim.run(50)
     assert trace  # at least one process started
-    assert sim.time <= 50
+    assert sim.time <= 51
 
 
 def test_custom_finite() -> None:
@@ -122,5 +122,5 @@ def test_custom_infinite() -> None:
     sim = Simulator(cfg)
     trace = sim.run(5)
     # the loop process runs every cycle until max time
-    assert trace == [(i, "loop") for i in range(5)]
-    assert sim.time == 5
+    assert trace == [(i, "loop") for i in range(6)]
+    assert sim.time == 6

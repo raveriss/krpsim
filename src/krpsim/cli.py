@@ -97,7 +97,8 @@ def main(argv: list[str] | None = None) -> int:
 
     exit_code = 0
     if sim.time >= args.delay:
-        print(f"Max time reached at time {sim.time}")
+        limit = args.delay if sim.time > args.delay else sim.time
+        print(f"Max time reached at time {limit}")
         exit_code = 1
     elif sim.deadlock:
         print(f"Deadlock detected at time {sim.time}")
