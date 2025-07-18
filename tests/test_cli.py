@@ -82,9 +82,7 @@ def test_cli_lists_all_stocks(capsys: pytest.CaptureFixture[str]) -> None:
     lines = captured.out.splitlines()
     idx = lines.index("Stocks:")
     stocks = {
-        line.split(" => ")[0]
-        for line in lines[idx + 1 : idx + 5]
-        if " => " in line
+        line.split(" => ")[0] for line in lines[idx + 1 : idx + 5] if " => " in line
     }
     assert stocks == {"client_content", "euro", "materiel", "produit"}
 
