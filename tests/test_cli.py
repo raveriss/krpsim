@@ -70,7 +70,7 @@ def test_cli_valid(tmp_path, capsys):
     captured = capsys.readouterr()
     assert "Nice file! 1 process, 1 stock, 0 objectives" in captured.out
     assert "Main walk:" in captured.out
-    assert "Stock(s):" in captured.out
+    assert "Final Stocks:" in captured.out
     assert "0:proc" in captured.out
     assert trace_path.read_text().splitlines() == ["0:proc"]
 
@@ -80,11 +80,27 @@ def test_cli_lists_all_stocks(capsys: pytest.CaptureFixture[str]) -> None:
     captured = capsys.readouterr()
     assert exit_code == 0
     lines = captured.out.splitlines()
-    idx = lines.index("Stock(s):")
+    idx = lines.index("Final Stocks:")
     stocks = {
-        line.split(" => ")[0] for line in lines[idx + 1 : idx + 5] if " => " in line
+        line.split(" => ")[0].strip()
+        for line in lines[idx + 1 : idx + 5]
+        if " => " in line
     }
     assert stocks == {"client_content", "euro", "materiel", "produit"}
+
+
+def test_cli_stock_alignment(capsys: pytest.CaptureFixture[str]) -> None:
+    exit_code = cli.main([str(Path("resources/simple")), "100"])
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    lines = captured.out.splitlines()
+    idx = lines.index("Final Stocks:")
+    stock_lines = [line for line in lines[idx + 1 : idx + 5] if "=>" in line]
+    assert stock_lines
+    arrow_pos = stock_lines[0].index("=>")
+    for line in stock_lines:
+        assert line.startswith("  ")
+        assert line.index("=>") == arrow_pos
 
 
 def test_cli_max_time(tmp_path, capsys):
