@@ -62,7 +62,9 @@ def test_cli_valid(tmp_path, capsys):
     trace_path = tmp_path / "trace.txt"
     assert cli.main([str(config), "5", "--trace", str(trace_path)]) == 0
     captured = capsys.readouterr()
+    assert "Nice file! 1 process, 1 stock, 0 objectives" in captured.out
     assert "Main walk" in captured.out
+    assert "Stocks:" in captured.out
     assert "0:proc" in captured.out
     assert trace_path.read_text().splitlines() == ["0:proc"]
 

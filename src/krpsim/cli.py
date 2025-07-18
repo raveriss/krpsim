@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 
 from . import parser as parser_mod
-from .display import format_trace, print_header, save_trace
+from .display import _pluralize, format_trace, print_header, save_trace
 from .parser import ParseError
 from .simulator import Simulator
 
@@ -101,7 +101,7 @@ def main(argv: list[str] | None = None) -> int:
         exit_code = 1
     else:
         print(f"no more process doable at time {sim.time}")
-    print("Stock:")
+    print(f"{_pluralize('stock', len(sim.stocks)).capitalize()}:")
     for name, qty in sim.stocks.items():
         print(f"{name} => {qty}")
 
