@@ -222,7 +222,10 @@ def test_cli_run_resources(
         assert "Max time reached" in captured.out
 
 
-def test_cli_partial_execution_small_delay(capsys: pytest.CaptureFixture[str]) -> None:
+def test_cli_partial_execution_small_delay(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # Delay must allow the delivery process at cycle 40 so client_content equals 1
     delay = 60
     exit_code = cli.main([str(Path("resources/simple")), str(delay)])
     captured = capsys.readouterr()
