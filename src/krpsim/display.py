@@ -25,7 +25,8 @@ def print_header(config: Config) -> None:
     process_info = (
         f"{len(config.processes)} {_pluralize('process', len(config.processes))}"
     )
-    stock_info = f"{len(config.stocks)} {_pluralize('stock', len(config.stocks))}"
+    stock_count = len(config.all_stock_names())
+    stock_info = f"{stock_count} {_pluralize('stock', stock_count)}"
     objective_info = f"{optimize_count} {_pluralize('objective', optimize_count)}"
     print("Nice file! " f"{process_info}, {stock_info}, {objective_info}")
     print("Evaluating ... done.")
