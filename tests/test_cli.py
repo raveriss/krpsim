@@ -93,7 +93,7 @@ def test_cli_header_stock_count(capsys: pytest.CaptureFixture[str]) -> None:
     exit_code = cli.main([str(Path("resources/simple")), "100"])
     captured = capsys.readouterr()
     assert exit_code == 0
-    assert "Nice file! 3 processes, 4 stocks, 2 objectives" in captured.out
+    assert "Nice file! 3 processes, 4 stocks, 1 to optimize" in captured.out
 
 
 def test_cli_stock_alignment(capsys: pytest.CaptureFixture[str]) -> None:
