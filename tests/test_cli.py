@@ -68,7 +68,7 @@ def test_cli_valid(tmp_path, capsys):
     trace_path = tmp_path / "trace.txt"
     assert cli.main([str(config), "5", "--trace", str(trace_path)]) == 0
     captured = capsys.readouterr()
-    assert "Nice file! 1 process, 1 stock, 0 objectives" in captured.out
+    assert "Nice file! 1 process, 2 stocks, 0 objectives" in captured.out
     assert "Main walk:" in captured.out
     assert "Final Stocks:" in captured.out
     assert "0:proc" in captured.out
@@ -87,6 +87,13 @@ def test_cli_lists_all_stocks(capsys: pytest.CaptureFixture[str]) -> None:
         if " => " in line
     }
     assert stocks == {"client_content", "euro", "materiel", "produit"}
+
+
+def test_cli_header_stock_count(capsys: pytest.CaptureFixture[str]) -> None:
+    exit_code = cli.main([str(Path("resources/simple")), "100"])
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "Nice file! 3 processes, 4 stocks, 2 objectives" in captured.out
 
 
 def test_cli_stock_alignment(capsys: pytest.CaptureFixture[str]) -> None:
