@@ -21,13 +21,13 @@ def _pluralize(word: str, count: int) -> str:
 
 def print_header(config: Config) -> None:
     """Print introduction lines about the config."""
-    optimize_count = len(config.optimize or [])
+    optimize_count = len([o for o in (config.optimize or []) if o != "time"])
     process_info = (
         f"{len(config.processes)} {_pluralize('process', len(config.processes))}"
     )
     stock_count = len(config.all_stock_names())
     stock_info = f"{stock_count} {_pluralize('stock', stock_count)}"
-    objective_info = f"{optimize_count} {_pluralize('objective', optimize_count)}"
+    objective_info = f"{optimize_count} to optimize"
     print("Nice file! " f"{process_info}, {stock_info}, {objective_info}")
     print("Evaluating ... done.")
     print("Main walk:")
