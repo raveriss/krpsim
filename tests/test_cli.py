@@ -107,9 +107,10 @@ def test_cli_max_time(tmp_path, capsys):
     config = tmp_path / "conf.txt"
     config.write_text("a:1\nproc:(a:1):(b:1):1\n")
     trace_path = tmp_path / "trace.txt"
-    assert cli.main([str(config), "1", "--trace", str(trace_path)]) == 1
+    delay = 1
+    assert cli.main([str(config), str(delay), "--trace", str(trace_path)]) == 1
     captured = capsys.readouterr()
-    assert "Max time reached" in captured.out
+    assert f"Max time reached at time {delay}" in captured.out
     assert "b  => 1" in captured.out
 
 
@@ -222,9 +223,11 @@ def test_cli_run_resources(
 
 
 def test_cli_partial_execution_small_delay(capsys: pytest.CaptureFixture[str]) -> None:
-    exit_code = cli.main([str(Path("resources/simple")), "10"])
+    delay = 60
+    exit_code = cli.main([str(Path("resources/simple")), str(delay)])
     captured = capsys.readouterr()
     assert exit_code == 1
     assert "Max time reached" in captured.out
     assert "0:achat_materiel" in captured.out
     assert "10:realisation_produit" in captured.out
+    assert "client_content  => 1" in captured.out
