@@ -1,0 +1,6 @@
+# un process à sorties multiples puis chaînage
+iron_ore:3;coal:2
+smelt:(iron_ore:1;coal:1):(iron:1;slag:1):4
+forge:(iron:2):(gear:1):6
+recycle_slag:(slag:1):(iron_ore:1):2
+optimize:(gear)

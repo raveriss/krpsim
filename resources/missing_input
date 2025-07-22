@@ -1,0 +1,4 @@
+# un process dépend d’une ressource jamais déclarée
+foo:2
+bar_process:(foo:1;baz:1):(bar:1):3
+optimize:(bar)

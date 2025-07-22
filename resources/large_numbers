@@ -1,0 +1,4 @@
+# tester les grandes quantités et performance
+iron_ore:100000
+smelt:(iron_ore:10):(iron:1):1
+optimize:(iron)

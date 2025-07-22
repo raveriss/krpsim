@@ -1,0 +1,4 @@
+# un process qui génère sa propre ressource, boucle quasi infinie
+X:1
+genX:(X:1):(X:2):1
+optimize:(X)

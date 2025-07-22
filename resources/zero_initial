@@ -1,0 +1,4 @@
+# tous les stocks à zéro, aucun process exécutable
+a:0;b:0
+p1:(a:1):(c:1):1
+optimize:(c)

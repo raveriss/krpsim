@@ -1,0 +1,4 @@
+# un process instantané peut-il être géré ?
+stockA:1
+instant:(stockA:1):(stockB:1):0
+optimize:(stockB)

@@ -1,0 +1,4 @@
+seed:1
+grow:(seed:1):(seed:2):5
+harvest:(seed:5):(fruit:10):10
+optimize:(fruit)
