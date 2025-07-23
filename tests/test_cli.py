@@ -2,11 +2,12 @@ import os
 from pathlib import Path
 
 import pytest
+from pytest import CaptureFixture, MonkeyPatch
 
 from krpsim import cli, verifier_cli
 
 
-def test_cli_help(capsys):
+def test_cli_help(capsys: CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit) as exc:
         cli.main(["-h"])
     assert exc.value.code == 0
@@ -21,7 +22,7 @@ def test_cli_invalid_path():
     assert exc.value.code == 2
 
 
-def test_cli_invalid_delay(tmp_path):
+def test_cli_invalid_delay(tmp_path: Path) -> None:
     config = tmp_path / "conf.txt"
     config.write_text("dummy")
     with pytest.raises(SystemExit) as exc:
@@ -34,7 +35,7 @@ def test_cli_delay_help_text() -> None:
     assert "inclusive upper bound" in parser.format_help()
 
 
-def test_verifier_cli_help(capsys):
+def test_verifier_cli_help(capsys: CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit) as exc:
         verifier_cli.main(["-h"])
     assert exc.value.code == 0
@@ -42,7 +43,7 @@ def test_verifier_cli_help(capsys):
     assert "usage" in captured.out.lower()
 
 
-def test_verifier_cli_valid(tmp_path, capsys):
+def test_verifier_cli_valid(tmp_path: Path, capsys: CaptureFixture[str]) -> None:
     cfg = tmp_path / "conf.txt"
     cfg.write_text("a:1\nproc:(a:1):(b:1):1\n")
     trace = tmp_path / "trace.txt"
@@ -52,7 +53,7 @@ def test_verifier_cli_valid(tmp_path, capsys):
     assert "trace is valid" in captured.out
 
 
-def test_verifier_cli_error(tmp_path, capsys):
+def test_verifier_cli_error(tmp_path: Path, capsys: CaptureFixture[str]) -> None:
     cfg = tmp_path / "conf.txt"
     cfg.write_text("a:1\nproc:(a:1):(b:1):1\n")
     trace = tmp_path / "trace.txt"
@@ -62,7 +63,7 @@ def test_verifier_cli_error(tmp_path, capsys):
     assert "invalid trace" in captured.out
 
 
-def test_cli_valid(tmp_path, capsys):
+def test_cli_valid(tmp_path: Path, capsys: CaptureFixture[str]) -> None:
     config = tmp_path / "conf.txt"
     config.write_text("a:1\nproc:(a:1):(b:1):1\n")
     trace_path = tmp_path / "trace.txt"
@@ -75,7 +76,7 @@ def test_cli_valid(tmp_path, capsys):
     assert trace_path.read_text().splitlines() == ["0:proc"]
 
 
-def test_cli_lists_all_stocks(capsys: pytest.CaptureFixture[str]) -> None:
+def test_cli_lists_all_stocks(capsys: CaptureFixture[str]) -> None:
     exit_code = cli.main([str(Path("resources/simple")), "100"])
     captured = capsys.readouterr()
     assert exit_code == 0
@@ -89,14 +90,14 @@ def test_cli_lists_all_stocks(capsys: pytest.CaptureFixture[str]) -> None:
     assert stocks == {"client_content", "euro", "materiel", "produit"}
 
 
-def test_cli_header_stock_count(capsys: pytest.CaptureFixture[str]) -> None:
+def test_cli_header_stock_count(capsys: CaptureFixture[str]) -> None:
     exit_code = cli.main([str(Path("resources/simple")), "100"])
     captured = capsys.readouterr()
     assert exit_code == 0
     assert "Nice file! 3 processes, 4 stocks, 1 to optimize" in captured.out
 
 
-def test_cli_stock_alignment(capsys: pytest.CaptureFixture[str]) -> None:
+def test_cli_stock_alignment(capsys: CaptureFixture[str]) -> None:
     exit_code = cli.main([str(Path("resources/simple")), "100"])
     captured = capsys.readouterr()
     assert exit_code == 0
@@ -110,7 +111,7 @@ def test_cli_stock_alignment(capsys: pytest.CaptureFixture[str]) -> None:
         assert line.index("=>") == arrow_pos
 
 
-def test_cli_max_time(tmp_path, capsys):
+def test_cli_max_time(tmp_path: Path, capsys: CaptureFixture[str]) -> None:
     config = tmp_path / "conf.txt"
     config.write_text("a:1\nproc:(a:1):(b:1):1\n")
     trace_path = tmp_path / "trace.txt"
@@ -121,7 +122,7 @@ def test_cli_max_time(tmp_path, capsys):
     assert "b  => 1" in captured.out
 
 
-def test_cli_deadlock(tmp_path, capsys):
+def test_cli_deadlock(tmp_path: Path, capsys: CaptureFixture[str]) -> None:
     config = tmp_path / "conf.txt"
     config.write_text("a:0\nproc:(a:1):(a:1):1\n")
     trace_path = tmp_path / "trace.txt"
@@ -130,7 +131,7 @@ def test_cli_deadlock(tmp_path, capsys):
     assert "Deadlock detected" in captured.out
 
 
-def test_cli_verbose_and_log(tmp_path):
+def test_cli_verbose_and_log(tmp_path: Path) -> None:
     config = tmp_path / "conf.txt"
     config.write_text("a:1\nproc:(a:1):(b:1):1\n")
     trace_path = tmp_path / "trace.txt"
@@ -152,7 +153,7 @@ def test_cli_verbose_and_log(tmp_path):
     assert "0:proc" in log_path.read_text()
 
 
-def test_cli_log_default_level(tmp_path):
+def test_cli_log_default_level(tmp_path: Path) -> None:
     config = tmp_path / "conf.txt"
     config.write_text("a:0\nproc:(a:1):(b:1):1\n")
     log_path = tmp_path / "app.log"
@@ -161,7 +162,7 @@ def test_cli_log_default_level(tmp_path):
     assert "Deadlock detected" in log_path.read_text()
 
 
-def test_cli_path_traversal(tmp_path):
+def test_cli_path_traversal(tmp_path: Path) -> None:
     config = tmp_path / "conf.txt"
     config.write_text("a:1\nproc:(a:1):(b:1):1\n")
     bad_path = config.parent / ".." / config.name
@@ -170,7 +171,7 @@ def test_cli_path_traversal(tmp_path):
     assert exc.value.code == 2
 
 
-def test_cli_unreadable_file(tmp_path, monkeypatch):
+def test_cli_unreadable_file(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     config = tmp_path / "conf.txt"
     config.write_text("a:1\nproc:(a:1):(b:1):1\n")
     original = os.access
@@ -193,7 +194,7 @@ def test_cli_unreadable_file(tmp_path, monkeypatch):
         Path("resources/invalid_bad_process"),
     ],
 )
-def test_cli_invalid_config(file: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_cli_invalid_config(file: Path, capsys: CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit) as exc:
         cli.main([str(file), "10"])
     assert exc.value.code == 1
@@ -201,7 +202,7 @@ def test_cli_invalid_config(file: Path, capsys: pytest.CaptureFixture[str]) -> N
     assert "invalid config" in captured.out.lower()
 
 
-def test_verifier_cli_log(tmp_path):
+def test_verifier_cli_log(tmp_path: Path) -> None:
     cfg = tmp_path / "conf.txt"
     cfg.write_text("a:1\nproc:(a:1):(b:1):1\n")
     trace = tmp_path / "trace.txt"
@@ -227,7 +228,7 @@ def test_verifier_cli_log(tmp_path):
     ],
 )
 def test_cli_run_resources(
-    resource: str, delay: int, capsys: pytest.CaptureFixture[str]
+    resource: str, delay: int, capsys: CaptureFixture[str]
 ) -> None:
     res = Path("resources") / resource
     exit_code = cli.main([str(res), str(delay)])
@@ -239,7 +240,7 @@ def test_cli_run_resources(
 
 
 def test_cli_partial_execution_small_delay(
-    capsys: pytest.CaptureFixture[str],
+    capsys: CaptureFixture[str],
 ) -> None:
     # Delay must allow the delivery process at cycle 40 so client_content equals 1
     delay = 60
@@ -253,7 +254,7 @@ def test_cli_partial_execution_small_delay(
 
 
 def test_cli_ignore_delay_when_optimize_time_first(
-    capsys: pytest.CaptureFixture[str],
+    capsys: CaptureFixture[str],
 ) -> None:
     exit_code = cli.main([str(Path("resources/simple")), "10"])
     captured = capsys.readouterr()
