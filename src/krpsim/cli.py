@@ -97,15 +97,19 @@ def main(argv: list[str] | None = None) -> int:
         print(f"invalid config: {exc}")
         raise SystemExit(1)
 
+    logger = logging.getLogger(__name__)
     exit_code = 0
     if not ignore_delay and sim.time >= args.delay:
         limit = args.delay if sim.time > args.delay else sim.time
+        logger.warning("Max time reached at time %d", limit)        
         print(f"Max time reached at time {limit}")
         exit_code = 1
     elif sim.deadlock:
+        logger.warning("Deadlock detected at time %d", sim.time)        
         print(f"Deadlock detected at time {sim.time}")
         exit_code = 1
     else:
+        logger.warning("No more process doable at time %d", sim.time)        
         print(f"No more process doable at time {sim.time}")
     stock_names = sorted(sim.config.all_stock_names())
     max_len = max((len(name) for name in stock_names), default=0)

@@ -152,6 +152,15 @@ def test_cli_verbose_and_log(tmp_path):
     assert "0:proc" in log_path.read_text()
 
 
+def test_cli_log_default_level(tmp_path):
+    config = tmp_path / "conf.txt"
+    config.write_text("a:0\nproc:(a:1):(b:1):1\n")
+    log_path = tmp_path / "app.log"
+    exit_code = cli.main([str(config), "5", "--log", str(log_path)])
+    assert exit_code == 1
+    assert "Deadlock detected" in log_path.read_text()
+
+
 def test_cli_path_traversal(tmp_path):
     config = tmp_path / "conf.txt"
     config.write_text("a:1\nproc:(a:1):(b:1):1\n")
