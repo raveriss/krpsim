@@ -40,20 +40,23 @@ def parse_trace(path: Path) -> list[TraceEntry]:
     return entries
 
 
-def _expected_trace(config: Config) -> list[TraceEntry]:
+def _expected_trace(config: Config) -> tuple[list[TraceEntry], Simulator]:
+    """Return the expected trace and simulator state for ``config``."""
+
     sim = Simulator(config)
     raw = sim.run(10_000)
-    return [TraceEntry(cycle, name) for cycle, name in raw]
+    entries = [TraceEntry(cycle, name) for cycle, name in raw]
+    return entries, sim
 
 
-def verify_trace(config: Config, trace: list[TraceEntry]) -> None:
+def verify_trace(config: Config, trace: list[TraceEntry]) -> Simulator:
     """Validate ``trace`` against ``config``.
 
     Raises :class:`TraceError` at the first mismatch.
     """
 
     logger = logging.getLogger(__name__)
-    expected = _expected_trace(config)
+    expected, sim = _expected_trace(config)
     for idx, (got, exp) in enumerate(zip(trace, expected), start=1):
         if got != exp:
             raise TraceError(
@@ -72,13 +75,13 @@ def verify_trace(config: Config, trace: list[TraceEntry]) -> None:
         raise TraceError(f"trace has extra events starting at line {len(expected)+1}")
 
     logger.info("trace validated successfully")
+    return sim
 
-
-def verify_files(config_path: Path, trace_path: Path) -> None:
+def verify_files(config_path: Path, trace_path: Path) -> Simulator:
     """Convenience wrapper verifying files."""
 
     logger = logging.getLogger(__name__)
     config = parse_file(config_path)
     trace = parse_trace(trace_path)
     logger.info("verifying trace against %s", config_path)
-    verify_trace(config, trace)
+    return verify_trace(config, trace)

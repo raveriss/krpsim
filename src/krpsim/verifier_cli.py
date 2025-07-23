@@ -6,7 +6,8 @@ import argparse
 import logging
 from pathlib import Path
 
-from .parser import ParseError
+from .parser import ParseError, parse_file
+from .simulator import Simulator
 from .verifier import TraceError, verify_files
 
 
@@ -42,15 +43,29 @@ def main(argv: list[str] | None = None) -> int:
         force=True,
     )
 
+    cfg = parse_file(Path(args.config))
+
+    sim = Simulator(cfg)
+    sim.run(10_000)
+
+    exit_code = 0
     try:
         verify_files(Path(args.config), Path(args.trace))
     except (OSError, ParseError, TraceError) as exc:
         logging.error("invalid trace: %s", exc)
         print(f"invalid trace: {exc}")
-        return 1
-    logging.info("trace is valid")
-    print("trace is valid")
-    return 0
+        exit_code = 1
+    else:
+        logging.info("trace is valid")
+        print("trace is valid")
+
+    stock_names = sorted(sim.config.all_stock_names())
+    max_len = max((len(name) for name in stock_names), default=0)
+    print("Final Stocks:")
+    for name in stock_names:
+        print(f"  {name:<{max_len}}  => {sim.stocks.get(name, 0)}")
+    print(f"Last cycle: {sim.time}")
+    return exit_code
 
 
 if __name__ == "__main__":
