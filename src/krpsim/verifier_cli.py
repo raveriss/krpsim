@@ -14,7 +14,7 @@ from .verifier import TraceError, verify_files
 def build_parser() -> argparse.ArgumentParser:
     """Return the CLI argument parser."""
 
-    parser = argparse.ArgumentParser(prog="krpsim-verif")
+    parser = argparse.ArgumentParser(prog="krpsim_verif")
     parser.add_argument("config", help="configuration file path")
     parser.add_argument("trace", help="execution trace file path")
     parser.add_argument(

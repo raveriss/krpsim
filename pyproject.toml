@@ -46,7 +46,7 @@ Homepage      = "https://github.com/raveriss/krpsim"
 
 [project.scripts]
 krpsim       = "krpsim.cli:main"
-krpsim-verif = "krpsim.verifier_cli:main"
+krpsim_verif = "krpsim.verifier_cli:main"
 
 # --------------------------------------------------------------------------- #
 #  Poetry-specific dev dependencies                                           #
