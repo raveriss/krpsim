@@ -58,17 +58,19 @@ def _validate_args(args: argparse.Namespace, parser: argparse.ArgumentParser) ->
         parser.error("delay must be a positive integer")
 
 
-def _run_simulation(args: argparse.Namespace) -> Simulator:
+def _run_simulation(args: argparse.Namespace) -> tuple[Simulator, bool]:
     """Run the simulation and return the simulator instance."""
 
     config = parser_mod.parse_file(Path(args.config))
+    ignore_delay = bool(config.optimize and config.optimize[0] == "time")
     sim = Simulator(config)
     print_header(config)
-    trace = sim.run(args.delay)
+    run_delay = args.delay if not ignore_delay else 10_000
+    trace = sim.run(run_delay)
     for line in format_trace(trace):
         print(line)
     save_trace(trace, Path(args.trace))
-    return sim
+    return sim, ignore_delay
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -90,13 +92,13 @@ def main(argv: list[str] | None = None) -> int:
     _validate_args(args, parser)
 
     try:
-        sim = _run_simulation(args)
+        sim, ignore_delay = _run_simulation(args)
     except ParseError as exc:
         print(f"invalid config: {exc}")
         raise SystemExit(1)
 
     exit_code = 0
-    if sim.time >= args.delay:
+    if not ignore_delay and sim.time >= args.delay:
         limit = args.delay if sim.time > args.delay else sim.time
         print(f"Max time reached at time {limit}")
         exit_code = 1

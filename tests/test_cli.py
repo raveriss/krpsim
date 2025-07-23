@@ -236,8 +236,19 @@ def test_cli_partial_execution_small_delay(
     delay = 60
     exit_code = cli.main([str(Path("resources/simple")), str(delay)])
     captured = capsys.readouterr()
-    assert exit_code == 1
-    assert "Max time reached" in captured.out
+    assert exit_code == 0
+    assert "Max time reached" not in captured.out
     assert "0:achat_materiel" in captured.out
     assert "10:realisation_produit" in captured.out
+    assert "client_content  => 1" in captured.out
+
+
+def test_cli_ignore_delay_when_optimize_time_first(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = cli.main([str(Path("resources/simple")), "10"])
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "Max time reached" not in captured.out
+    assert "40:livraison" in captured.out
     assert "client_content  => 1" in captured.out
