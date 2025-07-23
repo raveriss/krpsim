@@ -1,0 +1,13 @@
+#
+# test gateau simple - krpsim
+#
+# stock      name:quantity
+gateau:0
+machine:1
+#
+# process   name:(needs…):(results…):delay
+rapide:(machine:1):(gateau:1;machine:1):1
+lente:(machine:1):(gateau:1;machine:1):5
+#
+# optimize  (minimize time, maximize gateau)
+optimize:(time;gateau)

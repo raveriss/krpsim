@@ -25,6 +25,7 @@ class Simulator:
         self._running: list[_RunningProcess] = []
         self.trace: list[tuple[int, str]] = []
         self.deadlock = False
+        self._max_time = 0        
 
     def _complete_running(self) -> None:
         completed: list[_RunningProcess] = []
@@ -41,6 +42,8 @@ class Simulator:
         started = False
         logger = logging.getLogger(__name__)
         for process in order_processes(self.config):
+            if self.time + process.delay > self._max_time:
+                continue            
             if all(
                 self.stocks.get(name, 0) >= qty for name, qty in process.needs.items()
             ):
@@ -60,6 +63,7 @@ class Simulator:
 
     def run(self, max_time: int) -> list[tuple[int, str]]:
         self.deadlock = False
+        self._max_time = max_time        
         while self.time <= max_time and self.step():
             pass
         if not self.trace and self.config.processes:
