@@ -123,3 +123,20 @@ def test_custom_infinite() -> None:
     # the loop process runs every cycle until max time
     assert trace == [(i, "loop") for i in range(5)]
     assert sim.time == 6
+
+
+def test_recre_optimal() -> None:
+    cfg = parser.parse_file(Path("resources/recre"))
+    sim = Simulator(cfg)
+    trace = sim.run(110)
+    assert trace == [
+        (0, "parier_avec_un_copain"),
+        (10, "parier_avec_un_copain"),
+        (20, "parier_avec_un_copain"),
+        (30, "parier_avec_un_copain"),
+        (40, "parier_avec_un_copain"),
+        (50, "jouer_a_la_marelle"),
+        (70, "jouer_a_la_marelle"),
+        (90, "jouer_a_la_marelle"),
+    ]
+    assert sim.stocks["marelle"] == 3
