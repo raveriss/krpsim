@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import sys
 import os
 from pathlib import Path
 
@@ -79,7 +80,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    handlers: list[logging.Handler] = [logging.StreamHandler()]
+    handlers: list[logging.Handler] = [logging.StreamHandler(sys.stdout)]
     if args.log:
         handlers.append(logging.FileHandler(args.log))
     logging.basicConfig(

@@ -143,6 +143,22 @@ def _validate_optimize(
             raise ParseError(f"unknown stock '{item}' in optimize line")
 
 
+def _validate_process_resources(
+    stocks: dict[str, int], processes: dict[str, Process]
+) -> None:
+    """Ensure all resources used by processes are defined."""
+
+    defined = set(stocks)
+    for proc in processes.values():
+        defined.update(proc.results)
+    for proc in processes.values():
+        for res in proc.needs:
+            if res not in defined:
+                raise ParseError(
+                    f"unknown resource '{res}' used in process '{proc.name}'"
+                )
+
+
 def _read_lines(path: Path) -> list[str]:
     """Return validated lines from ``path``."""
 
@@ -202,4 +218,5 @@ def parse_file(path: Path) -> Config:
         raise ParseError("configuration must define at least one stock and process")
     if optimize:
         _validate_optimize(optimize, stocks, processes)
+    _validate_process_resources(stocks, processes)        
     return Config(stocks=stocks, processes=processes, optimize=optimize)

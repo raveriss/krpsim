@@ -189,3 +189,15 @@ def test_parse_unreadable_file(tmp_path, monkeypatch):
     monkeypatch.setattr(os, "access", fake_access)
     with pytest.raises(parser.ParseError):
         parser.parse_file(cfg)
+
+
+def test_parse_unknown_resource(tmp_path: Path) -> None:
+    config = tmp_path / "bad.txt"
+    config.write_text(
+        "foo:2\nbar_process:(foo:1;baz:1):(bar:1):3\noptimize:(bar)\n"
+    )
+    with pytest.raises(
+        parser.ParseError,
+        match="unknown resource 'baz' used in process 'bar_process'",
+    ):
+        parser.parse_file(config)
