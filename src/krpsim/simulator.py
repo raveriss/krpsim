@@ -67,10 +67,20 @@ class Simulator:
         # custom optimization for single target cases with resource farming
         if (
             self.config.optimize
-            and len(self.config.optimize) == 1
-            and self.config.optimize[0] != "time"
+            and (
+                (len(self.config.optimize) == 1 and self.config.optimize[0] != "time")
+                or (
+                    len(self.config.optimize) == 2
+                    and self.config.optimize[0] == "time"
+                    and self.config.optimize[1] != "time"
+                )
+            )
         ):
-            target = self.config.optimize[0]
+            target = (
+                self.config.optimize[0]
+                if self.config.optimize[0] != "time"
+                else self.config.optimize[1]
+            )
             target_proc = next(
                 (
                     p
