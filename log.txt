@@ -10053,6 +10053,7 @@ Last cycle: 10001
 === Traitement de resources/duplicate_entries ===
 invalid config: duplicate process 'dup'
 === Verification de resources/duplicate_entries ===
+invalid config: duplicate process 'dup'
 === Traitement de resources/exponential ===
 Nice file! 2 processes, 2 stocks, 1 to optimize
 Evaluating ... done.
@@ -10136,9 +10137,11 @@ Last cycle: 10001
 === Traitement de resources/invalid_bad_process ===
 invalid config: unrecognized line: 'process_missing_parts'
 === Verification de resources/invalid_bad_process ===
+invalid config: unrecognized line: 'process_missing_parts'
 === Traitement de resources/invalid_bad_stock ===
 invalid config: invalid stock line: 'stock:-1'
 === Verification de resources/invalid_bad_stock ===
+invalid config: invalid stock line: 'stock:-1'
 === Traitement de resources/large_numbers ===
 Nice file! 1 process, 2 stocks, 1 to optimize
 Evaluating ... done.
@@ -10167,9 +10170,11 @@ Last cycle: 10001
 === Traitement de resources/missing_input ===
 invalid config: unknown resource 'baz' used in process 'bar_process'
 === Verification de resources/missing_input ===
+invalid config: unknown resource 'baz' used in process 'bar_process'
 === Traitement de resources/multi_output_chain ===
 invalid config: invalid stock line: 'iron_ore:3;coal:2'
 === Verification de resources/multi_output_chain ===
+invalid config: invalid stock line: 'iron_ore:3;coal:2'
 === Traitement de resources/pomme ===
 Nice file! 18 processes, 16 stocks, 1 to optimize
 Evaluating ... done.
@@ -10301,6 +10306,7 @@ Last cycle: 41
 === Traitement de resources/unreachable_target ===
 invalid config: unknown stock 'target' in optimize line
 === Verification de resources/unreachable_target ===
+invalid config: unknown stock 'target' in optimize line
 === Traitement de resources/zero_delay ===
 Nice file! 1 process, 2 stocks, 1 to optimize
 Evaluating ... done.
@@ -10320,3 +10326,4 @@ Last cycle: 10001
 === Traitement de resources/zero_initial ===
 invalid config: invalid stock line: 'a:0;b:0'
 === Verification de resources/zero_initial ===
+invalid config: invalid stock line: 'a:0;b:0'

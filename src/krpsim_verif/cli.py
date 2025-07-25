@@ -43,7 +43,12 @@ def main(argv: list[str] | None = None) -> int:
         force=True,
     )
 
-    cfg = parse_file(Path(args.config))
+    try:
+        cfg = parse_file(Path(args.config))
+    except ParseError as exc:
+        logging.error("invalid config: %s", exc)
+        print(f"invalid config: {exc}")
+        return 1
 
     sim = Simulator(cfg)
     sim.run(10_000)
@@ -51,7 +56,11 @@ def main(argv: list[str] | None = None) -> int:
     exit_code = 0
     try:
         verify_files(Path(args.config), Path(args.trace))
-    except (OSError, ParseError, TraceError) as exc:
+    except ParseError as exc:
+        logging.error("invalid config: %s", exc)
+        print(f"invalid config: {exc}")
+        exit_code = 1
+    except (OSError, TraceError) as exc:
         logging.error("invalid trace: %s", exc)
         print(f"invalid trace: {exc}")
         exit_code = 1

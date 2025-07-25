@@ -4,8 +4,7 @@ from pathlib import Path
 import pytest
 from pytest import CaptureFixture, MonkeyPatch
 
-from krpsim import cli
-from krpsim import cli
+from krpsim import cli, parser
 from krpsim_verif import cli as verifier_cli
 
 
@@ -63,6 +62,33 @@ def test_verifier_cli_error(tmp_path: Path, capsys: CaptureFixture[str]) -> None
     assert verifier_cli.main([str(cfg), str(trace)]) == 1
     captured = capsys.readouterr()
     assert "invalid trace" in captured.out
+
+
+def test_verifier_cli_invalid_config(tmp_path: Path, capsys: CaptureFixture[str]) -> None:
+    cfg = tmp_path / "conf.txt"
+    cfg.write_text("bad\n")
+    trace = tmp_path / "trace.txt"
+    trace.write_text("")
+    assert verifier_cli.main([str(cfg), str(trace)]) == 1
+    captured = capsys.readouterr()
+    assert "invalid config" in captured.out.lower()
+
+
+def test_verifier_cli_invalid_config_runtime(
+    tmp_path: Path, capsys: CaptureFixture[str], monkeypatch: MonkeyPatch
+) -> None:
+    cfg = tmp_path / "conf.txt"
+    cfg.write_text("a:1\nproc:(a:1):(b:1):1\n")
+    trace = tmp_path / "trace.txt"
+    trace.write_text("0:proc\n")
+
+    def fake_verify_files(*args, **kwargs):
+        raise parser.ParseError("bad")
+
+    monkeypatch.setattr(verifier_cli, "verify_files", fake_verify_files)
+    assert verifier_cli.main([str(cfg), str(trace)]) == 1
+    captured = capsys.readouterr()
+    assert "invalid config" in captured.out.lower()
 
 
 def test_cli_valid(tmp_path: Path, capsys: CaptureFixture[str]) -> None:

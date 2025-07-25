@@ -43,6 +43,8 @@ def test_verify_trace_empty(cfg: Path = Path("resources/simple")) -> None:
     "content",
     ["", "0proc", "x:proc"],
 )
+
+
 def test_parse_trace_errors(tmp_path: Path, content: str) -> None:
     file = tmp_path / "trace.txt"
     file.write_text(content + "\n")
