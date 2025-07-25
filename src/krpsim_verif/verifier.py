@@ -40,7 +40,9 @@ def parse_trace(path: Path) -> list[TraceEntry]:
     return entries
 
 
-def _expected_trace(config: Config, max_time: int) -> tuple[list[TraceEntry], Simulator]:
+def _expected_trace(
+    config: Config, max_time: int
+) -> tuple[list[TraceEntry], Simulator]:
     """Return the expected trace and simulator state for ``config``.
 
     The simulation is executed until ``max_time`` so that the verifier
@@ -62,7 +64,13 @@ def verify_trace(config: Config, trace: list[TraceEntry]) -> Simulator:
     logger = logging.getLogger(__name__)
 
     if not trace:
-        raise TraceError("empty trace")
+        for proc in config.processes.values():
+            if all(config.stocks.get(n, 0) >= q for n, q in proc.needs.items()):
+                raise TraceError("empty trace")
+        sim = Simulator(config)
+        sim.run(0)
+        logger.info("trace validated successfully")
+        return sim
     last = trace[-1]
     process = config.processes.get(last.process)
     if process is None:

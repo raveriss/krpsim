@@ -4,7 +4,7 @@ import pytest
 
 from krpsim import parser
 from krpsim.simulator import Simulator
-from krpsim_verif.verifier import TraceError, TraceEntry, parse_trace, verify_trace
+from krpsim_verif.verifier import TraceEntry, TraceError, parse_trace, verify_trace
 
 
 def test_verify_trace_valid(tmp_path: Path) -> None:
@@ -33,10 +33,21 @@ def test_verify_trace_mismatch(tmp_path: Path) -> None:
         verify_trace(cfg, wrong)
 
 
-def test_verify_trace_empty(cfg: Path = Path("resources/simple")) -> None:
-    cfg = parser.parse_file(cfg)
+def test_verify_trace_empty(cfg_path: Path = Path("resources/simple")) -> None:
+    cfg = parser.parse_file(cfg_path)
     with pytest.raises(TraceError):
         verify_trace(cfg, [])
+
+
+def test_verify_empty_trace_valid(tmp_path: Path) -> None:
+    cfg_file = tmp_path / "cfg.txt"
+    cfg_file.write_text("a:0\nproc:(a:1):(a:1):1\n")
+    cfg = parser.parse_file(cfg_file)
+    trace_file = tmp_path / "trace.txt"
+    trace_file.write_text("")
+    trace = parse_trace(trace_file)
+    verify_trace(cfg, trace)
+
 
 
 @pytest.mark.parametrize(

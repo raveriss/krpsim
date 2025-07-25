@@ -10049,7 +10049,7 @@ Final Stocks:
 trace is valid
 Final Stocks:
   item  => 1
-Last cycle: 10001
+Last cycle: 11
 === Traitement de resources/duplicate_entries ===
 invalid config: duplicate process 'dup'
 === Verification de resources/duplicate_entries ===
@@ -10068,9 +10068,9 @@ Final Stocks:
 === Verification de resources/exponential ===
 trace is valid
 Final Stocks:
-  fruit  => 15350
-  seed   => 11
-Last cycle: 10001
+  fruit  => 0
+  seed   => 3
+Last cycle: 11
 === Traitement de resources/ikea ===
 Nice file! 4 processes, 5 stocks, 1 to optimize
 Evaluating ... done.
@@ -10129,11 +10129,11 @@ Final Stocks:
   clock   => 1
   day     => 0
   dream   => 0
-  hour    => 2
-  minute  => 46
-  second  => 40
+  hour    => 0
+  minute  => 0
+  second  => 10
   year    => 0
-Last cycle: 10001
+Last cycle: 11
 === Traitement de resources/invalid_bad_process ===
 invalid config: unrecognized line: 'process_missing_parts'
 === Verification de resources/invalid_bad_process ===
@@ -10164,9 +10164,9 @@ Final Stocks:
 === Verification de resources/large_numbers ===
 trace is valid
 Final Stocks:
-  iron      => 10000
-  iron_ore  => 0
-Last cycle: 10001
+  iron      => 10
+  iron_ore  => 99900
+Last cycle: 11
 === Traitement de resources/missing_input ===
 invalid config: unknown resource 'baz' used in process 'bar_process'
 === Verification de resources/missing_input ===
@@ -10200,24 +10200,6 @@ Final Stocks:
   tarte_pomme      => 0
 === Verification de resources/pomme ===
 invalid trace: empty trace
-Final Stocks:
-  beurre           => 279366
-  blanc_oeuf       => 4
-  boite            => 0
-  citron           => 10650
-  euro             => 0
-  farine           => 0
-  flan             => 0
-  four             => 10
-  jaune_oeuf       => 1
-  lait             => 33680
-  oeuf             => 1234
-  pate_feuilletee  => 1800
-  pate_sablee      => 0
-  pomme            => 7060
-  tarte_citron     => 5
-  tarte_pomme      => 4
-Last cycle: 10001
 === Traitement de resources/recre ===
 Nice file! 5 processes, 3 stocks, 1 to optimize
 Evaluating ... done.
@@ -10230,11 +10212,6 @@ Final Stocks:
   moi      => 1
 === Verification de resources/recre ===
 invalid trace: empty trace
-Final Stocks:
-  bonbon   => 0
-  marelle  => 144
-  moi      => 1
-Last cycle: 9980
 === Traitement de resources/self_gen ===
 Nice file! 1 process, 1 stock, 1 to optimize
 Evaluating ... done.
@@ -10256,8 +10233,8 @@ Final Stocks:
 === Verification de resources/self_gen ===
 trace is valid
 Final Stocks:
-  X  => 10001
-Last cycle: 10001
+  X  => 11
+Last cycle: 11
 === Traitement de resources/simple ===
 Nice file! 3 processes, 4 stocks, 1 to optimize
 Evaluating ... done.
@@ -10322,7 +10299,7 @@ trace is valid
 Final Stocks:
   stockA  => 0
   stockB  => 0
-Last cycle: 10001
+Last cycle: 1
 === Traitement de resources/zero_initial ===
 invalid config: invalid stock line: 'a:0;b:0'
 === Verification de resources/zero_initial ===

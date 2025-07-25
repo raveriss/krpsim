@@ -6,8 +6,8 @@ import argparse
 import logging
 from pathlib import Path
 
-from krpsim.parser import ParseError, parse_file
-from krpsim.simulator import Simulator
+from krpsim.parser import ParseError
+
 from .verifier import TraceError, verify_files
 
 
@@ -43,19 +43,10 @@ def main(argv: list[str] | None = None) -> int:
         force=True,
     )
 
-    try:
-        cfg = parse_file(Path(args.config))
-    except ParseError as exc:
-        logging.error("invalid config: %s", exc)
-        print(f"invalid config: {exc}")
-        return 1
-
-    sim = Simulator(cfg)
-    sim.run(10_000)
-
+    sim = None
     exit_code = 0
     try:
-        verify_files(Path(args.config), Path(args.trace))
+        sim = verify_files(Path(args.config), Path(args.trace))
     except ParseError as exc:
         logging.error("invalid config: %s", exc)
         print(f"invalid config: {exc}")
@@ -68,12 +59,13 @@ def main(argv: list[str] | None = None) -> int:
         logging.info("trace is valid")
         print("trace is valid")
 
-    stock_names = sorted(sim.config.all_stock_names())
-    max_len = max((len(name) for name in stock_names), default=0)
-    print("Final Stocks:")
-    for name in stock_names:
-        print(f"  {name:<{max_len}}  => {sim.stocks.get(name, 0)}")
-    print(f"Last cycle: {sim.time}")
+    if sim is not None:
+        stock_names = sorted(sim.config.all_stock_names())
+        max_len = max((len(name) for name in stock_names), default=0)
+        print("Final Stocks:")
+        for name in stock_names:
+            print(f"  {name:<{max_len}}  => {sim.stocks.get(name, 0)}")
+        print(f"Last cycle: {sim.time}")
     return exit_code
 
 

@@ -64,7 +64,9 @@ def test_verifier_cli_error(tmp_path: Path, capsys: CaptureFixture[str]) -> None
     assert "invalid trace" in captured.out
 
 
-def test_verifier_cli_invalid_config(tmp_path: Path, capsys: CaptureFixture[str]) -> None:
+def test_verifier_cli_invalid_config(
+    tmp_path: Path, capsys: CaptureFixture[str]
+) -> None:
     cfg = tmp_path / "conf.txt"
     cfg.write_text("bad\n")
     trace = tmp_path / "trace.txt"
