@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import argparse
 import logging
-import sys
 import os
+import sys
 from pathlib import Path
 
 from . import parser as parser_mod

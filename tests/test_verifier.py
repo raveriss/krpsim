@@ -4,7 +4,7 @@ import pytest
 
 from krpsim import parser
 from krpsim.simulator import Simulator
-from krpsim.verifier import TraceError, parse_trace, verify_trace
+from krpsim_verif.verifier import TraceError, parse_trace, verify_trace
 
 
 def test_verify_trace_valid(tmp_path: Path) -> None:

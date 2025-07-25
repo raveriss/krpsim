@@ -9,7 +9,8 @@ build-backend = "poetry.core.masonry.api"
 name    = "krpsim"
 version = "0.1.0"
 packages = [
-  { include = "krpsim", from = "src" }
+  { include = "krpsim", from = "src" },
+  { include = "krpsim_verif", from = "src" }
 ]
 
 [tool.poetry.dependencies]
@@ -46,7 +47,7 @@ Homepage      = "https://github.com/raveriss/krpsim"
 
 [project.scripts]
 krpsim       = "krpsim.cli:main"
-krpsim_verif = "krpsim.verifier_cli:main"
+krpsim_verif = "krpsim_verif.cli:main"
 
 # --------------------------------------------------------------------------- #
 #  Poetry-specific dev dependencies                                           #
@@ -130,6 +131,7 @@ addopts    = [
   "--strict-markers",
   "--strict-config",
   "--cov=krpsim",
+  "--cov=krpsim_verif",  
   "--cov-report=term-missing",
   "--cov-report=html",
   "--cov-report=xml",
@@ -146,7 +148,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["src/krpsim"]
+source = ["src/krpsim", "src/krpsim_verif"]
 omit   = [
   "tests/*",
   "krpsim/__main__.py"

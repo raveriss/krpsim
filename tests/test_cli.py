@@ -4,7 +4,9 @@ from pathlib import Path
 import pytest
 from pytest import CaptureFixture, MonkeyPatch
 
-from krpsim import cli, verifier_cli
+from krpsim import cli
+from krpsim import cli
+from krpsim_verif import cli as verifier_cli
 
 
 def test_cli_help(capsys: CaptureFixture[str]) -> None:

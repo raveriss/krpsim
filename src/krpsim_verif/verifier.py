@@ -6,8 +6,8 @@ import logging
 from dataclasses import dataclass
 from pathlib import Path
 
-from .parser import Config, parse_file
-from .simulator import Simulator
+from krpsim.parser import Config, parse_file
+from krpsim.simulator import Simulator
 
 
 class TraceError(Exception):

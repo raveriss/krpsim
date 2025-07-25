@@ -6,8 +6,8 @@ import argparse
 import logging
 from pathlib import Path
 
-from .parser import ParseError, parse_file
-from .simulator import Simulator
+from krpsim.parser import ParseError, parse_file
+from krpsim.simulator import Simulator
 from .verifier import TraceError, verify_files
 
 

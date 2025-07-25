@@ -14,7 +14,7 @@ cuisson_4:(steak_cru:1;poele:1):(steak_mi_cuit:1;poele:1):10
 cuisson_5:(steak_mi_cuit:1;poele:1):(steak_cuit:1;poele:1):10
 #
 # optimize time for 0 stock and no process possible,
-# or maximize some products over a long delay
+# or maximize some products over a long del-ay
 # optimize:(stock1;stock2;...)
 #
 optimize:(time;steak_cuit)
