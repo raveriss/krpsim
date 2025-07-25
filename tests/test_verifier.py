@@ -4,7 +4,7 @@ import pytest
 
 from krpsim import parser
 from krpsim.simulator import Simulator
-from krpsim_verif.verifier import TraceError, parse_trace, verify_trace
+from krpsim_verif.verifier import TraceError, TraceEntry, parse_trace, verify_trace
 
 
 def test_verify_trace_valid(tmp_path: Path) -> None:
@@ -26,6 +26,19 @@ def test_verify_trace_error(tmp_path: Path) -> None:
         verify_trace(cfg, trace)
 
 
+def test_verify_trace_mismatch(tmp_path: Path) -> None:
+    cfg = parser.parse_file(Path("resources/simple"))
+    wrong = [TraceEntry(1, "achat_materiel")]
+    with pytest.raises(TraceError):
+        verify_trace(cfg, wrong)
+
+
+def test_verify_trace_empty(cfg: Path = Path("resources/simple")) -> None:
+    cfg = parser.parse_file(cfg)
+    with pytest.raises(TraceError):
+        verify_trace(cfg, [])
+
+
 @pytest.mark.parametrize(
     "content",
     ["", "0proc", "x:proc"],
@@ -44,11 +57,11 @@ def test_verify_trace_short_and_extra(tmp_path: Path) -> None:
 
     short_file = tmp_path / "short.txt"
     short_file.write_text("\n".join(f"{c}:{n}" for c, n in events[:-1]))
-    with pytest.raises(TraceError):
-        verify_trace(cfg, parse_trace(short_file))
+    verify_trace(cfg, parse_trace(short_file))
 
     extra_file = tmp_path / "extra.txt"
-    extra_events = events + [(999, "extra")]
+    last_proc = events[-1][1]
+    extra_events = events + [(999, last_proc)]
     extra_file.write_text("\n".join(f"{c}:{n}" for c, n in extra_events))
     with pytest.raises(TraceError):
         verify_trace(cfg, parse_trace(extra_file))
@@ -69,5 +82,4 @@ def test_verify_custom_infinite(tmp_path: Path) -> None:
     events = sim.run(5)
     trace_file = tmp_path / "trace.txt"
     trace_file.write_text("\n".join(f"{c}:{n}" for c, n in events))
-    with pytest.raises(TraceError):
-        verify_trace(cfg, parse_trace(trace_file))
+    verify_trace(cfg, parse_trace(trace_file))

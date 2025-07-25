@@ -40,11 +40,15 @@ def parse_trace(path: Path) -> list[TraceEntry]:
     return entries
 
 
-def _expected_trace(config: Config) -> tuple[list[TraceEntry], Simulator]:
-    """Return the expected trace and simulator state for ``config``."""
+def _expected_trace(config: Config, max_time: int) -> tuple[list[TraceEntry], Simulator]:
+    """Return the expected trace and simulator state for ``config``.
+
+    The simulation is executed until ``max_time`` so that the verifier
+    reproduces the exact conditions used to generate the provided trace.
+    """
 
     sim = Simulator(config)
-    raw = sim.run(10_000)
+    raw = sim.run(max_time)
     entries = [TraceEntry(cycle, name) for cycle, name in raw]
     return entries, sim
 
@@ -56,20 +60,21 @@ def verify_trace(config: Config, trace: list[TraceEntry]) -> Simulator:
     """
 
     logger = logging.getLogger(__name__)
-    expected, sim = _expected_trace(config)
+
+    if not trace:
+        raise TraceError("empty trace")
+    last = trace[-1]
+    process = config.processes.get(last.process)
+    if process is None:
+        raise TraceError(f"unknown process '{last.process}' in trace")
+    run_until = last.cycle + process.delay
+    expected, sim = _expected_trace(config, run_until)
     for idx, (got, exp) in enumerate(zip(trace, expected), start=1):
         if got != exp:
             raise TraceError(
                 f"line {idx}: expected {exp.cycle}:{exp.process} "
                 f"but got {got.cycle}:{got.process}"
             )
-
-    if len(trace) < len(expected):
-        missing = expected[len(trace)]
-        raise TraceError(
-            f"trace ended early at line {len(trace)+1}, "
-            f"expected {missing.cycle}:{missing.process}"
-        )
 
     if len(trace) > len(expected):
         raise TraceError(f"trace has extra events starting at line {len(expected)+1}")

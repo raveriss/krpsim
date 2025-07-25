@@ -10046,7 +10046,7 @@ Max time reached at time 10
 Final Stocks:
   item  => 1
 === Verification de resources/custom_infinite ===
-invalid trace: trace ended early at line 11, expected 10:loop
+trace is valid
 Final Stocks:
   item  => 1
 Last cycle: 10001
@@ -10065,7 +10065,7 @@ Final Stocks:
   fruit  => 0
   seed   => 3
 === Verification de resources/exponential ===
-invalid trace: trace ended early at line 3, expected 6:grow
+trace is valid
 Final Stocks:
   fruit  => 15350
   seed   => 11
@@ -10123,7 +10123,7 @@ Final Stocks:
   second  => 10
   year    => 0
 === Verification de resources/inception ===
-invalid trace: trace ended early at line 11, expected 10:make_sec
+trace is valid
 Final Stocks:
   clock   => 1
   day     => 0
@@ -10159,7 +10159,7 @@ Final Stocks:
   iron      => 10
   iron_ore  => 99900
 === Verification de resources/large_numbers ===
-invalid trace: trace ended early at line 11, expected 10:smelt
+trace is valid
 Final Stocks:
   iron      => 10000
   iron_ore  => 0
@@ -10194,7 +10194,7 @@ Final Stocks:
   tarte_citron     => 0
   tarte_pomme      => 0
 === Verification de resources/pomme ===
-invalid trace: trace ended early at line 1, expected 0:buy_beurre
+invalid trace: empty trace
 Final Stocks:
   beurre           => 279366
   blanc_oeuf       => 4
@@ -10224,7 +10224,7 @@ Final Stocks:
   marelle  => 0
   moi      => 1
 === Verification de resources/recre ===
-invalid trace: trace ended early at line 1, expected 0:parier_avec_un_copain
+invalid trace: empty trace
 Final Stocks:
   bonbon   => 0
   marelle  => 144
@@ -10249,7 +10249,7 @@ Max time reached at time 10
 Final Stocks:
   X  => 11
 === Verification de resources/self_gen ===
-invalid trace: trace ended early at line 11, expected 10:genX
+trace is valid
 Final Stocks:
   X  => 10001
 Last cycle: 10001
