@@ -1,21 +1,72 @@
-.PHONY: install lint format test run
+# Makefile pour automatiser l'installation, le linting,
+# le formatage, les tests et l'exécution de krpsim
 
+# Déclaration des cibles sans fichier associé
+.PHONY: install lint format test krpsim krpsim-verif process-resources
+
+# Variable pour préfixer les commandes Poetry
+POETRY = poetry run
+
+# ------------------------------------------------------------
+# Installation des dépendances
+# ------------------------------------------------------------
 install:
+	# Installe les bibliothèques listées dans pyproject.toml
 	poetry install
 
+# ------------------------------------------------------------
+# Qualité de code : lint et typage statique
+# ------------------------------------------------------------
 lint:
-	poetry run ruff check src tests
-	poetry run mypy src tests
+	# Vérifie le style et l'erreurs via ruff
+	$(POETRY) ruff check src tests	
+	# Vérifie les annotations de types avec mypy
+	$(POETRY) mypy src tests
 
+# ------------------------------------------------------------
+# Mise en forme automatique du code
+# ------------------------------------------------------------
 format:
-	poetry run black src tests
-	poetry run isort src tests
+	# Reformate le code selon les conventions Black
+	$(POETRY) black src tests
+	# Trie et organise les imports selon isort
+	$(POETRY) isort src tests
 
+# ------------------------------------------------------------
+# Exécution de la suite de tests
+# ------------------------------------------------------------
 test:
-	poetry run pytest
+	# Lance pytest pour vérifier le bon fonctionnement des modules
+	$(POETRY) pytest
 
-ARGS ?=
+# ------------------------------------------------------------
+# Cibles pour exécuter krpsim et sa vérification
+# ------------------------------------------------------------
+krpsim:
+	# Exécute krpsim avec les arguments passés après "make krpsim"
+	$(POETRY) krpsim $(filter-out $@,$(MAKECMDGOALS))
 
-run:
-	poetry run krpsim $(ARGS)
+krpsim_verif:
+	# Exécute krpsim_verif avec les arguments passés après "make krpsim_verif"
+	$(POETRY) krpsim_verif $(filter-out $@,$(MAKECMDGOALS))
 
+# ------------------------------------------------------------
+# Traitement en batch de toutes les ressources
+# ------------------------------------------------------------
+process-resources:  # alias pratique pour O/I
+	@echo "=== Début du traitement de toutes les ressources ==="
+	@for f in resources/*; do \
+	  # Pour chaque fichier de ressources
+	  echo "=== Traitement de $$f ==="; \
+	  $(POETRY) krpsim "$$f" 10; \
+	  echo "=== Vérification de $$f ==="; \
+	  $(POETRY) krpsim_verif "$$f" trace.txt; \
+	  sleep 3; \
+	done > log.txt
+	@echo "=== Traitement terminé : voir log.txt pour le détail ==="
+
+# ------------------------------------------------------------
+# Gestion des targets inconnues sans erreur ni timestamps
+# ------------------------------------------------------------
+.DEFAULT:
+	@:

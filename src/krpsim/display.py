@@ -39,10 +39,13 @@ def format_trace(trace: Iterable[tuple[int, str]]) -> list[str]:
     """Return a list of ``cycle:process`` lines."""
     return [f"{cycle}:{name}" for cycle, name in trace]
 
+EMPTY_TRACE_MSG = "# no process executed (optimization)"
 
 def save_trace(trace: Iterable[tuple[int, str]], path: Path) -> None:
     """Save ``trace`` to ``path`` and flush to disk."""
     lines = format_trace(trace)
+    if not lines:
+        lines.append(EMPTY_TRACE_MSG)    
     with path.open("w", encoding="utf-8") as fh:
         for line in lines:
             fh.write(line + "\n")

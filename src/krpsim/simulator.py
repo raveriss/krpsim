@@ -56,6 +56,7 @@ class Simulator:
                 else:
                     self._running.append(_RunningProcess(process, process.delay))
                     started_nonzero = True
+                self.trace.append((self.time, process.name))                  
                 logger.info("%d:%s", self.time, process.name)
                 started = True
         return started, started_nonzero

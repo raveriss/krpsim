@@ -29,6 +29,8 @@ def parse_trace(path: Path) -> list[TraceEntry]:
     for idx, line in enumerate(lines, start=1):
         if not line:
             raise TraceError(f"empty trace line {idx}")
+        if line.startswith("#"):
+            continue            
         if ":" not in line:
             raise TraceError(f"invalid trace line {idx}: '{line}'")
         cycle_str, name = line.split(":", 1)
@@ -64,9 +66,10 @@ def verify_trace(config: Config, trace: list[TraceEntry]) -> Simulator:
     logger = logging.getLogger(__name__)
 
     if not trace:
-        for proc in config.processes.values():
-            if all(config.stocks.get(n, 0) >= q for n, q in proc.needs.items()):
-                raise TraceError("empty trace")
+        if not config.optimize:
+            for proc in config.processes.values():
+                if all(config.stocks.get(n, 0) >= q for n, q in proc.needs.items()):
+                    raise TraceError("empty trace")
         sim = Simulator(config)
         sim.run(0)
         logger.info("trace validated successfully")
