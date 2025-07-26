@@ -140,3 +140,12 @@ def test_recre_optimal() -> None:
         (90, "jouer_a_la_marelle"),
     ]
     assert sim.stocks["marelle"] == 3
+
+
+def test_zero_delay_process() -> None:
+    cfg = parser.parse_file(Path("resources/zero_delay"))
+    sim = Simulator(cfg)
+    trace = sim.run(10)
+    assert trace == [(0, "instant")]
+    assert sim.time == 0
+    assert sim.stocks["stockB"] == 1

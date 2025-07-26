@@ -38,8 +38,9 @@ class Simulator:
         for rp in completed:
             self._running.remove(rp)
 
-    def _start_processes(self) -> bool:
+    def _start_processes(self) -> tuple[bool, bool]:
         started = False
+        started_nonzero = False        
         logger = logging.getLogger(__name__)
         for process in order_processes(self.config):
             if self.time + process.delay > self._max_time:
@@ -49,31 +50,35 @@ class Simulator:
             ):
                 for name, qty in process.needs.items():
                     self.stocks[name] -= qty
-                self._running.append(_RunningProcess(process, process.delay))
-                self.trace.append((self.time, process.name))
+                if process.delay == 0:
+                    for name, qty in process.results.items():
+                        self.stocks[name] = self.stocks.get(name, 0) + qty
+                else:
+                    self._running.append(_RunningProcess(process, process.delay))
+                    started_nonzero = True
                 logger.info("%d:%s", self.time, process.name)
                 started = True
-        return started
+        return started, started_nonzero
 
     def step(self) -> bool:
+        running_before = bool(self._running)        
         self._complete_running()
-        started = self._start_processes()
-        self.time += 1
-        return started or bool(self._running)
+        started, started_nonzero = self._start_processes()
+        advance = running_before or bool(self._running) or started_nonzero
+        if advance:
+            self.time += 1
+        return advance
 
     def run(self, max_time: int) -> list[tuple[int, str]]:
         self.deadlock = False
         self._max_time = max_time
         # custom optimization for single target cases with resource farming
-        if (
-            self.config.optimize
-            and (
-                (len(self.config.optimize) == 1 and self.config.optimize[0] != "time")
-                or (
-                    len(self.config.optimize) == 2
-                    and self.config.optimize[0] == "time"
-                    and self.config.optimize[1] != "time"
-                )
+        if self.config.optimize and (
+            (len(self.config.optimize) == 1 and self.config.optimize[0] != "time")
+            or (
+                len(self.config.optimize) == 2
+                and self.config.optimize[0] == "time"
+                and self.config.optimize[1] != "time"
             )
         ):
             target = (
@@ -82,16 +87,16 @@ class Simulator:
                 else self.config.optimize[1]
             )
             target_proc = next(
-                (
-                    p
-                    for p in self.config.processes.values()
-                    if p.results.get(target)
-                ),
+                (p for p in self.config.processes.values() if p.results.get(target)),
                 None,
             )
-            if target_proc and len(
-                [p for p in self.config.processes.values() if p.results.get(target)]
-            ) == 1:
+            if (
+                target_proc
+                and len(
+                    [p for p in self.config.processes.values() if p.results.get(target)]
+                )
+                == 1
+            ):
                 token = next(
                     (
                         n
@@ -101,11 +106,7 @@ class Simulator:
                     None,
                 )
                 main_res = next(
-                    (
-                        n
-                        for n in target_proc.needs
-                        if n != token
-                    ),
+                    (n for n in target_proc.needs if n != token),
                     None,
                 )
                 booster = None
