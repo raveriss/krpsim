@@ -1,213 +1,132 @@
-# 🚀 KRPSIM — Simulateur de Processus & Optimiseur 42
+# krpsim
 
-![CI](https://github.com/USERNAME/krpsim/actions/workflows/ci.yml/badge.svg)
-![Coverage](https://codecov.io/gh/USERNAME/krpsim/branch/main/graph/badge.svg)
+![License](https://img.shields.io/github/license/raveriss/krpsim)
+![CI](https://github.com/raveriss/krpsim/actions/workflows/ci.yml/badge.svg)
+![Coverage](https://codecov.io/gh/raveriss/krpsim/branch/main/graph/badge.svg)
 ![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen)
-[MIT](https://opensource.org/licenses/MIT)
-[Python](https://www.python.org/)
+![Version](https://img.shields.io/badge/version-0.1.0-blue)
 
-> **KRPSIM** est un projet algorithmique d’optimisation et de recherche opérationnelle (42), porté à un standard professionnel.
-> Le programme lit une description de stocks et de processus, puis calcule une séquence d’actions optimisée pour maximiser un rendement ou minimiser un délai.
-> **Architecture en agents, TDD strict, CI/CD totale, robustesse Loi de Murphy, couverture 100%.**
+## 🚀 Objectif du projet
 
----
+**krpsim** est un simulateur de processus inspiré du projet 42. Le programme lit un fichier de configuration de stocks et de processus puis produit une trace optimisée de leur exécution.
 
-## Sommaire
+## 🧰 Stack technologique
 
-* [✨ Fonctionnalités Clés](#-fonctionnalités-clés)
-* [🏗️ Architecture Agents & Design](#-architecture-agents--design)
-* [⚙️ Installation & Démarrage Rapide](#-installation--démarrage-rapide)
-* [📄 Exemple de Fichier de Config](#-exemple-de-fichier-de-config)
-* [🖥️ Utilisation (Simulation & Vérification)](#-utilisation-simulation--vérification)
-* [🧪 Qualité, Tests & Loi de Murphy](#-qualité-tests--loi-de-murphy)
-* [📂 Structure du Projet](#-structure-du-projet)
-* [🛣️ Roadmap & Bonus](#-roadmap--bonus)
-* [🤝 Contribution & Guidelines](#-contribution--guidelines)
-* [❓ FAQ & Support](#-faq--support)
-* [📜 Licence](#-licence)
+Projet Python >=3.10 construit avec [Poetry](https://python-poetry.org/). Les dépendances principales sont listées dans `pyproject.toml` :
 
----
-
-## ✨ Fonctionnalités Clés
-
-* **Parsing Ultra-Robuste** : Validation stricte de la syntaxe, des dépendances logiques, de l’encodage et des formats. Messages d’erreur détaillés et explicites ([sujet 42](#)).
-* **Simulation par Événements Discrets** : Moteur orchestrant l’état des stocks, l’exécution concurrente des processus, gestion fine du temps/cycles.
-* **Optimisation Stratégique** : Agent de décision calculant la séquence d’actions optimale selon le critère (`time` ou maximisation de stocks).
-* **Validation de Trace** : Programme utilitaire (`krpsim_verif`) vérifiant la conformité de toute trace de simulation avec le fichier de config initial.
-* **Affichage Double** : Sortie lisible pour l’utilisateur **et** format machine pour la vérification automatique.
-* **Qualité Industrielle** : 100% de couverture de tests, CI/CD complète, formatage/lint strict, analyse statique (mypy, ruff, bandit…).
-* **Crash & Stress Tests** : Fuzzing, SIGINT, fichiers corrompus, gestion disque/logs/droits.
-* **Documenté, Actionnable, Onboardant** : Tout est prêt pour prise en main rapide, évaluation ou contribution pro.
-
----
-
-## 🏗️ Architecture Agents & Design
-
-KRPSIM repose sur **5 agents** ultra-spécialisés :
-*(Design inspiré SOLID, chaque agent a un rôle unique pour la robustesse, la lisibilité, et la maintenabilité)*
-
-```mermaid
-graph TD
-    A[Fichier config] --> B(Agent 1: Parser)
-    B --> C{Agent 3: Optimiseur}
-    C -- Décision --> D(Agent 2: Simulateur)
-    D -- État --> C
-    D -- Action --> E(Agent 4: Afficheur)
-    E -- Trace Machine --> F[fichier_trace.txt]
-    G[Fichier config] --> H(Agent 5: krpsim_verif)
-    F --> H
-    H --> I[✅/❌ Résultat Validation]
+```toml
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
 ```
 
-* **Agent 1 (parser.py)** : Analyseur syntaxique strict, refuse tout fichier non conforme, validation du format/encodage/stock/process ([sujet p.7](#)).
-* **Agent 2 (simulator.py)** : Orchestre la simulation, applique chaque process en tenant compte des stocks, cycles et règles métier.
-* **Agent 3 (optimizer.py)** : Décide à chaque cycle l’action optimale en fonction de l’état courant (algorithme de sélection, stratégie d’exécution, [sujet p.6-7](#)).
-* **Agent 4 (display.py)** : Affiche de manière claire pour l’utilisateur, tout en générant la trace machine conforme pour vérification.
-* **Agent 5 (krpsim\_verif.py)** : Vérifie toute trace de simulation, détecte la moindre incohérence, donne le diagnostic exact (cycle/process fautif, stocks finaux, [sujet p.8](#)).
+Les outils de développement incluent `pytest`, `ruff`, `black`, `isort` et `mypy`.
 
----
-
-## ⚙️ Installation & Démarrage Rapide
-
-### Prérequis
-
-* Python **3.10+**
-* [Poetry](https://python-poetry.org/docs/)
-
-### Installation
+## ⚡ Démarrage rapide
 
 ```bash
-git clone https://github.com/USERNAME/krpsim.git
+poetry install
+poetry run krpsim resources/simple 10
+```
+
+## 🔧 Installation
+
+### Depuis PyPI
+
+```bash
+pip install krpsim
+```
+### Depuis les sources
+
+```bash
+git clone https://github.com/raveriss/krpsim.git
 cd krpsim
 poetry install
 ```
 
-### Quickstart Simulation
+Pour un mode développement, utilisez un environnement virtuel `poetry shell`.
+
+## ▶️ Lancement
 
 ```bash
-poetry run krpsim resources/simple 10
+poetry run krpsim path/to/config delay
+poetry run krpsim_verif path/to/config trace.txt
 ```
 
-### Vérification de trace
+## 📦 Utilisation
 
-```bash
-poetry run krpsim_verif resources/simple my_trace.txt
-```
-
----
-
-## 📄 Exemple de Fichier de Config
+La CLI accepte un fichier de configuration et un délai maximal. Un exemple minimal de configuration se trouve dans `resources/simple` :
 
 ```txt
-# very simple demo - krpsim
 euro:10
-equipment_purchase:(euro:8):(equipment:1):10
-product_creation:(equipment:1):(product:1):30
-delivery:(product:1):(happy_client:1):20
-optimize:(time;happy_client)
+achat_materiel:(euro:8):(materiel:1):10
+realisation_produit:(materiel:1):(produit:1):30
 ```
 
-**Sortie attendue** (extrait du sujet) :
+## ⚙️ Utilisation avancée
 
-```
-Nice file! 3 processes, 4 stocks, 1 to optimize
-Evaluating ... done.
-Main walk:
-Optimization criteria: time, happy_client
-0:equipment_purchase
-10:product_creation
-40:delivery
-No more process doable at time 61
-Final Stocks:
-  happy_client  => 1
-  product       => 0
-  equipment     => 0
-  euro          => 2
+Consultez `krpsim --help` pour l'ensemble des options disponibles.
+
+## 🔌 Injection de dépendances
+
+```python
+from krpsim.simulator import Simulator
+sim = Simulator(config)
 ```
 
-⚠️ **Limite de délai** : le paramètre `<delai>` est une borne supérieure
-inclusive. La simulation se poursuit tant que `time ≤ delai`. Pour exécuter
-tous les processus sans limite, passez `--run-all`.
+Plus de détails dans `AGENTS.md`.
 
-Par exemple :
+## 📈 Collecte de métriques
 
-```bash
-$ poetry run krpsim resources/simple 10
-0:achat_materiel
-10:realisation_produit
-Max time reached at time 10
+```python
+from krpsim.display import format_trace
+for line in format_trace(trace):
+    print(line)
 ```
 
-Le second processus démarre au cycle `10` car cette valeur est incluse dans la période d'exécution.
+## ❗ Gestion des erreurs
 
----
+Les erreurs de parsing lèvent `ParseError`.
 
-## 🖥️ Utilisation (Simulation & Vérification)
-
-* **Simulation :**
-
-  ```bash
-  poetry run krpsim <chemin_fichier_config> <delai_max>
-  ```
-
-  `<delai_max>` est une borne inclusive : la simulation continue tant que
-  `time` est inférieur ou égal à cette valeur. Pour ignorer toute limite,
-  passez `--run-all`.
-* **Vérification de trace :**
-
-  ```bash
-  poetry run krpsim_verif <chemin_fichier_config> <fichier_trace>
-  ```
-
-  Le vérifieur indique si la progression est correcte, sinon précise le cycle/process fautif.
-
----
-
-## 🧪 Qualité, Tests & Loi de Murphy
-
-### **Politique Qualité**
-
-* **Tests unitaires/intégration/extremes** : 100% couverture, chaque branche, chaque condition.
-* **Crash/fuzzing** : Le système est testé sur : fichiers vides, corrompus, mauvais encoding, valeurs aberrantes, etc.
-* **Analyse statique & sécurité** : `black`, `ruff`, `mypy`, `bandit` (fail pipeline si défaut).
-* **CI/CD** : Pipeline GitHub Actions automatisé (installation, lint, test, coverage, sécurité).
-* **Formatage & documentation** : Norme stricte, docstring pour chaque agent, README à jour.
-
-### **Loi de Murphy — Table de mitigation**
-
-| Problème Potentiel                   | Mitigation Implémentée                                   |
-| ------------------------------------ | -------------------------------------------------------- |
-| Fichier absent/corrompu/non lisible  | Gestion d’erreur explicite, exit code non nul, log clair |
-| Encodage (UTF-8, BOM, CRLF)          | Détection automatique, conversion, refus si non géré     |
-| Syntaxe/process/config invalides     | Parsing strict, refus explicite, logs détaillés          |
-| Deadlock, boucle infinie, starvation | Watchdog interne, arrêt au délai imparti, logs           |
-| Explosion mémoire / input géant      | Profiling, parsing incrémental, limitation RAM           |
-| Crash pendant logs/traces            | Flush régulier, try/except sur I/O, intégrité sauvegarde |
-| CLI/args manquants/invalides         | Usage clair, exit code, message explicite                |
-| Documentation absente/obsolète       | README/pyproject.toml/docstring, checklist pipeline      |
-
-```bash
-# Lancer tous les tests et voir le rapport de couverture
-make test
-# ou
-poetry run pytest --cov=src --cov-fail-under=100
+```python
+from krpsim.parser import parse_file, ParseError
+try:
+    cfg = parse_file(path)
+except ParseError as exc:
+    print(f"invalid config: {exc}")
 ```
 
----
+## 📝 Formats d'entrée
+
+Les fichiers de configuration décrivent les stocks initiaux puis les processus sous forme `name:(need):(result):delay`.
+
+## 🧠 Architecture
+
+Un schéma mermaid simplifié illustre l'architecture en agents :
+
+```mermaid
+graph TD
+    A[Fichier config] --> B(Parser)
+    B --> C(Optimizer)
+    C --> D(Simulator)
+    D --> E(Display)
+    D --> F(Verifier)
+```
+
+Les rôles détaillés sont décrits dans `AGENTS.md`.
 
 ## 📂 Structure du Projet
 
 ```
 krpsim/
-├── .github/workflows/ci.yml      # Pipeline CI/CD (install, lint, tests, coverage, security)
-├── krpsim.py                    # Simulateur principal (entrée CLI)
-├── krpsim_verif.py              # Vérificateur (entrée CLI)
-├── src/
-│   ├── parser.py                # Agent 1 — Parsing & validation
-│   ├── simulator.py             # Agent 2 — Simulation cycle/cycle
-│   ├── optimizer.py             # Agent 3 — Décision/stratégie
-│   ├── display.py               # Agent 4 — Affichage & trace
-│   └── __init__.py
+├── src/krpsim/
+│   ├── parser.py
+│   ├── simulator.py
+│   ├── optimizer.py
+│   ├── display.py
+│   └── cli.py
+├── src/krpsim_verif/
+│   └── cli.py
+├── resources/
 ├── tests/
 │   ├── test_parser.py
 │   ├── test_simulator.py
@@ -217,47 +136,54 @@ krpsim/
 ├── pyproject.toml               # Dépendances et configuration
 ├── LICENSE
 ├── author
-└── README.md
+├── README.md
+└── pyproject.toml
 ```
 
----
+## 🖥️ Compatibilité Windows
 
-## 🛣️ Roadmap & Bonus
+La CI vérifie l'exécution des tests sous Windows et Linux.
 
-* [ ] Optimisation avancée (heuristiques, IA, bonus)
-* [ ] Support multi-thread/gros fichiers
-* [ ] Interface CLI avancée (mode verbose, export de logs)
-* [ ] Fuzzing et crash tests cross-platform
-* [ ] Documentation multilingue
+## 🛠️ Fichiers de configuration
 
----
+Les principaux réglages (`black`, `isort`, `mypy`, `pytest`) se trouvent dans `pyproject.toml`.
 
-## 🤝 Contribution & Guidelines
 
-1. **Créez une branche** (`git checkout -b feat/nom-feature`)
-2. **Respectez l’architecture agents et la qualité** (100% tests, lint, docstring à jour)
-3. **Vérifiez que la CI est verte avant PR**
-4. **PR atomique, claire, changelog/documentation mis à jour**
-5. **Pair review obligatoire avant merge**
+## 🧪 Tests
 
----
+```bash
+make test
+```
 
-## ❓ FAQ & Support
+La configuration `pytest` impose une couverture minimale de 100 % :
 
-**Q : Que faire si la simulation ne s’arrête jamais ?**
-R : Le watchdog arrête toujours le programme au délai imparti. Si ça boucle avant, c’est qu’il n’y a plus d’action possible.
+```toml
+[tool.pytest.ini_options]
+--cov=krpsim
+--cov=krpsim_verif
+--cov-fail-under=100
+```
 
-**Q : Comment vérifier une trace ?**
-R : Utilisez `krpsim_verif <config> <trace>`, le programme indique la conformité et le cycle problématique en cas d’échec.
+## 🔍 Qualité du code
 
-**Q : Les résultats sont-ils toujours identiques ?**
-R : Non, invariance non requise : des solutions différentes peuvent être produites à chaque run ([sujet](#)).
+* **Formatage** : `black` et `isort`.
+* **Lint** : `ruff`.
+* **Typage** : `mypy`.
+* **Hooks** : `pre-commit`.
 
-**Q : Qui contacter ?**
-Auteur : *raveriss* — [ton.email@provider.com](mailto:ton.email@provider.com)
+## 🤝 Contribuer
 
----
+Les règles de contribution sont détaillées dans `AGENTS.md`. Toute PR doit passer la CI et maintenir la couverture à 100 %.
 
-## 📜 Licence
+## 📚 Documentation liée
 
-Ce projet est distribué sous licence **MIT**. Voir le fichier `LICENSE`.
+* [AGENTS.md](AGENTS.md) – blueprint du projet.
+* [krpsim.en.subject.pdf](krpsim.en.subject.pdf) – énoncé original.
+
+## 🚀 Publication d'une release
+
+Le workflow GitHub Actions publie automatiquement sur PyPI lors du push d'un tag `v*`.
+
+## 🛡️ Licence
+
+Projet distribué sous licence MIT.
