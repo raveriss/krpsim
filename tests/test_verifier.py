@@ -35,8 +35,7 @@ def test_verify_trace_mismatch(tmp_path: Path) -> None:
 
 def test_verify_trace_empty(cfg_path: Path = Path("resources/simple")) -> None:
     cfg = parser.parse_file(cfg_path)
-    with pytest.raises(TraceError):
-        verify_trace(cfg, [])
+    verify_trace(cfg, [])
 
 
 def test_verify_empty_trace_valid(tmp_path: Path) -> None:
@@ -48,6 +47,29 @@ def test_verify_empty_trace_valid(tmp_path: Path) -> None:
     trace = parse_trace(trace_file)
     verify_trace(cfg, trace)
 
+
+def test_parse_trace_comment(tmp_path: Path) -> None:
+    file = tmp_path / "trace.txt"
+    file.write_text("# comment\n")
+    assert parse_trace(file) == []
+
+
+def test_verify_empty_trace_with_optimize(tmp_path: Path) -> None:
+    cfg_file = tmp_path / "cfg.txt"
+    cfg_file.write_text("a:1\nproc:(a:1):(b:1):1\noptimize:(b)\n")
+    cfg = parser.parse_file(cfg_file)
+    trace_file = tmp_path / "trace.txt"
+    trace_file.write_text("# no process executed (optimization)\n")
+    trace = parse_trace(trace_file)
+    verify_trace(cfg, trace)
+
+
+def test_verify_trace_empty_no_optimize_error(tmp_path: Path) -> None:
+    cfg_file = tmp_path / "cfg.txt"
+    cfg_file.write_text("a:1\nproc:(a:1):(b:1):1\n")
+    cfg = parser.parse_file(cfg_file)
+    with pytest.raises(TraceError):
+        verify_trace(cfg, [])
 
 
 @pytest.mark.parametrize(
