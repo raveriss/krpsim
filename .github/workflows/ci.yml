@@ -89,7 +89,7 @@ jobs:
   tests:
     name: Tests
     runs-on: ${{ matrix.os }}
-    needs: pre-commit
+    # pas de needs -> les tests tournent même si pre-commit échoue
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -142,6 +142,7 @@ jobs:
           files: ./coverage.xml
           flags: unittests
           name: codecov-krpsim
+          # pas de 'token:' pour un repo public
           fail_ci_if_error: true
           verbose: true
 
