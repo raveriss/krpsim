@@ -7,7 +7,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name    = "krpsim"
-version = "0.1.0"
+version = "0.1.1"
 packages = [
   { include = "krpsim", from = "src" },
   { include = "krpsim_verif", from = "src" }
@@ -21,7 +21,7 @@ python = ">=3.10,<3.13"
 # --------------------------------------------------------------------------- #
 [project]
 name    = "krpsim"
-version = "0.1.0"
+dynamic = ["version"]
 description     = "Simulation et vérification de graphes de processus pour la gestion de ressources"
 readme          = "README.md"
 license         = { text = "MIT" }
