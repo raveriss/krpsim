@@ -18,7 +18,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+            python-version: "3.10"
 
       - name: Install Poetry
         run: pipx install poetry
@@ -26,13 +26,19 @@ jobs:
       - name: Install dependencies
         run: poetry install --no-interaction --no-ansi
 
-      - name: Run tests with coverage
-        run: poetry run pytest --cov=src --cov-branch --cov-report=xml:coverage.xml
+      - name: Run tests with coverage (XML at repo root)
+        run: |
+          poetry run pytest --cov=src --cov-branch --cov-report=xml:coverage.xml
+          echo "== ls at repo root =="
+          ls -lah
+          echo "== show coverage.xml head =="
+          head -n 20 coverage.xml || true
+          test -f coverage.xml || (echo "coverage.xml missing" && exit 1)
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
-          files: coverage.xml
+          files: ./coverage.xml
           disable_search: true
           flags: unittests
           verbose: true
