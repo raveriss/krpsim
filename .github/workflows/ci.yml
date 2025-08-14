@@ -115,43 +115,16 @@ jobs:
           head -n 20 coverage.xml || true
           test -f coverage.xml || (echo "coverage.xml missing" && exit 1)
 
-      - name: Upload coverage to Codecov (action v5, strict, slug)
+      - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage.xml
           disable_search: true
           flags: unittests
-          verbose: true
-          fail_ci_if_error: true
-          slug: raveriss/krpsim
-          commit_sha: ${{ github.sha }}
-          branch: ${{ github.ref_name }}
           name: ci-ubuntu-py310
-
-      - name: Also upload coverage as artifact (debug)
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage.xml
-          path: coverage.xml
-          if-no-files-found: error
-
-      # Fallback ultra-verbeux (si jamais l'action ne poste pas de rapport)
-      - name: Download Codecov uploader
-        run: |
-          curl -Os https://uploader.codecov.io/latest/linux/codecov
-          chmod +x codecov
-          ./codecov --version
-
-      - name: Upload via Codecov CLI (strict, same context)
-        run: |
-          ./codecov \
-            -f coverage.xml \
-            -Z \
-            -n ci-ubuntu-py310 \
-            -r raveriss/krpsim \
-            -B "${GITHUB_REF_NAME}" \
-            -C "${GITHUB_SHA}" \
-            -v
+          slug: raveriss/krpsim
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
 
   build:
     name: Build Package
