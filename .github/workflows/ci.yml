@@ -139,12 +139,8 @@ jobs:
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10'
         uses: codecov/codecov-action@v5
         with:
-          files: ./coverage.xml
-          flags: unittests
-          name: codecov-krpsim
-          # pas de 'token:' pour un repo public
-          fail_ci_if_error: true
-          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: raveriss/krpsim
 
   build:
     name: Build Package
