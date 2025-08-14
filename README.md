@@ -2,7 +2,7 @@
 
 ![License](https://img.shields.io/github/license/raveriss/krpsim)
 ![CI](https://img.shields.io/github/actions/workflow/status/raveriss/krpsim/ci.yml?branch=main&label=CI)
-+ [![Coverage](https://codecov.io/gh/raveriss/krpsim/branch/main/graph/badge.svg)](https://app.codecov.io/gh/raveriss/krpsim/tree/main)
+[![Coverage](https://codecov.io/gh/raveriss/krpsim/branch/main/graph/badge.svg)](https://app.codecov.io/gh/raveriss/krpsim/tree/main)
 ![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen)
 ![Version](https://img.shields.io/badge/version-0.1.0-blue)
 
