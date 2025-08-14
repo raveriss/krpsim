@@ -6,7 +6,7 @@
 [![CI](https://github.com/raveriss/krpsim/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/raveriss/krpsim/actions)
 [![Coverage](https://codecov.io/gh/raveriss/krpsim/branch/main/graph/badge.svg)](https://codecov.io/gh/raveriss/krpsim)
 ![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?label=pre--commit)
-![Version](https://img.shields.io/badge/version-0.1.0-blue)
+![Version](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/raveriss/krpsim/main/docs/badges/version.json)
 
 </div>
 
