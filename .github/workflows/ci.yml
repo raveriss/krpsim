@@ -7,6 +7,10 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   tests:
     runs-on: ubuntu-latest
@@ -18,7 +22,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-            python-version: "3.10"
+          python-version: "3.10"
 
       - name: Install Poetry
         run: pipx install poetry
@@ -35,7 +39,7 @@ jobs:
           head -n 20 coverage.xml || true
           test -f coverage.xml || (echo "coverage.xml missing" && exit 1)
 
-      - name: Upload coverage to Codecov
+      - name: Upload coverage to Codecov (action v5, verbose)
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage.xml
@@ -43,3 +47,10 @@ jobs:
           flags: unittests
           verbose: true
           fail_ci_if_error: true
+
+      - name: Also upload coverage as artifact (debug)
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage.xml
+          path: coverage.xml
+          if-no-files-found: error
