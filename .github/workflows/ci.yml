@@ -140,6 +140,7 @@ jobs:
         with:
           # explicite = moins d'ambiguïté côté autodétection
           files: ./coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
           slug: raveriss/krpsim
           flags: unittests
           name: codecov-krpsim
