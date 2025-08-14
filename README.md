@@ -1,16 +1,15 @@
 # krpsim
 
-<p align="center">
-  <img src="https://img.shields.io/github/license/raveriss/krpsim" alt="License">
-  <a href="https://github.com/raveriss/krpsim/actions">
-    <img src="https://github.com/raveriss/krpsim/workflows/CI/badge.svg" alt="CI">
-  </a>
-  <a href="https://codecov.io/gh/raveriss/krpsim">
-    <img src="https://codecov.io/gh/raveriss/krpsim/branch/main/graph/badge.svg" alt="codecov">
-  </a>
-  <img src="https://img.shields.io/badge/pre--commit-enabled-brightgreen" alt="Pre-commit">
-  <img src="https://img.shields.io/badge/version-0.1.0-blue" alt="Version">
-</p>
+<div align="center">
+
+![License](https://img.shields.io/github/license/raveriss/krpsim)
+[![CI](https://github.com/raveriss/krpsim/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/raveriss/krpsim/actions)
+[![Coverage](https://codecov.io/gh/raveriss/krpsim/branch/main/graph/badge.svg)](https://codecov.io/gh/raveriss/krpsim)
+![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?label=pre--commit)
+![Version](https://img.shields.io/badge/version-0.1.0-blue)
+
+</div>
+
 
 ## 🚀 Objectif du projet
 
