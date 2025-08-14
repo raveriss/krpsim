@@ -80,7 +80,7 @@ jobs:
       - name: Run Ruff
         run: poetry run ruff check .
       - name: Run MyPy
-        run: poetry run mypy .
+        run: poetry run mypy src tests
       - name: Run Black check
         run: poetry run black --check .
       - name: Run isort check
