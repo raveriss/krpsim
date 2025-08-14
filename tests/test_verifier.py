@@ -76,8 +76,6 @@ def test_verify_trace_empty_no_optimize_error(tmp_path: Path) -> None:
     "content",
     ["", "0proc", "x:proc"],
 )
-
-
 def test_parse_trace_errors(tmp_path: Path, content: str) -> None:
     file = tmp_path / "trace.txt"
     file.write_text(content + "\n")

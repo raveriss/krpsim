@@ -26,11 +26,15 @@ lint:
 # ------------------------------------------------------------
 # Mise en forme automatique du code
 # ------------------------------------------------------------
+PY_FILES := $(shell git ls-files '*.py')
+
 format:
-	# Reformate le code selon les conventions Black
-	$(POETRY) black src tests
-	# Trie et organise les imports selon isort
-	$(POETRY) isort src tests
+	@if [ -n "$(PY_FILES)" ]; then \
+		$(POETRY) black $(PY_FILES); \
+		$(POETRY) isort $(PY_FILES); \
+	else \
+		echo "Aucun fichier Python détecté via git ls-files."; \
+	fi
 
 # ------------------------------------------------------------
 # Exécution de la suite de tests

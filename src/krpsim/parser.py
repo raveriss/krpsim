@@ -218,5 +218,5 @@ def parse_file(path: Path) -> Config:
         raise ParseError("configuration must define at least one stock and process")
     if optimize:
         _validate_optimize(optimize, stocks, processes)
-    _validate_process_resources(stocks, processes)        
+    _validate_process_resources(stocks, processes)
     return Config(stocks=stocks, processes=processes, optimize=optimize)

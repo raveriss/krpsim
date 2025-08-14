@@ -30,7 +30,7 @@ def parse_trace(path: Path) -> list[TraceEntry]:
         if not line:
             raise TraceError(f"empty trace line {idx}")
         if line.startswith("#"):
-            continue            
+            continue
         if ":" not in line:
             raise TraceError(f"invalid trace line {idx}: '{line}'")
         cycle_str, name = line.split(":", 1)
@@ -92,6 +92,7 @@ def verify_trace(config: Config, trace: list[TraceEntry]) -> Simulator:
 
     logger.info("trace validated successfully")
     return sim
+
 
 def verify_files(config_path: Path, trace_path: Path) -> Simulator:
     """Convenience wrapper verifying files."""

@@ -102,13 +102,13 @@ def main(argv: list[str] | None = None) -> int:
     exit_code = 0
     if not ignore_delay and sim.time >= args.delay:
         limit = args.delay if sim.time > args.delay else sim.time
-        logger.warning("Max time reached at time %d", limit)        
+        logger.warning("Max time reached at time %d", limit)
         exit_code = 1
     elif sim.deadlock:
-        logger.warning("Deadlock detected at time %d", sim.time)        
+        logger.warning("Deadlock detected at time %d", sim.time)
         exit_code = 1
     else:
-        logger.warning("No more process doable at time %d", sim.time)        
+        logger.warning("No more process doable at time %d", sim.time)
     stock_names = sorted(sim.config.all_stock_names())
     max_len = max((len(name) for name in stock_names), default=0)
     print("Final Stocks:")
