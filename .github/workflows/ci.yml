@@ -88,7 +88,8 @@ jobs:
 
   tests:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -108,7 +109,9 @@ jobs:
 
       - name: Run tests with coverage (XML at repo root)
         run: |
-          poetry run pytest --cov=src --cov-branch --cov-report=xml:coverage.xml
+          poetry run pytest \
+            --cov=krpsim --cov=krpsim_verif \
+            --cov-branch --cov-report=xml:coverage.xml
           echo "== ls at repo root =="
           ls -lah
           echo "== head coverage.xml =="
@@ -122,9 +125,7 @@ jobs:
           disable_search: true
           flags: unittests
           name: ci-ubuntu-py310
-          slug: raveriss/krpsim
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
+          fail_ci_if_error: true
 
   build:
     name: Build Package
