@@ -2,7 +2,7 @@
 # le formatage, les tests et l'exécution de krpsim
 
 # Déclaration des cibles sans fichier associé
-.PHONY: install dev-install lint format test krpsim krpsim_verif process_resources clean fclean re uninstall
+.PHONY: install lint format test krpsim krpsim_verif process_resources clean fclean re uninstall
 
 # Variable pour préfixer les commandes Poetry
 POETRY = poetry run

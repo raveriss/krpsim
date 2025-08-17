@@ -20,4 +20,4 @@ dist/
 
 .hypothesis/
 
-trace.txt
+*.txt
