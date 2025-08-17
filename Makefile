@@ -2,7 +2,7 @@
 # le formatage, les tests et l'exécution de krpsim
 
 # Déclaration des cibles sans fichier associé
-.PHONY: install lint format test krpsim krpsim_verif process-resources
+.PHONY: install dev-install lint format test krpsim krpsim_verif process_resources clean fclean re uninstall
 
 # Variable pour préfixer les commandes Poetry
 POETRY = poetry run
@@ -13,6 +13,7 @@ POETRY = poetry run
 install:
 	# Installe les bibliothèques listées dans pyproject.toml
 	poetry install
+	poetry run python -m pip install -e .
 
 # ------------------------------------------------------------
 # Qualité de code : lint et typage statique
@@ -68,6 +69,36 @@ process-resources:  # alias pratique pour O/I
 	  sleep 3; \
 	done > log.txt
 	@echo "=== Traitement terminé : voir log.txt pour le détail ==="
+
+# -------------------------------------------------------------------
+# Uninstall / Clean / Fclean / Re
+# -------------------------------------------------------------------
+
+# Désinstalle le paquet du venv courant si présent (sans casser le pyproject)
+uninstall:
+	-$(POETRY) python -m pip uninstall -y krpsim || true
+
+# Supprime artefacts de build/tests/logs
+clean:
+	@echo "Nettoyage des artefacts…"
+	@rm -rf \
+	  build/ dist/ \
+	  .pytest_cache/ .mypy_cache/ \
+	  .coverage coverage.xml htmlcov/ \
+	  .ruff_cache/ .tox/ \
+	  **/__pycache__/ \
+	  log.txt trace.txt junit.xml \
+	  .artifacts/ docs/graphs/*.png
+
+# clean + désinstalle + supprime le venv Poetry (optionnel mais radical)
+fclean: clean
+	@echo "Désinstallation du package dans le venv Poetry…"
+	-$(POETRY) python -m pip uninstall -y krpsim || true
+	@echo "Suppression du venv Poetry…"
+	-poetry env remove python || true
+
+# Re = fclean + install
+re: fclean install
 
 # ------------------------------------------------------------
 # Gestion des targets inconnues sans erreur ni timestamps
