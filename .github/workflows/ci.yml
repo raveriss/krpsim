@@ -143,7 +143,7 @@ jobs:
         run: poetry install --no-interaction
 
       - name: Run tests
-        run: poetry run pytest --cov=src/rubik_solver --cov-report=xml --cov-report=term-missing
+        run: poetry run pytest --cov=src/krpsim--cov-report=xml --cov-report=term-missing
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
