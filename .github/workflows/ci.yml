@@ -122,9 +122,8 @@ jobs:
           disable_search: true
           flags: unittests
           name: ci-ubuntu-py310
-          slug: raveriss/krpsim
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
+          verbose: true
+          fail_ci_if_error: true  # repasse à false une fois OK
 
   build:
     name: Build Package
