@@ -58,7 +58,7 @@ krpsim_verif:
 # ------------------------------------------------------------
 # Traitement en batch de toutes les ressources
 # ------------------------------------------------------------
-process-resources:  # alias pratique pour O/I
+process_resources:  # alias pratique pour O/I
 	@echo "=== Début du traitement de toutes les ressources ==="
 	@for f in resources/*; do \
 	  # Pour chaque fichier de ressources
