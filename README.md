@@ -57,6 +57,17 @@ poetry run krpsim path/to/config delay
 poetry run krpsim_verif path/to/config trace.txt
 ```
 
+### Lancement via Makefile
+
+```bash
+make krpsim resources/simple 10
+make krpsim_verif resources/simple trace.txt
+make process-resources
+```
+
+Les arguments fournis après la cible sont transmis au binaire.
+
+
 ## 📦 Utilisation
 
 La CLI accepte un fichier de configuration et un délai maximal. Un exemple minimal de configuration se trouve dans `resources/simple` :
@@ -122,32 +133,70 @@ Les rôles détaillés sont décrits dans `AGENTS.md`.
 ## 📂 Structure du Projet
 
 ```
-krpsim/
-├── src/krpsim/
-│   ├── parser.py
-│   ├── simulator.py
-│   ├── optimizer.py
-│   ├── display.py
-│   └── cli.py
-├── src/krpsim_verif/
-│   └── cli.py
-├── resources/
-├── tests/
+.
+├── AGENTS.md
+├── author
+├── codecov.yml
+├── docs
+│   └── badges
+│       └── version.json
+├── gantt_project
+│   └── gantt.py
+├── install.txt
+├── junit.xml
+├── krpsim.en.subject.pdf
+├── LICENSE
+├── log.txt
+├── Lois de Murphy.KRPSIM.txt
+├── Makefile
+├── poetry.lock
+├── pyproject.toml
+├── README.md
+├── resources
+│   ├── best
+│   ├── custom_finite
+│   ├── custom_infinite
+│   ├── duplicate_entries
+│   ├── exponential
+│   ├── ikea
+│   ├── inception
+│   ├── invalid_bad_process
+│   ├── invalid_bad_stock
+│   ├── large_numbers
+│   ├── missing_input
+│   ├── multi_output_chain
+│   ├── pomme
+│   ├── recre
+│   ├── self_gen
+│   ├── simple
+│   ├── steak
+│   ├── unreachable_target
+│   ├── zero_delay
+│   └── zero_initial
+├── resources.tgz
+├── src
+│   ├── krpsim
+│   │   ├── cli.py
+│   │   ├── display.py
+│   │   ├── __init__.py
+│   │   ├── optimizer.py
+│   │   ├── parser.py
+│   │   └── simulator.py
+│   └── krpsim_verif
+│       ├── cli.py
+│       ├── __init__.py
+│       └── verifier.py
+├── tests
+│   ├── __init__.py
+│   ├── test_cli.py
+│   ├── test_display.py
+│   ├── test_parser_hypothesis.py
 │   ├── test_parser.py
 │   ├── test_simulator.py
-│   └── test_verifier.py
-├── resources/                   # Fichiers de config tests (cas nominaux, crash, stress, forever)
-├── Makefile                     # Commandes (install, test, lint…)
-├── pyproject.toml               # Dépendances et configuration
-├── LICENSE
-├── author
-├── README.md
-└── pyproject.toml
+│   ├── test_verifier.py
+│   └── test_version.py
+└── WBS_krpsim.txt
 ```
-
-## 🖥️ Compatibilité Windows
-
-La CI vérifie l'exécution des tests sous Windows et Linux.
 
 ## 🛠️ Fichiers de configuration
 
@@ -185,9 +234,15 @@ Les règles de contribution sont détaillées dans `AGENTS.md`. Toute PR doit pa
 * [AGENTS.md](AGENTS.md) – blueprint du projet.
 * [krpsim.en.subject.pdf](krpsim.en.subject.pdf) – énoncé original.
 
-## 🚀 Publication d'une release
+## 📊 Diagramme de Gantt
 
-Le workflow GitHub Actions publie automatiquement sur PyPI lors du push d'un tag `v*`.
+Pour visualiser l'ordonnancement des tâches :
+
+- Installation des dépendances : `pip install pandas matplotlib` (ou `poetry add pandas matplotlib`).
+- Commande d’exécution : `poetry run python gantt_project/gantt.py`.
+
+Le script utilise des données d’exemple et peut être adapté pour parser une trace réelle.
+
 
 ## 🛡️ Licence
 
