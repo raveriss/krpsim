@@ -1,4 +1,8 @@
-# Byte-compiled / optimized / DLL files
+# ================================
+#   .gitignore pour projet Python
+# ================================
+
+# Byte-compiled / Optimized / DLL files
 __pycache__/
 *.py[cod]
 *.so
@@ -11,13 +15,13 @@ __pycache__/
 htmlcov/
 coverage.xml
 
-# Distribution / packaging
+# Distribution / Packaging
 build/
 dist/
-
-# Misc
 *.egg-info/
 
+# Hypothesis testing
 .hypothesis/
 
+# Divers
 *.txt
