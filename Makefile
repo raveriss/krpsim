@@ -18,7 +18,7 @@ install:
 # ------------------------------------------------------------
 # Qualité de code : lint et typage statique
 # ------------------------------------------------------------
-lint:
+lint: install
 	# Vérifie le style et l'erreurs via ruff
 	$(POETRY) ruff check src tests	
 	# Vérifie les annotations de types avec mypy
@@ -29,7 +29,7 @@ lint:
 # ------------------------------------------------------------
 PY_FILES := $(shell git ls-files '*.py')
 
-format:
+format: install
 	@if [ -n "$(PY_FILES)" ]; then \
 		$(POETRY) black $(PY_FILES); \
 		$(POETRY) isort $(PY_FILES); \
@@ -40,7 +40,7 @@ format:
 # ------------------------------------------------------------
 # Exécution de la suite de tests
 # ------------------------------------------------------------
-test:
+test: install	
 	# Lance pytest pour vérifier le bon fonctionnement des modules
 	$(POETRY) pytest
 
@@ -58,17 +58,25 @@ krpsim_verif:
 # ------------------------------------------------------------
 # Traitement en batch de toutes les ressources
 # ------------------------------------------------------------
-process_resources:  # alias pratique pour O/I
-	@echo "=== Début du traitement de toutes les ressources ==="
-	@for f in resources/*; do \
-	  # Pour chaque fichier de ressources
-	  echo "=== Traitement de $$f ==="; \
-	  $(POETRY) krpsim "$$f" 10; \
-	  echo "=== Vérification de $$f ==="; \
-	  $(POETRY) krpsim_verif "$$f" trace.txt; \
-	  sleep 3; \
-	done > log.txt
-	@echo "=== Traitement terminé : voir log.txt pour le détail ==="
+process_resources: install
+	@{ \
+	  echo "=== Début du traitement de toutes les ressources ==="; \
+	  files=$$(find resources -type f | sort); \
+	  if [ -z "$$files" ]; then \
+	    echo "Aucun fichier trouvé dans resources/"; \
+	    exit 1; \
+	  fi; \
+	  for f in $$files; do \
+	    echo "=== Traitement de $$f ==="; \
+	    $(POETRY) krpsim "$$f" 10; \
+	    echo "=== Vérification de $$f ==="; \
+	    $(POETRY) krpsim_verif "$$f" trace.txt; \
+	    sleep 1; \
+	  done; \
+	  echo "=== Traitement terminé ==="; \
+	} > log.txt 2>&1
+
+
 
 # -------------------------------------------------------------------
 # Uninstall / Clean / Fclean / Re
