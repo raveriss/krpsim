@@ -87,43 +87,76 @@ jobs:
         run: poetry run isort --check-only .
 
   tests:
-    runs-on: ubuntu-latest
+    name: Tests
+    runs-on: ${{ matrix.os }}
+    needs: pre-commit
+    strategy:
+      matrix:
+        # os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest]
+        # python-version: ["3.11"]
+        python-version: ["3.10", "3.11", "3.12"]
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # important pour que l'uploader retrouve le commit
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: ${{ matrix.python-version }}
 
-      - name: Install Poetry
-        run: pipx install poetry
+      - name: Install system dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev
+
+      - name: Install Poetry (Unix)
+        if: runner.os != 'Windows'
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Install Poetry (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
+          $env:PATH += ";$env:POETRY_HOME\bin"
+          echo "$env:POETRY_HOME\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
+        shell: powershell
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install dependencies
-        run: poetry install --no-interaction --no-ansi
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
 
-      - name: Run tests with coverage (XML at repo root)
-        run: |
-          poetry run pytest --cov=src --cov-branch --cov-report=xml:coverage.xml
-          echo "== ls at repo root =="
-          ls -lah
-          echo "== head coverage.xml =="
-          head -n 20 coverage.xml || true
-          test -f coverage.xml || (echo "coverage.xml missing" && exit 1)
+      - name: Install project
+        run: poetry install --no-interaction
+
+      - name: Run tests
+        run: poetry run pytest --cov=src/rubik_solver --cov-report=xml --cov-report=term-missing
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12' && env.CODECOV_TOKEN != ''
+        uses: codecov/codecov-action@v3
         with:
-          files: ./coverage.xml
-          disable_search: true
+          token: ${{ env.CODECOV_TOKEN }}
+          file: ./coverage.xml
           flags: unittests
-          name: ci-ubuntu-py310
-          verbose: true
-          fail_ci_if_error: true  # repasse à false une fois OK
+          name: codecov-umbrella
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
 
   build:
     name: Build Package
