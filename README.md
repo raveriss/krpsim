@@ -145,10 +145,6 @@ krpsim/
 └── pyproject.toml
 ```
 
-## 🖥️ Compatibilité Windows
-
-La CI vérifie l'exécution des tests sous Windows et Linux.
-
 ## 🛠️ Fichiers de configuration
 
 Les principaux réglages (`black`, `isort`, `mypy`, `pytest`) se trouvent dans `pyproject.toml`.
