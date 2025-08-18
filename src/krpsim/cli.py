@@ -8,12 +8,28 @@ import os
 import sys
 from pathlib import Path
 
+import snoop
+from packaging import version
+
+snoop_version = version.parse(snoop.__version__)
+
+if snoop_version >= version.parse("0.6.0"):
+    try:
+        snoop.install(out=sys.stdout, prefix="[SNOOP] ",
+                      columns=("time", "file", "function", "code", "variables"))
+    except Exception:
+        # Fallback silencieux: pas de columns
+        snoop.install(out=sys.stdout, prefix="[SNOOP] ")
+else:
+    snoop.install(out=sys.stdout, prefix="[SNOOP] ")
+
 from . import parser as parser_mod
 from .display import format_trace, print_header, save_trace
 from .parser import ParseError
 from .simulator import Simulator
 
 
+@snoop
 def build_parser() -> argparse.ArgumentParser:
     """Return the CLI argument parser."""
 
@@ -45,6 +61,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+@snoop
 def _validate_args(args: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
     """Validate CLI arguments."""
 
@@ -59,6 +76,7 @@ def _validate_args(args: argparse.Namespace, parser: argparse.ArgumentParser) ->
         parser.error("delay must be a positive integer")
 
 
+@snoop
 def _run_simulation(args: argparse.Namespace) -> tuple[Simulator, bool]:
     """Run the simulation and return the simulator instance."""
 
@@ -74,6 +92,7 @@ def _run_simulation(args: argparse.Namespace) -> tuple[Simulator, bool]:
     return sim, ignore_delay
 
 
+@snoop
 def main(argv: list[str] | None = None) -> int:
     """Entry point for the krpsim CLI."""
 
