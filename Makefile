@@ -39,12 +39,12 @@ $(STAMP): pyproject.toml poetry.lock
 			echo "❌ Poetry introuvable. Installe-le puis relance 'make'."; \
 			exit 1; \
 		fi; \
-		echo "# Installation des dépendances et du package (editable)"; \
+		echo "# Installation des dépendances et du package"; \
 		poetry install; \
-		poetry run python -m pip install -e .; \
 		echo "$$HASH" > $(STAMP); \
 		echo "✅ Dépendances installées."; \
 	fi
+
 
 install: $(STAMP)
 
@@ -177,19 +177,26 @@ fclean:
 	@$(MAKE) clean
 	@$(MAKE) uninstall
 	@echo "🗑️  Suppression du venv Poetry (si présent)…"
-	@set -eu; \
-	if command -v poetry >/dev/null 2>&1; then \
-		if poetry env info -p >/dev/null 2>&1; then \
-			poetry env remove python >/dev/null 2>&1 || true; \
-			echo "✅ Venv Poetry supprimé."; \
-		else \
-			echo "ℹ️  Aucun venv Poetry détecté : rien à supprimer."; \
+	@{ \
+		set -eu; \
+		VENV_PATH="$$(poetry env info -p 2>/dev/null || true)"; \
+		: # 1) Suppression via Poetry par chemin (plus fiable); \
+		if [ -n "$$VENV_PATH" ]; then \
+			poetry env remove "$$VENV_PATH" >/dev/null 2>&1 || true; \
 		fi; \
-	else \
-		echo "ℹ️  Poetry non trouvé : skip suppression venv."; \
-	fi
+		: # 2) Fallback: si le dossier existe encore, on l'enlève; \
+		if [ -n "$$VENV_PATH" ] && [ -d "$$VENV_PATH" ]; then \
+			rm -rf "$$VENV_PATH"; \
+		fi; \
+		: # 3) Fallback additionnel: cas in-project .venv; \
+		if [ -d ".venv" ]; then \
+			rm -rf ".venv"; \
+		fi; \
+		echo "✅ Venv supprimé (s'il existait)."; \
+	}; true
 	@$(MAKE) uninstall-bin
 	@rm -f $(STAMP)
+
 
 re:
 	@$(MAKE) fclean
