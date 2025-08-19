@@ -150,15 +150,10 @@ process_resources: $(STAMP)
 # -------------------------------------------------------------------
 uninstall:
 	@set -eu; \
-	if command -v poetry >/dev/null 2>&1; then \
-		if poetry env info -p >/dev/null 2>&1; then \
-			echo "🧽 Désinstallation du package dans le venv Poetry…"; \
-			$(POETRY) python -m pip uninstall -y krpsim >/dev/null 2>&1 || true; \
-		else \
-			echo "ℹ️  Aucun venv Poetry actif : rien à désinstaller."; \
-		fi; \
+	if command -v poetry >/dev/null 2>&1 && poetry env info -p >/dev/null 2>&1; then \
+		echo "🧽 Skip désinstallation du package (sera supprimé avec le venv)."; \
 	else \
-		echo "ℹ️  Poetry non trouvé : skip désinstallation."; \
+		echo "ℹ️  Aucun venv Poetry actif : rien à désinstaller."; \
 	fi
 
 clean:
