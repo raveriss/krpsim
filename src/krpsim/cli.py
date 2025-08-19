@@ -29,7 +29,6 @@ from .simulator import Simulator
 #     snoop.install(out=sys.stdout, prefix="[SNOOP] ")
 
 
-
 # @snoop
 def build_parser() -> argparse.ArgumentParser:
     """Return the CLI argument parser."""
