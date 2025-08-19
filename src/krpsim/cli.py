@@ -8,11 +8,16 @@ import os
 import sys
 from pathlib import Path
 
+from . import parser as parser_mod
+from .display import format_trace, print_header, save_trace
+from .parser import ParseError
+from .simulator import Simulator
+
 # import snoop
 # from packaging import version
-# 
+#
 # snoop_version = version.parse(snoop.__version__)
-# 
+#
 # if snoop_version >= version.parse("0.6.0"):
 #     try:
 #         snoop.install(out=sys.stdout, prefix="[SNOOP] ",
@@ -23,10 +28,6 @@ from pathlib import Path
 # else:
 #     snoop.install(out=sys.stdout, prefix="[SNOOP] ")
 
-from . import parser as parser_mod
-from .display import format_trace, print_header, save_trace
-from .parser import ParseError
-from .simulator import Simulator
 
 
 # @snoop
