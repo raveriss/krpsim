@@ -34,6 +34,17 @@ poetry run krpsim resources/simple 10
 
 ## 🔧 Installation
 
+### Prérequis
+
+- Python ≥3.10
+- [Poetry](https://python-poetry.org/) pour la gestion des dépendances :
+
+  ```bash
+  pipx install poetry  # recommandé
+  # ou
+  curl -sSL https://install.python-poetry.org | python3 -
+  ```
+
 ### Depuis PyPI
 
 ```bash
@@ -224,9 +235,22 @@ La configuration `pytest` impose une couverture minimale de 100 % :
 * **Typage** : `mypy`.
 * **Hooks** : `pre-commit`.
 
+Pour exécuter les vérifications localement :
+
+```bash
+poetry run pre-commit install
+poetry run pre-commit run --all-files
+```
+
 ## 🤝 Contribuer
 
 Les règles de contribution sont détaillées dans `AGENTS.md`. Toute PR doit passer la CI et maintenir la couverture à 100 %.
+Avant de soumettre des changements, vérifie localement les hooks et les tests :
+
+```bash
+poetry run pre-commit run --all-files
+make test
+```
 
 ## 📚 Documentation liée
 
