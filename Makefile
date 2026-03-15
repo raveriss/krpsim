@@ -73,7 +73,6 @@ install-bin: install
 uninstall-bin:
 	@set -eu; \
 	rm -f "$$HOME/.local/bin/krpsim" "$$HOME/.local/bin/krpsim_verif"; \
-	echo "🗑️  Symlinks (si présents) supprimés de $$HOME/.local/bin"
 
 # ------------------------------------------------------------
 # Qualité de code : lint et typage statique
@@ -150,12 +149,9 @@ uninstall:
 	@set -eu; \
 	if command -v poetry >/dev/null 2>&1 && poetry env info -p >/dev/null 2>&1; then \
 		echo "🧽 Skip désinstallation du package (sera supprimé avec le venv)."; \
-	else \
-		echo "ℹ️  Aucun venv Poetry actif : rien à désinstaller."; \
 	fi
 
 clean:
-	@echo "🧹 Nettoyage des artefacts…"
 	@rm -rf \
 	  build dist \
 	  .pytest_cache .mypy_cache \
@@ -164,12 +160,11 @@ clean:
 	  **/__pycache__ \
 	  log.txt trace.txt junit.xml \
 	  .artifacts docs/graphs 2>/dev/null || true
-	@echo "✅ Nettoyage terminé (aucune erreur si déjà vide)."
 
 fclean:
+	@echo "🧹 Nettoyage"
 	@$(MAKE) clean
 	@$(MAKE) uninstall
-	@echo "🗑️  Suppression du venv Poetry (si présent)…"
 	@{ \
 		set -eu; \
 		VENV_PATH="$$(poetry env info -p 2>/dev/null || true)"; \
@@ -185,7 +180,6 @@ fclean:
 		if [ -d ".venv" ]; then \
 			rm -rf ".venv"; \
 		fi; \
-		echo "✅ Venv supprimé (s'il existait)."; \
 	}; true
 	@$(MAKE) uninstall-bin
 
