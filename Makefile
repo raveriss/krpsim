@@ -2,7 +2,7 @@
 # le formatage, les tests et l'exécution de krpsim
 #
 # Usage express :
-#   make                -> install + install-bin (avec cache)
+#   make                -> install + install-bin
 #   krpsim --help       -> dispo direct si ~/.local/bin est dans le PATH
 
 .PHONY: default install install-bin uninstall-bin \
@@ -11,7 +11,7 @@
 
 MAKEFLAGS += --no-print-directory
 POETRY = poetry run
-STAMP  = .stamp.install
+VENV_DIR = .venv
 
 # ------------------------------------------------------------
 # [DEFAULT] Installation complète (deps + binaires user)
@@ -21,32 +21,26 @@ default: install install-bin
 	@echo "   Ex.: krpsim --help"
 
 # ------------------------------------------------------------
-# INSTALL avec cache :
-# Recrée $(STAMP) si pyproject.toml/poetry.lock changent.
+# INSTALL avec cache basé sur .venv :
+# Relance l'installation si pyproject.toml/poetry.lock sont plus récents.
 # ------------------------------------------------------------
-$(STAMP): pyproject.toml poetry.lock
-	@echo "# Vérification des dépendances (avec cache)…"
+$(VENV_DIR): pyproject.toml poetry.lock
+	@echo "# Vérification des dépendances (cache .venv)…"
 	@set -eu; \
-	HASH="$$( (cat pyproject.toml poetry.lock 2>/dev/null || true) | \
-		( command -v sha256sum >/dev/null 2>&1 && sha256sum || \
-		  (command -v shasum >/dev/null 2>&1 && shasum -a 256) || \
-		  openssl dgst -sha256 | sed 's/^.*= //') | awk '{print $$1}' )"; \
-	OLD="$$(cat $(STAMP) 2>/dev/null || true)"; \
-	if [ -n "$$OLD" ] && [ "$$HASH" = "$$OLD" ] && [ -d ".venv" ]; then \
-		echo "≡ Déjà à jour (deps inchangées)"; \
-	else \
-		if ! command -v poetry >/dev/null 2>&1; then \
-			echo "❌ Poetry introuvable. Installe-le puis relance 'make'."; \
-			exit 1; \
-		fi; \
-		echo "# Installation des dépendances et du package"; \
-		poetry install; \
-		echo "$$HASH" > $(STAMP); \
-		echo "✅ Dépendances installées."; \
+	if [ ! -d "$(VENV_DIR)" ]; then \
+		echo "# Environnement virtuel absent : installation initiale"; \
+	fi; \
+	if ! command -v poetry >/dev/null 2>&1; then \
+		echo "❌ Poetry introuvable. Installe-le puis relance 'make'."; \
+		exit 1; \
 	fi
+	echo "# Installation des dépendances et du package"; \
+	poetry install; \
+	touch "$(VENV_DIR)"; \
+	echo "✅ Dépendances installées."
 
 
-install: $(STAMP)
+install: $(VENV_DIR)
 
 # ------------------------------------------------------------
 # Installe les binaires dans ~/.local/bin via symlinks (idempotent)
@@ -84,7 +78,7 @@ uninstall-bin:
 # ------------------------------------------------------------
 # Qualité de code : lint et typage statique
 # ------------------------------------------------------------
-lint: $(STAMP)
+lint: install
 	@echo "# Lint (ruff) + type-check (mypy)"
 	$(POETRY) ruff check src tests || true
 	$(POETRY) mypy src tests || true
@@ -94,7 +88,7 @@ lint: $(STAMP)
 # ------------------------------------------------------------
 PY_FILES := $(shell git ls-files '*.py')
 
-format: $(STAMP)
+format: install
 	@if [ -n "$(PY_FILES)" ]; then \
 		echo "# Format (black + isort)"; \
 		$(POETRY) black $(PY_FILES) || true; \
@@ -106,22 +100,26 @@ format: $(STAMP)
 # ------------------------------------------------------------
 # Tests
 # ------------------------------------------------------------
-test: $(STAMP)
+test: install
 	$(POETRY) pytest || true
 
 # ------------------------------------------------------------
 # Exécutions (via Poetry)
 # ------------------------------------------------------------
-krpsim: $(STAMP)
+krpsim: install
+	@set -euo pipefail; \
+	file = "$(word 1,$(MAKECMDGOALS))"; \
+	echo "⚡ Exécution de krpsim sur $$file"; \
 	$(POETRY) krpsim $(filter-out $@,$(MAKECMDGOALS))
+	exit 0;
 
-krpsim_verif: $(STAMP)
+krpsim_verif: install
 	$(POETRY) krpsim_verif $(filter-out $@,$(MAKECMDGOALS))
 
 # ------------------------------------------------------------
 # Traitement en batch de toutes les ressources (silencieux, tout dans log.txt)
 # ------------------------------------------------------------
-process_resources: $(STAMP)
+process_resources: install
 	@LOG="log.txt"; \
 	: > "$$LOG"; \
 	{ \
@@ -190,7 +188,6 @@ fclean:
 		echo "✅ Venv supprimé (s'il existait)."; \
 	}; true
 	@$(MAKE) uninstall-bin
-	@rm -f $(STAMP)
 
 
 re:
@@ -221,13 +218,13 @@ doctor:
 		[ -n "$$VENV" ] && echo "Venv: $$VENV" || echo "Venv: ABSENT"; \
 	fi; \
 	which krpsim >/dev/null 2>&1 && echo "krpsim dans PATH: $$([ -n "$$(which krpsim 2>/dev/null)" ] && which krpsim)" || echo "krpsim dans PATH: NON"; \
-	[ -f "$(STAMP)" ] && echo "Stamp présent: $(STAMP)" || echo "Stamp: ABSENT"; \
+	[ -d "$(VENV_DIR)" ] && echo "Dossier venv présent: $(VENV_DIR)" || echo "Dossier venv: ABSENT"; \
 	echo "——————"
 
 help:
 	@echo "Cibles :"
-	@echo "  (défaut)      -> install + install-bin (avec cache)"
-	@echo "  install       -> prépare le venv si modifs deps (pyproject/lock)"
+	@echo "  (défaut)      -> install + install-bin"
+	@echo "  install       -> installe via Poetry (cache basé sur .venv)"
 	@echo "  install-bin   -> symlinks vers ~/.local/bin (idempotent)"
 	@echo "  uninstall-bin -> supprime les symlinks utilisateur"
 	@echo "  krpsim ...    -> exécute via Poetry"
