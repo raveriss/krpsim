@@ -7,10 +7,13 @@
 
 .PHONY: default install install-bin uninstall-bin \
         lint format test krpsim krpsim_verif process_resources \
-        clean fclean re uninstall which-bin print-path help doctor
+        clean fclean re uninstall which-bin print-path help doctor \
+			show-activate
 
 MAKEFLAGS += --no-print-directory
-POETRY = poetry run
+POETRY_BIN = $(shell command -v poetry 2>/dev/null || printf '%s' "$(HOME)/.local/bin/poetry")
+POETRY = $(POETRY_BIN) run
+POETRY_INSTALL_URL = https://install.python-poetry.org
 VENV_DIR = .venv
 
 # ------------------------------------------------------------
@@ -30,12 +33,35 @@ $(VENV_DIR): pyproject.toml poetry.lock
 	if [ ! -d "$(VENV_DIR)" ]; then \
 		echo "# Environnement virtuel absent : installation initiale"; \
 	fi; \
-	if ! command -v poetry >/dev/null 2>&1; then \
-		echo "❌ Poetry introuvable. Installe-le puis relance 'make'."; \
-		exit 1; \
-	fi
+	POETRY_BIN="$(POETRY_BIN)"; \
+	if [ ! -x "$$POETRY_BIN" ]; then \
+		echo "# Poetry introuvable dans la session : installation automatique (sans sudo)."; \
+		if ! command -v curl >/dev/null 2>&1; then \
+			echo "❌ 'curl' est requis pour installer Poetry automatiquement."; \
+			echo "   Action: installe curl ou installe Poetry manuellement via $(POETRY_INSTALL_URL)."; \
+			exit 1; \
+		fi; \
+		if ! command -v python3 >/dev/null 2>&1; then \
+			echo "❌ 'python3' est requis pour installer Poetry automatiquement."; \
+			echo "   Action: installe Python 3 puis relance 'make install'."; \
+			exit 1; \
+		fi; \
+		if ! curl -sSL "$(POETRY_INSTALL_URL)" | python3 -; then \
+			echo "❌ L'installation automatique de Poetry a échoué."; \
+			echo "   Action: vérifie la connexion réseau, puis relance 'make install'."; \
+			exit 1; \
+		fi; \
+		POETRY_BIN="$$HOME/.local/bin/poetry"; \
+		if [ ! -x "$$POETRY_BIN" ]; then \
+			echo "❌ Poetry semble installé mais binaire introuvable: $$POETRY_BIN"; \
+			echo "   Action: ajoute $$HOME/.local/bin au PATH puis relance 'make install'."; \
+			exit 1; \
+		fi; \
+		POETRY_VERSION="$$( "$$POETRY_BIN" --version 2>/dev/null || true )"; \
+		[ -n "$$POETRY_VERSION" ] && echo "✅ $$POETRY_VERSION"; \
+	fi; \
 	echo "# Installation des dépendances et du package"; \
-	poetry install; \
+	"$$POETRY_BIN" install; \
 	touch "$(VENV_DIR)"; \
 	echo "✅ Dépendances installées."
 
@@ -47,7 +73,8 @@ install: $(VENV_DIR)
 # ------------------------------------------------------------
 install-bin: install
 	@set -eu; \
-	VENV_PATH="$$(poetry env info -p 2>/dev/null || true)"; \
+	POETRY_BIN="$(POETRY_BIN)"; \
+	VENV_PATH="$$( "$$POETRY_BIN" env info -p 2>/dev/null || true )"; \
 	if [ -z "$$VENV_PATH" ] || [ ! -d "$$VENV_PATH" ]; then \
 		echo "❌ Venv Poetry introuvable. Lance d'abord: make install"; \
 		exit 1; \
@@ -142,12 +169,17 @@ process_resources: install
 	  fi; \
 	} >> "$$LOG" 2>&1
 
+show-activate:
+	@echo "Commande d'activation (a executer dans le shell courant) :"
+	@echo "source $$(poetry env info -p)/bin/activate"
+
 # -------------------------------------------------------------------
 # Uninstall / Clean / Fclean / Re
 # -------------------------------------------------------------------
 uninstall:
 	@set -eu; \
-	if command -v poetry >/dev/null 2>&1 && poetry env info -p >/dev/null 2>&1; then \
+	POETRY_BIN="$(POETRY_BIN)"; \
+	if [ -x "$$POETRY_BIN" ] && "$$POETRY_BIN" env info -p >/dev/null 2>&1; then \
 		echo "🧽 Skip désinstallation du package (sera supprimé avec le venv)."; \
 	fi
 
@@ -167,10 +199,11 @@ fclean:
 	@$(MAKE) uninstall
 	@{ \
 		set -eu; \
-		VENV_PATH="$$(poetry env info -p 2>/dev/null || true)"; \
+		POETRY_BIN="$(POETRY_BIN)"; \
+		VENV_PATH="$$( "$$POETRY_BIN" env info -p 2>/dev/null || true )"; \
 		: # 1) Suppression via Poetry par chemin (plus fiable); \
 		if [ -n "$$VENV_PATH" ]; then \
-			poetry env remove "$$VENV_PATH" >/dev/null 2>&1 || true; \
+			"$$POETRY_BIN" env remove "$$VENV_PATH" >/dev/null 2>&1 || true; \
 		fi; \
 		: # 2) Fallback: si le dossier existe encore, on l'enlève; \
 		if [ -n "$$VENV_PATH" ] && [ -d "$$VENV_PATH" ]; then \
@@ -180,8 +213,44 @@ fclean:
 		if [ -d ".venv" ]; then \
 			rm -rf ".venv"; \
 		fi; \
-	}; true
+		}; true
 	@$(MAKE) uninstall-bin
+	@set -eu; \
+	POETRY_LINK="$$HOME/.local/bin/poetry"; \
+	POETRY_HOME="$$HOME/.local/share/pypoetry"; \
+	if [ -L "$$POETRY_LINK" ] && [ ! -x "$$POETRY_LINK" ] && [ ! -d "$$POETRY_HOME" ]; then \
+		echo "# Nettoyage d'un symlink Poetry cassé: $$POETRY_LINK"; \
+		rm -f "$$POETRY_LINK"; \
+		echo "✅ Symlink Poetry cassé supprimé."; \
+	elif [ -x "$$POETRY_LINK" ] || [ -d "$$POETRY_HOME" ]; then \
+		echo "# Désinstallation de Poetry utilisateur (~/.local)"; \
+		if ! command -v curl >/dev/null 2>&1; then \
+			echo "❌ Impossible de désinstaller Poetry automatiquement: 'curl' est absent."; \
+			echo "   Action: installe curl, ou lance manuellement: curl -sSL $(POETRY_INSTALL_URL) | python3 - --uninstall"; \
+			exit 1; \
+		fi; \
+		if ! command -v python3 >/dev/null 2>&1; then \
+			echo "❌ Impossible de désinstaller Poetry automatiquement: 'python3' est absent."; \
+			echo "   Action: installe Python 3, ou désinstalle Poetry manuellement."; \
+			exit 1; \
+		fi; \
+		if ! curl -sSL "$(POETRY_INSTALL_URL)" | python3 - --uninstall; then \
+			echo "❌ La désinstallation automatique de Poetry a échoué."; \
+			echo "   Action: relance 'make fclean' avec Internet, ou exécute la commande manuelle d'uninstall."; \
+			exit 1; \
+		fi; \
+		if [ -L "$$POETRY_LINK" ] && [ ! -e "$$POETRY_LINK" ]; then \
+			rm -f "$$POETRY_LINK"; \
+		fi; \
+		if [ -L "$$POETRY_LINK" ] || [ -x "$$POETRY_LINK" ] || [ -d "$$POETRY_HOME" ]; then \
+			echo "❌ Poetry semble encore présent dans ~/.local après désinstallation."; \
+			echo "   Action: vérifie les permissions puis supprime ~/.local/bin/poetry et ~/.local/share/pypoetry."; \
+			exit 1; \
+		fi; \
+		echo "✅ Poetry utilisateur supprimé."; \
+	else \
+		echo "# Poetry utilisateur déjà absent (rien à désinstaller)."; \
+	fi
 
 
 re:
@@ -194,7 +263,8 @@ re:
 which-bin:
 	@set -e; \
 	echo "Poetry venv:"; \
-	if command -v poetry >/dev/null 2>&1; then poetry env info -p || true; else echo "(poetry non installé)"; fi; \
+	POETRY_BIN="$(POETRY_BIN)"; \
+	if [ -x "$$POETRY_BIN" ]; then "$$POETRY_BIN" env info -p || true; else echo "(poetry non installé)"; fi; \
 	echo; \
 	echo "which krpsim:"; which krpsim || echo "(non trouvé dans le PATH)"; \
 	echo; \
@@ -205,10 +275,11 @@ print-path:
 
 doctor:
 	@set -eu; \
+	POETRY_BIN="$(POETRY_BIN)"; \
 	echo "— Doctor —"; \
-	command -v poetry >/dev/null 2>&1 && echo "Poetry: OK" || echo "Poetry: ABSENT"; \
-	if command -v poetry >/dev/null 2>&1; then \
-		VENV="$$(poetry env info -p 2>/dev/null || true)"; \
+	[ -x "$$POETRY_BIN" ] && echo "Poetry: OK ($$POETRY_BIN)" || echo "Poetry: ABSENT"; \
+	if [ -x "$$POETRY_BIN" ]; then \
+		VENV="$$( "$$POETRY_BIN" env info -p 2>/dev/null || true )"; \
 		[ -n "$$VENV" ] && echo "Venv: $$VENV" || echo "Venv: ABSENT"; \
 	fi; \
 	which krpsim >/dev/null 2>&1 && echo "krpsim dans PATH: $$([ -n "$$(which krpsim 2>/dev/null)" ] && which krpsim)" || echo "krpsim dans PATH: NON"; \
@@ -218,11 +289,11 @@ doctor:
 help:
 	@echo "Cibles :"
 	@echo "  (défaut)      -> install + install-bin"
-	@echo "  install       -> installe via Poetry (cache basé sur .venv)"
+	@echo "  install       -> auto-installe Poetry si absent, puis installe les deps"
 	@echo "  install-bin   -> symlinks vers ~/.local/bin (idempotent)"
 	@echo "  uninstall-bin -> supprime les symlinks utilisateur"
 	@echo "  krpsim ...    -> exécute via Poetry"
 	@echo "  krpsim_verif  -> exécute via Poetry"
 	@echo "  lint | format | test | process_resources"
-	@echo "  clean | fclean | re | uninstall"
+	@echo "  clean | fclean (supprime aussi Poetry user) | re | uninstall"
 	@echo "  which-bin | print-path | doctor | help"

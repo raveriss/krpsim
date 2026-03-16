@@ -28,8 +28,8 @@ Les outils de développement incluent `pytest`, `ruff`, `black`, `isort` et `myp
 ## ⚡ Démarrage rapide
 
 ```bash
-poetry install
-poetry run krpsim resources/simple 10
+make install
+make krpsim resources/simple 10
 ```
 
 ## 🔧 Installation
@@ -44,8 +44,10 @@ pip install krpsim
 ```bash
 git clone https://github.com/raveriss/krpsim.git
 cd krpsim
-poetry install
+make install
 ```
+
+`make install` installe automatiquement Poetry dans `~/.local/bin` s'il est absent (sans sudo), puis crée le venv et installe les dépendances.
 
 Pour un mode développement, utilisez un environnement virtuel `poetry shell`.
 
@@ -65,6 +67,8 @@ make process-resources
 ```
 
 Les arguments fournis après la cible sont transmis au binaire.
+
+Note: `make fclean` supprime aussi Poetry utilisateur (`~/.local/bin/poetry`) afin de tester un flux d'installation "from scratch".
 
 
 ## 📦 Utilisation
