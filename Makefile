@@ -6,15 +6,27 @@
 #   krpsim --help       -> dispo direct si ~/.local/bin est dans le PATH
 
 .PHONY: default install install-bin uninstall-bin \
-        lint format test krpsim krpsim_verif process_resources \
+        lint format test krpsim krpsim_verif graph process_resources \
         clean fclean re uninstall which-bin print-path help doctor \
-			show-activate
+		show-activate
 
 MAKEFLAGS += --no-print-directory
 POETRY_BIN = $(shell command -v poetry 2>/dev/null || printf '%s' "$(HOME)/.local/bin/poetry")
 POETRY = $(POETRY_BIN) run
 POETRY_INSTALL_URL = https://install.python-poetry.org
 VENV_DIR = .venv
+KRPSIM_INPUT = $(word 2,$(MAKECMDGOALS))
+KRPSIM_CYCLES = $(word 3,$(MAKECMDGOALS))
+KRPSIM_VERIF_INPUT = $(word 2,$(MAKECMDGOALS))
+KRPSIM_VERIF_TRACE = $(word 3,$(MAKECMDGOALS))
+KRPSIM_ARGS_COUNT = $(words $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS)))
+CLI_ARG_TARGETS = krpsim krpsim_verif
+
+ifneq (,$(filter $(firstword $(MAKECMDGOALS)),$(CLI_ARG_TARGETS)))
+CLI_ARGS = $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+.PHONY: $(CLI_ARGS)
+$(foreach arg,$(CLI_ARGS),$(eval $(arg):;@:))
+endif
 
 # ------------------------------------------------------------
 # [DEFAULT] Installation complète (deps + binaires user)
@@ -28,11 +40,8 @@ default: install install-bin
 # Relance l'installation si pyproject.toml/poetry.lock sont plus récents.
 # ------------------------------------------------------------
 $(VENV_DIR): pyproject.toml poetry.lock
-	@echo "# Vérification des dépendances (cache .venv)…"
+	@echo "# Installation de l'Environnement virtuel des dépendances et du package"
 	@set -eu; \
-	if [ ! -d "$(VENV_DIR)" ]; then \
-		echo "# Environnement virtuel absent : installation initiale"; \
-	fi; \
 	POETRY_BIN="$(POETRY_BIN)"; \
 	if [ ! -x "$$POETRY_BIN" ]; then \
 		echo "# Poetry introuvable dans la session : installation automatique (sans sudo)."; \
@@ -60,7 +69,6 @@ $(VENV_DIR): pyproject.toml poetry.lock
 		POETRY_VERSION="$$( "$$POETRY_BIN" --version 2>/dev/null || true )"; \
 		[ -n "$$POETRY_VERSION" ] && echo "✅ $$POETRY_VERSION"; \
 	fi; \
-	echo "# Installation des dépendances et du package"; \
 	"$$POETRY_BIN" install; \
 	touch "$(VENV_DIR)"; \
 	echo "✅ Dépendances installées."
@@ -133,14 +141,156 @@ test: install
 # Exécutions (via Poetry)
 # ------------------------------------------------------------
 krpsim: install
-	@set -euo pipefail; \
-	file = "$(word 1,$(MAKECMDGOALS))"; \
-	echo "⚡ Exécution de krpsim sur $$file"; \
-	$(POETRY) krpsim $(filter-out $@,$(MAKECMDGOALS))
-	exit 0;
+	@set -u; \
+	HAS_ERROR=0; \
+	CYCLE_IS_INT=1; \
+	if [ "$(KRPSIM_ARGS_COUNT)" -ne 2 ]; then \
+		echo "[KRPSIM][ERREUR] Arguments invalides."; \
+		echo "Usage: make krpsim <resource_file> <max_cycles>"; \
+		echo "Exemple: make krpsim resources/simple 10"; \
+		echo "Action: fournis exactement 2 arguments."; \
+		HAS_ERROR=1; \
+	fi; \
+	if [ "$$HAS_ERROR" -eq 1 ]; then \
+		exit 0; \
+	fi; \
+	if [ ! -f "$(KRPSIM_INPUT)" ]; then \
+		echo "[KRPSIM][ERREUR] Fichier de configuration introuvable: $(KRPSIM_INPUT)"; \
+		echo "Action: vérifie le chemin du fichier (ex: resources/simple)."; \
+		HAS_ERROR=1; \
+	fi; \
+	case "$(KRPSIM_CYCLES)" in \
+		''|*[!0-9]*) \
+			echo "[KRPSIM][ERREUR] <max_cycles> doit etre un entier positif."; \
+			echo "Valeur reçue: $(KRPSIM_CYCLES)"; \
+			echo "Action: utilise un entier positif."; \
+			CYCLE_IS_INT=0; \
+			HAS_ERROR=1; \
+			;; \
+	esac; \
+	if [ "$$CYCLE_IS_INT" -eq 1 ] && [ "$(KRPSIM_CYCLES)" -le 0 ]; then \
+		echo "[KRPSIM][ERREUR] <max_cycles> doit etre strictement supérieur a 0."; \
+		echo "Valeur reçue: $(KRPSIM_CYCLES)"; \
+		echo "Action: utilise une valeur comme 1, 10, 100."; \
+		HAS_ERROR=1; \
+	fi; \
+	if [ "$$HAS_ERROR" -eq 1 ]; then \
+		exit 0; \
+	fi; \
+	CONFIG_BASENAME="$$(basename "$(KRPSIM_INPUT)")"; \
+	CONFIG_STEM="$${CONFIG_BASENAME%.*}"; \
+	TRACE_FILE="trace_$${CONFIG_STEM}.txt"; \
+	GRAPH_CONFIG_FILE="graph_config_$${CONFIG_STEM}.json"; \
+	echo "[KRPSIM] Exécution: file=$(KRPSIM_INPUT), max_cycles=$(KRPSIM_CYCLES)"; \
+	echo "[KRPSIM] Trace de sortie: $$TRACE_FILE"; \
+	echo "[KRPSIM] Config graphe: $$GRAPH_CONFIG_FILE"; \
+	OUT="$$(mktemp)"; \
+	if $(POETRY) krpsim "$(KRPSIM_INPUT)" "$(KRPSIM_CYCLES)" --trace "$$TRACE_FILE" >"$$OUT" 2>&1; then \
+		cat "$$OUT"; \
+		CFG_OUT="$$(mktemp)"; \
+		if $(POETRY) python gantt_project/build_graph_config.py \
+			--config "$(KRPSIM_INPUT)" \
+			--trace "$$TRACE_FILE" \
+			--output "$$GRAPH_CONFIG_FILE" >"$$CFG_OUT" 2>&1; then \
+			[ -s "$$CFG_OUT" ] && cat "$$CFG_OUT"; \
+		else \
+			CFG_CODE=$$?; \
+			echo "[KRPSIM][ERREUR] Génération de la config graphe échouée (code=$$CFG_CODE)."; \
+			echo "Action: vérifie le fichier de config, la trace, puis relance la commande."; \
+			echo "Détail technique:"; \
+			sed 's/^/  /' "$$CFG_OUT"; \
+		fi; \
+		rm -f "$$CFG_OUT"; \
+	else \
+		CODE=$$?; \
+		echo "[KRPSIM][ERREUR] L'exécution a échoué (code=$$CODE)."; \
+		echo "Action: vérifie les arguments puis relance la commande."; \
+		echo "Détail technique:"; \
+		sed 's/^/  /' "$$OUT"; \
+	fi; \
+	rm -f "$$OUT"
 
 krpsim_verif: install
-	$(POETRY) krpsim_verif $(filter-out $@,$(MAKECMDGOALS))
+	@set -u; \
+	HAS_ERROR=0; \
+	if [ "$(KRPSIM_ARGS_COUNT)" -ne 2 ]; then \
+		echo "[KRPSIM_VERIF][ERREUR] Arguments invalides."; \
+		echo "Usage: make krpsim_verif <resource_file> <trace_file>"; \
+		echo "Exemple: make krpsim_verif resources/simple trace.txt"; \
+		echo "Action: fournis exactement 2 arguments."; \
+		HAS_ERROR=1; \
+	fi; \
+	if [ "$$HAS_ERROR" -eq 1 ]; then \
+		exit 0; \
+	fi; \
+	if [ ! -f "$(KRPSIM_VERIF_INPUT)" ]; then \
+		echo "[KRPSIM_VERIF][ERREUR] Fichier de configuration introuvable: $(KRPSIM_VERIF_INPUT)"; \
+		echo "Action: vérifie le chemin du fichier (ex: resources/simple)."; \
+		HAS_ERROR=1; \
+	fi; \
+	if [ ! -f "$(KRPSIM_VERIF_TRACE)" ]; then \
+		echo "[KRPSIM_VERIF][ERREUR] Fichier de trace introuvable: $(KRPSIM_VERIF_TRACE)"; \
+		echo "Action: génère d'abord une trace puis relance la vérification."; \
+		HAS_ERROR=1; \
+	fi; \
+	if [ "$$HAS_ERROR" -eq 1 ]; then \
+		exit 0; \
+	fi; \
+	echo "[KRPSIM_VERIF] Vérification: file=$(KRPSIM_VERIF_INPUT), trace=$(KRPSIM_VERIF_TRACE)"; \
+	OUT="$$(mktemp)"; \
+	if $(POETRY) krpsim_verif "$(KRPSIM_VERIF_INPUT)" "$(KRPSIM_VERIF_TRACE)" >"$$OUT" 2>&1; then \
+		cat "$$OUT"; \
+		CONFIG_BASENAME="$$(basename "$(KRPSIM_VERIF_INPUT)")"; \
+		CONFIG_STEM="$${CONFIG_BASENAME%.*}"; \
+		GRAPH_CONFIG_FILE="graph_config_$${CONFIG_STEM}.json"; \
+		CFG_OUT="$$(mktemp)"; \
+		if $(POETRY) python gantt_project/build_graph_config.py \
+			--config "$(KRPSIM_VERIF_INPUT)" \
+			--trace "$(KRPSIM_VERIF_TRACE)" \
+			--output "$$GRAPH_CONFIG_FILE" >"$$CFG_OUT" 2>&1; then \
+			[ -s "$$CFG_OUT" ] && cat "$$CFG_OUT"; \
+			echo "[GRAPH] Génération du graphe Gantt"; \
+			GRAPH_OUT="$$(mktemp)"; \
+			if $(POETRY) python gantt_project/gantt.py --config "$$GRAPH_CONFIG_FILE" >"$$GRAPH_OUT" 2>&1; then \
+				[ -s "$$GRAPH_OUT" ] && cat "$$GRAPH_OUT"; \
+			else \
+				GRAPH_CODE=$$?; \
+				echo "[GRAPH][ERREUR] La génération a échoué (code=$$GRAPH_CODE)."; \
+				echo "Action: vérifie le fichier $$GRAPH_CONFIG_FILE et les dépendances graphiques."; \
+				echo "Détail technique:"; \
+				sed 's/^/  /' "$$GRAPH_OUT"; \
+			fi; \
+			rm -f "$$GRAPH_OUT"; \
+		else \
+			CFG_CODE=$$?; \
+			echo "[KRPSIM_VERIF][ERREUR] Génération de la config graphe échouée (code=$$CFG_CODE)."; \
+			echo "Action: vérifie le fichier de config, la trace, puis relance la commande."; \
+			echo "Détail technique:"; \
+			sed 's/^/  /' "$$CFG_OUT"; \
+		fi; \
+		rm -f "$$CFG_OUT"; \
+	else \
+		CODE=$$?; \
+		echo "[KRPSIM_VERIF][ERREUR] L'exécution a échoué (code=$$CODE)."; \
+		echo "Action: vérifie le format de la trace et la cohérence avec le fichier source."; \
+		echo "Détail technique:"; \
+		sed 's/^/  /' "$$OUT"; \
+	fi; \
+	rm -f "$$OUT"
+
+graph: install
+	@echo "[GRAPH] Génération du graphe Gantt"; \
+	OUT="$$(mktemp)"; \
+	if $(POETRY) python gantt_project/gantt.py --config graph_config_simple.json >"$$OUT" 2>&1; then \
+		cat "$$OUT"; \
+	else \
+		CODE=$$?; \
+		echo "[GRAPH][ERREUR] La génération a échoué (code=$$CODE)."; \
+		echo "Action: vérifie graph_config_simple.json, les dépendances graphiques et le script gantt_project/gantt.py."; \
+		echo "Détail technique:"; \
+		sed 's/^/  /' "$$OUT"; \
+	fi; \
+	rm -f "$$OUT"
 
 # ------------------------------------------------------------
 # Traitement en batch de toutes les ressources (silencieux, tout dans log.txt)
@@ -179,9 +329,6 @@ show-activate:
 uninstall:
 	@set -eu; \
 	POETRY_BIN="$(POETRY_BIN)"; \
-	if [ -x "$$POETRY_BIN" ] && "$$POETRY_BIN" env info -p >/dev/null 2>&1; then \
-		echo "🧽 Skip désinstallation du package (sera supprimé avec le venv)."; \
-	fi
 
 clean:
 	@rm -rf \
@@ -190,7 +337,7 @@ clean:
 	  .coverage coverage.xml htmlcov \
 	  .ruff_cache .tox \
 	  **/__pycache__ \
-	  log.txt trace.txt junit.xml \
+	  log.txt trace.txt trace_*.txt graph_config_*.json junit.xml \
 	  .artifacts docs/graphs 2>/dev/null || true
 
 fclean:
@@ -249,7 +396,7 @@ fclean:
 		fi; \
 		echo "✅ Poetry utilisateur supprimé."; \
 	else \
-		echo "# Poetry utilisateur déjà absent (rien à désinstaller)."; \
+		rm -rf .venv; \
 	fi
 
 
@@ -292,8 +439,11 @@ help:
 	@echo "  install       -> auto-installe Poetry si absent, puis installe les deps"
 	@echo "  install-bin   -> symlinks vers ~/.local/bin (idempotent)"
 	@echo "  uninstall-bin -> supprime les symlinks utilisateur"
-	@echo "  krpsim ...    -> exécute via Poetry"
-	@echo "  krpsim_verif  -> exécute via Poetry"
+	@echo "  krpsim <file> <cycles>          -> exécute via Poetry"
+	@echo "    sortie: trace_<file>.txt + graph_config_<file>.json"
+	@echo "  krpsim_verif <file> <trace>     -> exécute via Poetry"
+	@echo "  note          -> si un argument commence par '-', utilise: make -- <target> ..."
+	@echo "  graph         -> génère le graphe Gantt"
 	@echo "  lint | format | test | process_resources"
 	@echo "  clean | fclean (supprime aussi Poetry user) | re | uninstall"
 	@echo "  which-bin | print-path | doctor | help"
