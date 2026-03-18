@@ -1,0 +1,27 @@
+#
+# stress test - finite lexicographic multi-objective priority
+#
+# Goal:
+#   enforce a strict priority chain with optimize:(gold;silver;bronze)
+#
+# Expected behavior with current optimize line:
+#   c_g10_s5_b7 should always be selected
+#   (gold tie at 10 -> silver tie at 5 -> bronze breaks tie: 7 > 0)
+#
+# Useful variants:
+#   optimize:(silver;gold;bronze) -> should favor d_g9_s99_b99
+#   optimize:(gold;silver)        -> tie between b/c then deterministic tie-break
+#
+machine:1
+fuel:15
+gold:0
+silver:0
+bronze:0
+
+a_g10_s0_b9:(machine:1;fuel:1):(machine:1;gold:10;bronze:9):1
+b_g10_s5_b0:(machine:1;fuel:1):(machine:1;gold:10;silver:5):1
+c_g10_s5_b7:(machine:1;fuel:1):(machine:1;gold:10;silver:5;bronze:7):1
+d_g9_s99_b99:(machine:1;fuel:1):(machine:1;gold:9;silver:99;bronze:99):1
+e_g10_s4_b50:(machine:1;fuel:1):(machine:1;gold:10;silver:4;bronze:50):1
+
+optimize:(gold;silver;bronze)

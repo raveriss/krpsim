@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 ZERO_DURATION_WIDTH = 0.4
+MAX_FIGURE_HEIGHT = 24.0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -65,9 +66,16 @@ def _display_duration(duration: int) -> float:
     return ZERO_DURATION_WIDTH
 
 
+def _figure_height(task_count: int) -> float:
+    """Compute a bounded figure height."""
+    raw_height = max(3.0, task_count * 0.6 + 1.5)
+    return min(MAX_FIGURE_HEIGHT, raw_height)
+
+
 def render_chart(title: str, tasks_data: list[dict[str, int | str]]) -> None:
     """Render the chart from validated task data."""
-    height = max(3.0, len(tasks_data) * 0.6 + 1.5)
+    lanes = len({str(task["Task"]) for task in tasks_data}) if tasks_data else 0
+    height = _figure_height(lanes)
     fig, ax = plt.subplots(figsize=(10, height))
     if not tasks_data:
         ax.set_xlabel("Temps")

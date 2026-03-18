@@ -56,3 +56,25 @@ def test_gantt_render_chart_handles_zero_and_empty_tasks(monkeypatch: object) ->
     monkeypatch.setattr(gantt.plt, "show", lambda: None)
     gantt.render_chart("zero", [{"Task": "instant", "Start": 0, "Duration": 0}])
     gantt.render_chart("empty", [])
+
+
+def test_gantt_figure_height_is_capped() -> None:
+    assert gantt._figure_height(1) == 3.0
+    assert gantt._figure_height(10_000) == gantt.MAX_FIGURE_HEIGHT
+
+
+def test_gantt_render_uses_unique_task_lanes(monkeypatch: object) -> None:
+    seen: dict[str, int] = {}
+
+    def fake_height(task_count: int) -> float:
+        seen["task_count"] = task_count
+        return 3.0
+
+    monkeypatch.setattr(gantt, "_figure_height", fake_height)
+    monkeypatch.setattr(gantt.plt, "show", lambda: None)
+    gantt.render_chart(
+        "dense",
+        [{"Task": "rapide", "Start": index, "Duration": 1} for index in range(100)],
+    )
+
+    assert seen["task_count"] == 1

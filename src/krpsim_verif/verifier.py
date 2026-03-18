@@ -175,16 +175,18 @@ def verify_trace(config: Config, trace: list[TraceEntry]) -> Simulator:
         # Pour rendre a l'appelant le resultat promis par le contrat.
         return sim
 
-    # Pour borner la simulation de reference au dernier evenement declare.
-    last = trace[-1]
-    # Pour isoler une etape de validation et garder un diagnostic clair.
-    process = config.processes.get(last.process)
-    # Pour arreter la verification sur une reference de processus inconnue.
-    if process is None:
-        # Pour signaler sans delai une violation explicite du contrat.
-        raise TraceError(f"unknown process '{last.process}' in trace")
-    # Pour borner la reproduction a la derniere operation declaree.
-    run_until = last.cycle + process.delay
+    # Pour borner la simulation en tenant compte de tous les evenements.
+    run_until = 0
+    # Pour appliquer uniformement la regle a chaque element concerne.
+    for entry in trace:
+        # Pour isoler une etape de validation et garder un diagnostic clair.
+        process = config.processes.get(entry.process)
+        # Pour arreter la verification sur une reference de processus inconnue.
+        if process is None:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise TraceError(f"unknown process '{entry.process}' in trace")
+        # Pour inclure les processus lents demarres au meme cycle que le dernier.
+        run_until = max(run_until, entry.cycle + process.delay)
     # Pour comparer la trace utilisateur a une reference reproduite.
     expected, sim = _expected_trace(config, run_until)
     # Pour appliquer uniformement la regle a chaque element concerne.

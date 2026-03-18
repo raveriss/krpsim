@@ -1,0 +1,26 @@
+#
+# stress test - multi-objective priority for optimize:(stock1;stock2;...)
+#
+# Idea:
+# - all candidate processes need the same "machine:1" and return it after 1 cycle
+# - so only one candidate can start per cycle
+# - this makes process ordering directly visible in the trace
+#
+# With optimize:(stock1;stock2), expected preferred process is:
+#   b_s1eq_s2high (same stock1 as a_*, but higher stock2)
+#
+# If you switch optimize to (stock1), expected preferred process is:
+#   a_s1eq_s2low (tie on stock1, fallback to process name order)
+#
+# If you switch optimize to (stock2;stock1), expected preferred process is:
+#   c_s1low_s2huge (highest stock2 despite lower stock1)
+#
+machine:1
+stock1:0
+stock2:0
+
+a_s1eq_s2low:(machine:1):(machine:1;stock1:5;stock2:1):1
+b_s1eq_s2high:(machine:1):(machine:1;stock1:5;stock2:7):1
+c_s1low_s2huge:(machine:1):(machine:1;stock1:4;stock2:50):1
+
+optimize:(stock1;stock2)

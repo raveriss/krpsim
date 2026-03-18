@@ -116,3 +116,12 @@ def test_verify_custom_infinite(tmp_path: Path) -> None:
     trace_file = tmp_path / "trace.txt"
     trace_file.write_text("\n".join(f"{c}:{n}" for c, n in events))
     verify_trace(cfg, parse_trace(trace_file))
+
+
+def test_verify_recre_same_cycle_mixed_delays(tmp_path: Path) -> None:
+    cfg = parser.parse_file(Path("resources/recre"))
+    sim = Simulator(cfg)
+    events = sim.run(120)
+    trace_file = tmp_path / "trace.txt"
+    trace_file.write_text("\n".join(f"{c}:{n}" for c, n in events))
+    verify_trace(cfg, parse_trace(trace_file))

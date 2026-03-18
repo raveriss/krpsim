@@ -203,8 +203,24 @@ krpsim: install
 		rm -f "$$CFG_OUT"; \
 	else \
 		CODE=$$?; \
-		echo "[KRPSIM][ERREUR] L'exécution a échoué (code=$$CODE)."; \
-		echo "Action: vérifie les arguments puis relance la commande."; \
+		if grep -q "^invalid config:" "$$OUT"; then \
+			REASON="$$(grep -m1 "^invalid config:" "$$OUT" | sed 's/^invalid config:[[:space:]]*//')"; \
+			echo "[KRPSIM][ERREUR] Configuration invalide: $$REASON"; \
+			echo "Action: corrige $(KRPSIM_INPUT) (format, doublons, ressources), puis relance."; \
+		elif grep -q "Max time reached at time" "$$OUT"; then \
+			DETAIL="$$(grep -m1 "Max time reached at time" "$$OUT")"; \
+			echo "[KRPSIM][ERREUR] Limite de cycles atteinte."; \
+			echo "Détail: $$DETAIL"; \
+			echo "Action: augmente <max_cycles> ou ajuste la config pour converger."; \
+		elif grep -q "Deadlock detected at time" "$$OUT"; then \
+			DETAIL="$$(grep -m1 "Deadlock detected at time" "$$OUT")"; \
+			echo "[KRPSIM][ERREUR] Deadlock détecté."; \
+			echo "Détail: $$DETAIL"; \
+			echo "Action: vérifie les dépendances de ressources/processus."; \
+		else \
+			echo "[KRPSIM][ERREUR] L'exécution a échoué (code=$$CODE)."; \
+			echo "Action: vérifie la configuration et les arguments puis relance."; \
+		fi; \
 		echo "Détail technique:"; \
 		sed 's/^/  /' "$$OUT"; \
 	fi; \
