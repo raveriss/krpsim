@@ -336,8 +336,23 @@ process_resources: install
 	} >> "$$LOG" 2>&1
 
 show-activate:
-	@echo "Commande d'activation (a executer dans le shell courant) :"
-	@echo "source $$(poetry env info -p)/bin/activate"
+	@set -eu; \
+	POETRY_BIN="$(POETRY_BIN)"; \
+	if [ ! -x "$$POETRY_BIN" ]; then \
+		echo "❌ Poetry introuvable: $$POETRY_BIN"; \
+		echo "   Action: lance d'abord 'make install'."; \
+		exit 1; \
+	fi; \
+	VENV_PATH="$$( "$$POETRY_BIN" env info -p 2>/dev/null || true )"; \
+	if [ -z "$$VENV_PATH" ] || [ ! -d "$$VENV_PATH" ]; then \
+		echo "❌ Environnement Poetry introuvable."; \
+		echo "   Action: lance d'abord 'make install'."; \
+		exit 1; \
+	fi; \
+	echo "Commande d'activation (POSIX, compatible /bin/sh) :"; \
+	echo ". \"$$VENV_PATH/bin/activate\""; \
+	echo "Commande équivalente (bash/zsh) :"; \
+	echo "source \"$$VENV_PATH/bin/activate\""
 
 # -------------------------------------------------------------------
 # Uninstall / Clean / Fclean / Re
