@@ -1,4 +1,4 @@
-# krpsim
+# Production Process Simulator & Verifier (Python) - KRPSIM
 
 <div align="center">
 
@@ -15,37 +15,46 @@
 
 </div>
 
+KRPSIM est un simulateur d'ordonnancement de processus avec vérification de trace. Le projet lit une configuration de stocks/processus, calcule une exécution optimisée et permet de vérifier la cohérence d'une trace d'exécution.
 
-## 🚀 Objectif du projet
+## 🧭 Table des matières
 
-**krpsim** est un simulateur de processus inspiré du projet 42. Le programme lit un fichier de configuration de stocks et de processus puis produit une trace optimisée de leur exécution.
+- [🎯 Objectif du projet](#objectif-du-projet)
+- [🧩 Fonctionnalités principales](#fonctionnalités-principales)
+- [🧰 Stack](#stack)
+- [⚙️ Installation (source)](#installation-source)
+- [🚀 Quick Start](#quick-start)
+- [📋 Tableau des commandes make](#tableau-des-commandes-make)
+- [📝 Formats d'entrée](#formats-entree)
+- [🖥️ Exemple de sortie: simulation](#exemple-de-sortie-simulation)
+- [✅ Exemple de sortie: vérification + graphe](#exemple-de-sortie-vérification--graphe)
+- [📊 Visualisation Gantt](#visualisation-gantt)
+- [🗂️ Structure du projet](#structure-du-projet)
+- [🧪 Tests](#tests)
+- [🔍 Qualité du code](#qualite-du-code)
+- [📚 Documentation](#documentation)
+- [👥 Auteurs](#auteurs)
+- [🛡️ Licence](#licence)
 
-## 🧰 Stack technologique
+## 🎯 Objectif du projet
 
-Projet Python >=3.10 construit avec [Poetry](https://python-poetry.org/). Les dépendances principales sont listées dans `pyproject.toml` :
+Projet réalisé dans le cadre du cursus **École 42** (projet KRPSIM), avec un objectif d'ingénierie logicielle: parser une grammaire métier, ordonnancer des processus de façon déterministe et valider les sorties.
 
-```toml
-[tool.poetry.dependencies]
-python = ">=3.10,<3.13"
-```
+## 🧩 Fonctionnalités principales
 
-Les outils de développement incluent `pytest`, `ruff`, `black`, `isort` et `mypy`.
+- Simulation d'un flux de production à ressources contraintes.
+- Optimisation multi-critères (temps, stock cible).
+- Vérification automatique d'une trace (auditabilité d'exécution).
+- Génération d'une configuration exploitable pour visualisation Gantt.
 
-## ⚡ Démarrage rapide
+## 🧰 Stack
 
-```bash
-make install
-make krpsim resources/simple 10
-```
+- **Langage & packaging** : Python `>=3.10,<3.13`, Poetry
+- **Runtime** : pandas, matplotlib
+- **Tests** : pytest, pytest-cov, Hypothesis
+- **Qualité** : Ruff, MyPy, Black, isort, pre-commit
 
-## 🔧 Installation
-
-### Depuis PyPI
-
-```bash
-pip install krpsim
-```
-### Depuis les sources
+## ⚙️ Installation (source)
 
 ```bash
 git clone https://github.com/raveriss/krpsim.git
@@ -53,110 +62,149 @@ cd krpsim
 make install
 ```
 
-`make install` installe automatiquement Poetry dans `~/.local/bin` s'il est absent (sans sudo), puis crée le venv et installe les dépendances.
+`make install` installe automatiquement Poetry (si absent), crée le virtualenv et installe les dépendances.
 
-Pour un mode développement, utilisez un environnement virtuel `poetry shell`.
-
-## ▶️ Lancement
+## 🚀 Quick Start
 
 ```bash
-poetry run krpsim path/to/config delay
-poetry run krpsim_verif path/to/config trace.txt
+make krpsim resources/ikea 10
+make krpsim_verif resources/ikea trace_ikea.txt
 ```
 
-### Lancement via Makefile
+## 📋 Tableau des commandes make
 
-```bash
-make krpsim resources/simple 10
-make krpsim_verif resources/simple trace.txt
-make process-resources
-```
+| Commande | Description |
+| --- | --- |
+| `make` | Installation complète (`install` + `install-bin`) |
+| `make install` | Installe Poetry (si absent) et les dépendances |
+| `make install-bin` | Crée les symlinks `krpsim` / `krpsim_verif` dans `~/.local/bin` |
+| `make krpsim <resource_file> <max_cycles>` | Lance la simulation |
+| `make krpsim_verif <resource_file> <trace_file>` | Vérifie une trace |
+| `make graph` | Génère le graphe Gantt |
+| `make test` | Exécute les tests |
+| `make lint` | Exécute le lint et le typage |
+| `make format` | Formate le code (`black`, `isort`) |
+| `make process_resources` | Batch sur tous les fichiers de `resources` |
+| `make clean` | Nettoie les artefacts temporaires |
+| `make fclean` | Nettoyage complet (inclut venv et Poetry user) |
+| `make doctor` | Vérifie l’état de l’environnement |
+| `make help` | Affiche l’aide des cibles |
 
-Les arguments fournis après la cible sont transmis au binaire.
-
-Note: `make fclean` supprime aussi Poetry utilisateur (`~/.local/bin/poetry`) afin de tester un flux d'installation "from scratch".
-
-
-## 📦 Utilisation
-
-La CLI accepte un fichier de configuration et un délai maximal. Un exemple minimal de configuration se trouve dans `resources/simple` :
-
-```txt
-euro:10
-achat_materiel:(euro:8):(materiel:1):10
-realisation_produit:(materiel:1):(produit:1):30
-```
-
-## ⚙️ Utilisation avancée
-
-Consultez `krpsim --help` pour l'ensemble des options disponibles.
-
-## 🔌 Injection de dépendances
-
-```python
-from krpsim.simulator import Simulator
-sim = Simulator(config)
-```
-
-Plus de détails dans `AGENTS.md`.
-
-## 📈 Collecte de métriques
-
-```python
-from krpsim.display import format_trace
-for line in format_trace(trace):
-    print(line)
-```
-
-## ❗ Gestion des erreurs
-
-Les erreurs de parsing lèvent `ParseError`.
-
-```python
-from krpsim.parser import parse_file, ParseError
-try:
-    cfg = parse_file(path)
-except ParseError as exc:
-    print(f"invalid config: {exc}")
-```
+<a id="formats-entree"></a>
 
 ## 📝 Formats d'entrée
 
 Les fichiers de configuration décrivent les stocks initiaux puis les processus sous forme `name:(need):(result):delay`.
 
-## 🧠 Architecture
+Exemple (`resources/ikea`):
 
-Un schéma mermaid simplifié illustre l'architecture en agents :
-
-```mermaid
-graph TD
-    A[Fichier config] --> B(Parser)
-    B --> C(Optimizer)
-    C --> D(Simulator)
-    D --> E(Display)
-    D --> F(Verifier)
+```txt
+#
+# ikea demo - krpsim
+#
+# stock      name:quantity
+planche:7
+#
+# process   name:(need1:qty1;need2:qty2;[...]):(result1:qty1;result2:qty2;[...]):delay
+#
+do_montant:(planche:1):(montant:1):15
+do_fond:(planche:2):(fond:1):20
+do_etagere:(planche:1):(etagere:1):10
+do_armoire_ikea:(montant:2;fond:1;etagere:3):(armoire:1):30
+#
+# optimize time for 0 stock and no process possible,
+# or maximize some products over a long delay
+# optimize:(stock1;stock2;...)
+#
+optimize:(time;armoire)
+#
 ```
 
-Les rôles détaillés sont décrits dans `AGENTS.md`.
+## 🖥️ Exemple de sortie: simulation
 
-## 📂 Structure du Projet
-
+```bash
+[KRPSIM] Exécution: file=resources/ikea, max_cycles=10
+[KRPSIM] Trace de sortie: trace_ikea.txt
+[KRPSIM] Config graphe: graph_config_ikea.json
+Nice file! 4 processes, 5 stocks, 1 to optimize
+Evaluating ... done.
+Main walk:
+Optimization criteria: time, armoire
+0:do_etagere
+0:do_montant
+0:do_fond
+1:do_etagere
+1:do_montant
+2:do_etagere
+20:do_armoire_ikea
+No more process doable at time 51
+Final Stocks:
+  armoire  => 1
+  etagere  => 0
+  fond     => 0
+  montant  => 0
+  planche  => 0
+[GRAPH_CONFIG] Fichier genere: graph_config_ikea.json
 ```
+
+## ✅ Exemple de sortie: vérification + graphe
+
+```bash
+[KRPSIM_VERIF] Vérification: file=resources/ikea, trace=trace_ikea.txt
+trace is valid
+Final Stocks:
+  armoire  => 1
+  etagere  => 0
+  fond     => 0
+  montant  => 0
+  planche  => 0
+Last cycle: 51
+[GRAPH_CONFIG] Fichier genere: graph_config_ikea.json
+[GRAPH] Génération du graphe Gantt
+```
+
+## 📊 Visualisation Gantt
+
+Exemple de diagramme généré à partir du cas `resources/ikea`:
+
+<div align="center">
+  <img src="docs/diagramme_gantt_ikea.png" alt="Diagramme de Gantt IKEA">
+</div>
+
+## 🗂️ Structure du projet
+
+Commande utilisée:
+
+```bash
+tree -L 2
+```
+
+Sortie:
+
+```txt
 .
-├── AGENTS.md
 ├── author
 ├── codecov.yml
 ├── docs
-│   └── badges
-│       └── version.json
+│   ├── AGENTS.md
+│   ├── diagramme_gantt_ikea.png
+│   ├── diagramme_gantt_simple.png
+│   ├── krpsim.en.subject.pdf
+│   ├── Lois de Murphy.KRPSIM.txt
+│   ├── optimize_marelle-bonbon.png
+│   ├── optimize_marelle.png
+│   ├── optimize_stock1.png
+│   ├── optimize_stock1-stock2.png
+│   ├── optimize_stock2-stock1.png
+│   ├── optimize_time-marelle.png
+│   ├── pipeline.md
+│   └── WBS_krpsim.txt
 ├── gantt_project
+│   ├── build_graph_config.py
 │   └── gantt.py
-├── install.txt
-├── junit.xml
-├── krpsim.en.subject.pdf
+├── graph_config_ikea.json
+├── graph_config_simple.json
 ├── LICENSE
-├── log.txt
-├── Lois de Murphy.KRPSIM.txt
 ├── Makefile
 ├── poetry.lock
 ├── pyproject.toml
@@ -179,38 +227,31 @@ Les rôles détaillés sont décrits dans `AGENTS.md`.
 │   ├── self_gen
 │   ├── simple
 │   ├── steak
+│   ├── stress_lexicographic_finite
+│   ├── stress_multi_objective
 │   ├── unreachable_target
 │   ├── zero_delay
 │   └── zero_initial
-├── resources.tgz
 ├── src
 │   ├── krpsim
-│   │   ├── cli.py
-│   │   ├── display.py
-│   │   ├── __init__.py
-│   │   ├── optimizer.py
-│   │   ├── parser.py
-│   │   └── simulator.py
 │   └── krpsim_verif
-│       ├── cli.py
-│       ├── __init__.py
-│       └── verifier.py
 ├── tests
 │   ├── __init__.py
 │   ├── test_cli.py
 │   ├── test_display.py
+│   ├── test_graph_pipeline.py
 │   ├── test_parser_hypothesis.py
 │   ├── test_parser.py
 │   ├── test_simulator.py
 │   ├── test_verifier.py
 │   └── test_version.py
-└── WBS_krpsim.txt
+├── trace_ikea.txt
+└── trace_simple.txt
+
+7 directories, 57 files
 ```
 
-## 🛠️ Fichiers de configuration
-
-Les principaux réglages (`black`, `isort`, `mypy`, `pytest`) se trouvent dans `pyproject.toml`.
-
+<a id="tests"></a>
 
 ## 🧪 Tests
 
@@ -218,14 +259,7 @@ Les principaux réglages (`black`, `isort`, `mypy`, `pytest`) se trouvent dans `
 make test
 ```
 
-La configuration `pytest` impose une couverture minimale de 100 % :
-
-```toml
-[tool.pytest.ini_options]
---cov=krpsim
---cov=krpsim_verif
---cov-fail-under=100
-```
+<a id="qualite-du-code"></a>
 
 ## 🔍 Qualité du code
 
@@ -234,24 +268,15 @@ La configuration `pytest` impose une couverture minimale de 100 % :
 * **Typage** : `mypy`.
 * **Hooks** : `pre-commit`.
 
-## 🤝 Contribuer
+## 📚 Documentation
 
-Les règles de contribution sont détaillées dans `AGENTS.md`. Toute PR doit passer la CI et maintenir la couverture à 100 %.
+- [Pipeline global](docs/pipeline.md)
+- [Sujet du projet 42 (PDF)](docs/krpsim.en.subject.pdf)
 
-## 📚 Documentation liée
+## 👥 Auteurs
 
-* [AGENTS.md](AGENTS.md) – blueprint du projet.
-* [krpsim.en.subject.pdf](krpsim.en.subject.pdf) – énoncé original.
-
-## 📊 Diagramme de Gantt
-
-Pour visualiser l'ordonnancement des tâches :
-
-- Installation des dépendances : `pip install pandas matplotlib` (ou `poetry add pandas matplotlib`).
-- Commande d’exécution : `poetry run python gantt_project/gantt.py`.
-
-Le script utilise des données d’exemple et peut être adapté pour parser une trace réelle.
-
+- **Rafael Verissimo** — [LinkedIn](https://www.linkedin.com/in/verissimo-rafael/) · [GitHub](https://github.com/raveriss)
+- **Sylvanna Courbis** — [LinkedIn](https://www.linkedin.com/in/sylvanna-courbis-7626b63a7/) · [GitHub](https://github.com/Sycourbi)
 
 ## 🛡️ Licence
 
