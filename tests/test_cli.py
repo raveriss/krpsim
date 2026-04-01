@@ -250,7 +250,6 @@ def test_verifier_cli_log(tmp_path: Path) -> None:
     [
         ("ikea", 100),
         ("steak", 100),
-        ("pomme", 100),
         ("recre", 100),
         ("inception", 100),
         ("custom_finite", 100),
@@ -267,6 +266,20 @@ def test_cli_run_resources(
     if resource == "custom_infinite":
         assert exit_code == 1
         assert "Max time reached" in captured.out
+
+
+@pytest.mark.parametrize("resource", ["zero_delay", "pomme"])
+def test_cli_rejects_zero_delay_process_resources(
+    resource: str,
+    capsys: CaptureFixture[str],
+) -> None:
+    with pytest.raises(SystemExit) as exc:
+        cli.main([str(Path("resources") / resource), "10"])
+    assert exc.value.code == 1
+    captured = capsys.readouterr()
+    assert "invalid config:" in captured.out
+    assert "Delay must be >= 1 cycle" in captured.out
+    assert "replace ':0' by a positive delay such as ':1'" in captured.out
 
 
 def test_cli_partial_execution_small_delay(

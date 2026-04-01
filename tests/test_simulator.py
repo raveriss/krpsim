@@ -98,7 +98,7 @@ def test_optimize_stock_priority():
 
 @pytest.mark.parametrize(
     "resource",
-    ["ikea", "steak", "pomme", "recre", "inception"],
+    ["ikea", "steak", "recre", "inception"],
 )
 def test_run_resources(resource: str) -> None:
     cfg = parser.parse_file(Path("resources") / resource)
@@ -142,10 +142,6 @@ def test_recre_optimal() -> None:
     assert sim.stocks["marelle"] == 3
 
 
-def test_zero_delay_process() -> None:
-    cfg = parser.parse_file(Path("resources/zero_delay"))
-    sim = Simulator(cfg)
-    trace = sim.run(10)
-    assert trace == [(0, "instant")]
-    assert sim.time == 0
-    assert sim.stocks["stockB"] == 1
+def test_zero_delay_process_rejected() -> None:
+    with pytest.raises(parser.ParseError, match="Delay must be >= 1 cycle"):
+        parser.parse_file(Path("resources/zero_delay"))

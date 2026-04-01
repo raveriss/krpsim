@@ -220,6 +220,16 @@ def _parse_process(line: str) -> Process:
         raise ParseError(f"invalid process line: '{line}'")
     # Pour isoler une etape de validation et garder un diagnostic clair.
     name, needs_block, results_block, delay_str = match.groups()
+    # Pour verrouiller les calculs suivants sur un type numerique fiable.
+    delay = int(delay_str)
+    # Pour traiter explicitement un cas d'entree invalide ou absent.
+    if delay <= 0:
+        # Pour signaler sans delai une violation explicite du contrat.
+        raise ParseError(
+            f"invalid delay for process '{name}': {delay}. "
+            "Delay must be >= 1 cycle. "
+            "Action: replace ':0' by a positive delay such as ':1'."
+        )
     # Pour partager la meme validation entre besoins et resultats.
     needs = _parse_resources(needs_block)
     # Pour unifier la logique avec le cas de bloc resultat absent.
@@ -233,7 +243,7 @@ def _parse_process(line: str) -> Process:
         # Pour construire un objet Process coherant avec les valeurs validees.
         results=results,
         # Pour construire un objet Process coherant avec les valeurs validees.
-        delay=int(delay_str),
+        delay=delay,
     # Pour clore le bloc sans ambiguite de structure.
     )
 

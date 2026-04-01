@@ -207,3 +207,17 @@ def test_gantt_render_uses_same_gap_between_adjacent_task_groups(
     gap_fa = a0 - f0
     assert gap_em == pytest.approx(gap_mf)
     assert gap_em == pytest.approx(gap_fa)
+
+
+def test_gantt_render_single_instant_task_keeps_timeline_span(
+    monkeypatch: object,
+) -> None:
+    monkeypatch.setattr(gantt.plt, "show", lambda: None)
+    gantt.render_chart(
+        "instant",
+        [{"Task": "do_benef", "Start": 0, "Duration": 0}],
+    )
+
+    x_min, x_max = gantt.plt.gca().get_xlim()
+    assert x_min == 0
+    assert x_max >= gantt.MIN_TIMELINE_SPAN

@@ -167,7 +167,7 @@ def _run_simulation(args: argparse.Namespace) -> tuple[Simulator, bool]:
     # Pour contextualiser l'execution avant la trace des cycles.
     print_header(config)
     # Pour imposer une borne finie meme en mode optimisation.
-    run_delay = args.delay if not ignore_delay else 10_000
+    run_delay = args.delay if not ignore_delay else 500
     # Pour produire l'etat de reference a partir du moteur unique.
     trace = sim.run(run_delay)
     # Pour conserver l'ordre temporel lors de la sortie de trace.

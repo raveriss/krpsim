@@ -17,6 +17,7 @@ ZERO_DURATION_WIDTH = 0.4
 MAX_FIGURE_HEIGHT = 24.0
 MAJOR_TICK_STEP = 10
 MINOR_TICK_STEP = 1
+MIN_TIMELINE_SPAN = float(MAJOR_TICK_STEP)
 TASK_LANE_SPAN = 0.82
 PHI = 1.618
 TRACK_GAP_RATIO = 0.12
@@ -390,8 +391,9 @@ def render_chart(title: str, tasks_data: list[TaskPayload]) -> None:
     )
 
     max_end = max(bar.end for bar in bars)
-    x_margin = max(1.0, max_end * 0.02)
-    ax.set_xlim(0, max_end + x_margin)
+    visible_span = max(max_end, MIN_TIMELINE_SPAN)
+    x_margin = max(1.0, visible_span * 0.02)
+    ax.set_xlim(0, visible_span + x_margin)
     ax.set_ylim(-0.5, max_last_center + 0.5)
     ax.set_yticks([task_label_center[task] for task in task_order], labels=task_order)
     ax.set_axisbelow(True)

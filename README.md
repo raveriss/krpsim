@@ -95,6 +95,8 @@ make krpsim_verif resources/ikea trace_ikea.txt
 ## 📝 Formats d'entrée
 
 Les fichiers de configuration décrivent les stocks initiaux puis les processus sous forme `name:(need):(result):delay`.
+La durée `delay` d'un processus doit être strictement positive (`>= 1`).
+Une durée `:0` est rejetée avec un message explicite indiquant comment corriger la ligne.
 
 Exemple (`resources/ikea`):
 

@@ -92,6 +92,8 @@ def test_internal_parser_functions(tmp_path):
         parser._parse_stock("a:-1")
     with pytest.raises(parser.ParseError):
         parser._parse_process("bad")
+    with pytest.raises(parser.ParseError, match="Delay must be >= 1 cycle"):
+        parser._parse_process("instant:(a:1):(b:1):0")
     with pytest.raises(parser.ParseError):
         parser._parse_optimize("bad")
 
@@ -199,3 +201,12 @@ def test_parse_unknown_resource(tmp_path: Path) -> None:
         match="unknown resource 'baz' used in process 'bar_process'",
     ):
         parser.parse_file(config)
+
+
+@pytest.mark.parametrize("resource_file", ["zero_delay", "pomme"])
+def test_parse_rejects_zero_delay_processes(resource_file: str) -> None:
+    with pytest.raises(
+        parser.ParseError,
+        match="Delay must be >= 1 cycle",
+    ):
+        parser.parse_file(Path("resources") / resource_file)
