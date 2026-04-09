@@ -60,6 +60,8 @@ Projet réalisé dans le cadre du cursus **École 42** (projet KRPSIM), avec un 
 git clone https://github.com/raveriss/krpsim.git
 cd krpsim
 make install
+make show-activate 
+source "/home/raveriss/Desktop/krpsim/.venv/bin/activate"
 ```
 
 `make install` installe automatiquement Poetry (si absent), crée le virtualenv et installe les dépendances.
