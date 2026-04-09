@@ -125,6 +125,7 @@ optimize:(time;armoire)
 ## 🖥️ Exemple de sortie: simulation
 
 ```bash
+make krpsim resources/ikea 10
 [KRPSIM] Exécution: file=resources/ikea, max_cycles=10
 [KRPSIM] Trace de sortie: trace_ikea.txt
 [KRPSIM] Config graphe: graph_config_ikea.json
@@ -152,6 +153,7 @@ Final Stocks:
 ## ✅ Exemple de sortie: vérification + graphe
 
 ```bash
+make krpsim_verif resources/ikea trace_ikea.txt
 [KRPSIM_VERIF] Vérification: file=resources/ikea, trace=trace_ikea.txt
 trace is valid
 Final Stocks:
