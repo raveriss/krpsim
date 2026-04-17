@@ -6,9 +6,9 @@
 #   krpsim --help       -> dispo direct si ~/.local/bin est dans le PATH
 
 .PHONY: default install install-bin uninstall-bin \
-        lint format test krpsim krpsim_verif graph process_resources \
+        lint format test krpsim analysis_log_krpsim krpsim_verif graph process_resources \
         clean fclean re uninstall which-bin print-path help doctor \
-		show-activate
+			show-activate
 
 MAKEFLAGS += --no-print-directory
 POETRY_BIN = $(shell command -v poetry 2>/dev/null || printf '%s' "$(HOME)/.local/bin/poetry")
@@ -20,7 +20,7 @@ KRPSIM_CYCLES = $(word 3,$(MAKECMDGOALS))
 KRPSIM_VERIF_INPUT = $(word 2,$(MAKECMDGOALS))
 KRPSIM_VERIF_TRACE = $(word 3,$(MAKECMDGOALS))
 KRPSIM_ARGS_COUNT = $(words $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS)))
-CLI_ARG_TARGETS = krpsim krpsim_verif
+CLI_ARG_TARGETS = krpsim analysis_log_krpsim krpsim_verif
 
 ifneq (,$(filter $(firstword $(MAKECMDGOALS)),$(CLI_ARG_TARGETS)))
 CLI_ARGS = $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
@@ -225,6 +225,50 @@ krpsim: install
 		sed 's/^/  /' "$$OUT"; \
 	fi; \
 	rm -f "$$OUT"
+
+analysis_log_krpsim: install
+	@set -u; \
+	HAS_ERROR=0; \
+	CYCLE_IS_INT=1; \
+	if [ "$(KRPSIM_ARGS_COUNT)" -ne 2 ]; then \
+		echo "[ANALYSIS_LOG_KRPSIM][ERREUR] Arguments invalides."; \
+		echo "Usage: make analysis_log_krpsim <resource_file> <max_cycles>"; \
+		echo "Exemple: make analysis_log_krpsim resources/simple 10"; \
+		echo "Action: fournis exactement 2 arguments."; \
+		HAS_ERROR=1; \
+	fi; \
+	if [ "$$HAS_ERROR" -eq 1 ]; then \
+		exit 0; \
+	fi; \
+	if [ ! -f "$(KRPSIM_INPUT)" ]; then \
+		echo "[ANALYSIS_LOG_KRPSIM][ERREUR] Fichier de configuration introuvable: $(KRPSIM_INPUT)"; \
+		echo "Action: vérifie le chemin du fichier (ex: resources/simple)."; \
+		HAS_ERROR=1; \
+	fi; \
+	case "$(KRPSIM_CYCLES)" in \
+		''|*[!0-9]*) \
+			echo "[ANALYSIS_LOG_KRPSIM][ERREUR] <max_cycles> doit etre un entier positif."; \
+			echo "Valeur reçue: $(KRPSIM_CYCLES)"; \
+			echo "Action: utilise un entier positif."; \
+			CYCLE_IS_INT=0; \
+			HAS_ERROR=1; \
+			;; \
+	esac; \
+	if [ "$$CYCLE_IS_INT" -eq 1 ] && [ "$(KRPSIM_CYCLES)" -le 0 ]; then \
+		echo "[ANALYSIS_LOG_KRPSIM][ERREUR] <max_cycles> doit etre strictement supérieur a 0."; \
+		echo "Valeur reçue: $(KRPSIM_CYCLES)"; \
+		echo "Action: utilise une valeur comme 1, 10, 100."; \
+		HAS_ERROR=1; \
+	fi; \
+	if [ "$$HAS_ERROR" -eq 1 ]; then \
+		exit 0; \
+	fi; \
+	CONFIG_BASENAME="$$(basename "$(KRPSIM_INPUT)")"; \
+	CONFIG_STEM="$${CONFIG_BASENAME%.*}"; \
+	TRACE_FILE="trace_$${CONFIG_STEM}.txt"; \
+	echo "[ANALYSIS_LOG_KRPSIM] Exécution: file=$(KRPSIM_INPUT), max_cycles=$(KRPSIM_CYCLES)"; \
+	echo "[ANALYSIS_LOG_KRPSIM] Trace de sortie: $$TRACE_FILE"; \
+	$(POETRY) krpsim "$(KRPSIM_INPUT)" "$(KRPSIM_CYCLES)" --trace "$$TRACE_FILE" --analysis-log
 
 krpsim_verif: install
 	@set -u; \
