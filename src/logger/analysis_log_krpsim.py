@@ -103,3 +103,20 @@ class AnalysisLogger:
         self._emit(self.VALUE_SEPARATOR)
         self._emit(f"= {self._format_value(result)}")
         self._emit("")
+
+
+_ACTIVE_ANALYSIS_LOGGER: AnalysisLogger | None = None
+
+
+def set_active_analysis_logger(logger: AnalysisLogger | None) -> None:
+    """Definit l'instance de logger d'analyse active pour le process courant."""
+    global _ACTIVE_ANALYSIS_LOGGER
+    _ACTIVE_ANALYSIS_LOGGER = logger
+
+
+def get_active_analysis_logger() -> AnalysisLogger:
+    """Retourne le logger d'analyse actif, ou un logger no-op par defaut."""
+    global _ACTIVE_ANALYSIS_LOGGER
+    if _ACTIVE_ANALYSIS_LOGGER is None:
+        _ACTIVE_ANALYSIS_LOGGER = AnalysisLogger(enabled=False)
+    return _ACTIVE_ANALYSIS_LOGGER

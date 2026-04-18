@@ -27,7 +27,7 @@ from .parser import ParseError
 # Pour limiter le couplage aux composants internes necessaires.
 from .simulator import Simulator
 
-from logger.analysis_log_krpsim import AnalysisLogger
+from logger.analysis_log_krpsim import AnalysisLogger, set_active_analysis_logger
 
 
 def _serialize_simulator_state(sim: Simulator) -> dict[str, object]:
@@ -371,6 +371,8 @@ def main(argv: list[str] | None = None) -> int:
     scope = "main"
     # Pour centraliser les traces d'analyse du comportement de la CLI.
     analysis_logger = AnalysisLogger(enabled=args.analysis_log)
+    # Pour partager le logger d'analyse avec les sous-modules (ex: optimizer).
+    set_active_analysis_logger(analysis_logger)
     # Pour exposer les arguments parsees dans un bloc d'entree unique.
     analysis_logger.log_header("CLI ENTRYPOINT", scope=scope)
     # Pour garder un format deterministe pour reproduire un run exact.
