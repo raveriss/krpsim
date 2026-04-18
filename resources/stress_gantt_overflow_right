@@ -1,0 +1,16 @@
+#
+# stress test Gantt - overflow horizontal
+#
+# Objectif:
+# - generer beaucoup d'executions qui se suivent sur tres peu de lanes
+# - depassement attendu vers la droite avec un max_cycles eleve (ex: 400+)
+#
+# stock initial
+loop_token:1
+
+# alternance stricte: A -> B -> A -> B ...
+do_phase_a:(loop_token:1):(phase_token:1):1
+do_phase_b:(phase_token:1):(loop_token:1;progress:1):1
+
+# optimiser la progression pour maintenir la boucle active
+optimize:(progress)

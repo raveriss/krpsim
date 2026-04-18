@@ -198,7 +198,7 @@ def _validate_args(
     # Pour detecter un probleme de permission avant l'execution metier.
     is_readable = os.access(config_path, os.R_OK)
     # Pour tracer explicitement l'etat d'acces lu par la CLI.
-    analysis_logger.log_key_value("CONFIG_FILE_READABLE", is_readable, scope=scope)
+
     if not is_readable:
         # Pour fournir une erreur CLI uniforme et immediate a l'utilisateur.
         parser.error(f"config file is not readable: '{args.config}'")
