@@ -1,0 +1,20 @@
+{
+  "hideComments.regex": [
+    {
+      "regex": "^[ \\t]*#.*\\r?\\n[ \\t]*analysis_logger\\.[^\\n]*\\(\\s*\\r?\\n[\\s\\S]*?^[ \\t]*\\)\\s*,?[ \\t]*$",
+      "flags": "gm"
+    },
+    {
+      "regex": "^[ \\t]*analysis_logger\\.[^\\n]*\\(\\s*\\r?\\n[\\s\\S]*?^[ \\t]*\\)\\s*,?[ \\t]*$",
+      "flags": "gm"
+    },
+    {
+      "regex": "(?:^[ \\t]*#.*\\r?\\n[ \\t]*analysis_logger\\.[^\\n]*\\)\\s*$)|(?:^[ \\t]*analysis_logger\\.[^\\n]*\\)\\s*$)",
+      "flags": "gm"
+    },
+    {
+      "regex": "(?:^[ \\t]*#.*\\r?\\n[ \\t]*analysis_logger\\s*=.*$)|(?:^[ \\t]*analysis_logger\\s*=.*$)",
+      "flags": "gm"
+    }
+  ]
+}

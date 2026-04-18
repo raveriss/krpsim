@@ -338,6 +338,8 @@ krpsim_verif: install
 	fi; \
 	rm -f "$$OUT"
 
+analysis_log_verif: install
+
 graph: install
 	@echo "[GRAPH] Génération du graphe Gantt"; \
 	OUT="$$(mktemp)"; \
