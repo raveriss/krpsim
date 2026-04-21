@@ -1,4 +1,4 @@
-# Production Process Simulator & Verifier (Python) - KRPSIM
+# ⏱️ Production Process Simulator & Verifier (Python) - KRPSIM
 
 <div align="center">
 
