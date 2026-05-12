@@ -13,6 +13,12 @@ from matplotlib.colors import to_rgba
 from matplotlib.patches import FancyBboxPatch
 from matplotlib.ticker import MultipleLocator
 
+from logger.analysis_log_gantt_project import (
+    AnalysisLogger,
+    get_active_analysis_logger,
+    set_active_analysis_logger,
+)
+
 ZERO_DURATION_WIDTH = 0.4
 MAX_FIGURE_HEIGHT = 24.0
 MAJOR_TICK_STEP = 10
@@ -51,51 +57,108 @@ def build_parser() -> argparse.ArgumentParser:
         default="graph_config_simple.json",
         help="path to the graph configuration json file",
     )
+    parser.add_argument(
+        "--analysis-log",
+        action="store_true",
+        help="print detailed analysis logs for Gantt rendering",
+    )
     return parser
 
 
 def load_config(path: Path) -> tuple[str, list[TaskPayload]]:
     """Load and validate graph configuration file."""
+    analysis_logger = get_active_analysis_logger()
+    scope = "gantt.load_config"
+    analysis_logger.log_header("GRAPH CONFIG LOAD", scope=scope)
+    analysis_logger.log_key_value("CONFIG_PATH", str(path), scope=scope)
     if not path.is_file():
+        analysis_logger.log_step("CONFIG_PATH_ERROR", str(path), scope=scope)
         raise FileNotFoundError(f"invalid graph config path: '{path}'")
 
-    data = json.loads(path.read_text(encoding="utf-8"))
+    raw_text = path.read_text(encoding="utf-8")
+    analysis_logger.log_key_value("RAW_JSON", raw_text, scope=scope)
+    data = json.loads(raw_text)
+    analysis_logger.log_key_value("DECODED_JSON", data, scope=scope)
     if not isinstance(data, dict):
+        analysis_logger.log_step("CONFIG_SCHEMA_ERROR", "root_not_object", scope=scope)
         raise ValueError("graph config must be a JSON object")
 
     title = data.get("title")
     tasks = data.get("tasks")
+    analysis_logger.log_key_value(
+        "TOP_LEVEL_FIELDS",
+        {"title": title, "tasks_type": type(tasks).__name__},
+        scope=scope,
+    )
 
     if not isinstance(title, str) or not title.strip():
+        analysis_logger.log_step("CONFIG_SCHEMA_ERROR", "invalid_title", scope=scope)
         raise ValueError("graph config must define a non-empty 'title'")
     if not isinstance(tasks, list):
+        analysis_logger.log_step("CONFIG_SCHEMA_ERROR", "invalid_tasks", scope=scope)
         raise ValueError("graph config must define a 'tasks' list")
 
     normalized: list[TaskPayload] = []
     for index, item in enumerate(tasks, start=1):
+        analysis_logger.log_key_value(
+            "TASK_READ",
+            {"index": index, "payload": item},
+            scope=scope,
+        )
         if not isinstance(item, dict):
+            analysis_logger.log_step(
+                "TASK_SCHEMA_ERROR",
+                {"index": index, "reason": "not_object"},
+                scope=scope,
+            )
             raise ValueError(f"task #{index} must be a JSON object")
         name = item.get("Task")
         start = item.get("Start")
         duration = item.get("Duration")
         progress = item.get("Progress", 100)
         if not isinstance(name, str) or not name:
+            analysis_logger.log_step(
+                "TASK_SCHEMA_ERROR",
+                {"index": index, "field": "Task", "value": name},
+                scope=scope,
+            )
             raise ValueError(f"task #{index} has invalid 'Task' value")
         if not isinstance(start, int) or start < 0:
+            analysis_logger.log_step(
+                "TASK_SCHEMA_ERROR",
+                {"index": index, "field": "Start", "value": start},
+                scope=scope,
+            )
             raise ValueError(f"task #{index} has invalid 'Start' value")
         if not isinstance(duration, int) or duration < 0:
+            analysis_logger.log_step(
+                "TASK_SCHEMA_ERROR",
+                {"index": index, "field": "Duration", "value": duration},
+                scope=scope,
+            )
             raise ValueError(f"task #{index} has invalid 'Duration' value")
         if not isinstance(progress, (int, float)) or not (0 <= float(progress) <= 100):
+            analysis_logger.log_step(
+                "TASK_SCHEMA_ERROR",
+                {"index": index, "field": "Progress", "value": progress},
+                scope=scope,
+            )
             raise ValueError(f"task #{index} has invalid 'Progress' value")
-        normalized.append(
-            {
-                "Task": name,
-                "Start": start,
-                "Duration": duration,
-                "Progress": float(progress),
-            }
+        normalized_task = {
+            "Task": name,
+            "Start": start,
+            "Duration": duration,
+            "Progress": float(progress),
+        }
+        analysis_logger.log_key_value(
+            "TASK_NORMALIZED",
+            normalized_task,
+            scope=scope,
         )
+        normalized.append(normalized_task)
 
+    analysis_logger.log_key_value("TITLE", title, scope=scope)
+    analysis_logger.log_key_value("NORMALIZED_TASKS", normalized, scope=scope)
     return title, normalized
 
 
@@ -109,16 +172,37 @@ def _display_duration(duration: int) -> float:
 def _figure_height(task_count: int) -> float:
     """Compute a bounded figure height."""
     raw_height = max(3.0, task_count * 0.6 + 1.5)
-    return min(MAX_FIGURE_HEIGHT, raw_height)
+    result = min(MAX_FIGURE_HEIGHT, raw_height)
+    get_active_analysis_logger().log_calculation(
+        "FIGURE_HEIGHT",
+        [
+            "raw_height = max(3.0, task_count * 0.6 + 1.5)",
+            f"task_count = {task_count}",
+            f"max_height = {MAX_FIGURE_HEIGHT}",
+        ],
+        result,
+        scope="gantt._figure_height",
+    )
+    return result
 
 
 def _collect_task_order(tasks_data: list[TaskPayload]) -> list[str]:
     """Return task names in their first appearance order."""
-    return list(dict.fromkeys(str(task["Task"]) for task in tasks_data))
+    result = list(dict.fromkeys(str(task["Task"]) for task in tasks_data))
+    get_active_analysis_logger().log_key_value(
+        "TASK_ORDER",
+        result,
+        scope="gantt._collect_task_order",
+    )
+    return result
 
 
 def _build_bars(tasks_data: list[TaskPayload]) -> list[_TaskBar]:
     """Convert payload tasks into normalized bars."""
+    analysis_logger = get_active_analysis_logger()
+    scope = "gantt._build_bars"
+    analysis_logger.log_header("TASK BAR BUILD", scope=scope)
+    analysis_logger.log_key_value("TASKS_DATA", tasks_data, scope=scope)
     bars: list[_TaskBar] = []
     for task_data in tasks_data:
         task = str(task_data["Task"])
@@ -136,14 +220,25 @@ def _build_bars(tasks_data: list[TaskPayload]) -> list[_TaskBar]:
                 progress=progress,
             )
         )
+        analysis_logger.log_key_value(
+            "BAR_CREATED",
+            bars[-1],
+            scope=scope,
+        )
+    analysis_logger.log_key_value("BARS", bars, scope=scope)
     return bars
 
 
 def _assign_tracks(bars: list[_TaskBar]) -> None:
     """Assign sub-tracks per task to separate overlapping repetitions."""
+    analysis_logger = get_active_analysis_logger()
+    scope = "gantt._assign_tracks"
+    analysis_logger.log_header("TRACK ASSIGNMENT", scope=scope)
+    analysis_logger.log_key_value("INPUT_BARS", bars, scope=scope)
     grouped_indices: dict[str, list[int]] = defaultdict(list)
     for index, bar in enumerate(bars):
         grouped_indices[bar.task].append(index)
+    analysis_logger.log_key_value("GROUPED_INDICES", dict(grouped_indices), scope=scope)
 
     for indices in grouped_indices.values():
         lane_ends: list[float] = []
@@ -153,24 +248,51 @@ def _assign_tracks(bars: list[_TaskBar]) -> None:
                 if bar.start >= lane_end:
                     bar.track_index = track_index
                     lane_ends[track_index] = bar.end
+                    analysis_logger.log_key_value(
+                        "TRACK_REUSED",
+                        {
+                            "bar_index": bar_index,
+                            "bar": bar,
+                            "track_index": track_index,
+                            "lane_ends": lane_ends,
+                        },
+                        scope=scope,
+                    )
                     break
             else:
                 bar.track_index = len(lane_ends)
                 lane_ends.append(bar.end)
+                analysis_logger.log_key_value(
+                    "TRACK_CREATED",
+                    {
+                        "bar_index": bar_index,
+                        "bar": bar,
+                        "track_index": bar.track_index,
+                        "lane_ends": lane_ends,
+                    },
+                    scope=scope,
+                )
 
         track_count = max(1, len(lane_ends))
         for bar_index in indices:
             bars[bar_index].track_count = track_count
+    analysis_logger.log_key_value("ASSIGNED_BARS", bars, scope=scope)
 
 
 def _color_map(task_order: list[str]) -> dict[str, RgbaColor]:
     """Build a stable color map with one color per distinct task."""
     cmap = plt.get_cmap("tab20")
     palette = [cmap(idx) for idx in range(cmap.N)]
-    return {
+    colors = {
         task: to_rgba(palette[index % len(palette)])
         for index, task in enumerate(task_order)
     }
+    get_active_analysis_logger().log_key_value(
+        "COLOR_MAP",
+        colors,
+        scope="gantt._color_map",
+    )
+    return colors
 
 
 def _edge_color(color: RgbaColor) -> RgbaColor:
@@ -236,7 +358,13 @@ def _window_title(chart_title: str) -> str:
     _, _, tail = chart_title.partition("-")
     dataset_name = tail.strip() if tail.strip() else chart_title.strip()
     compact_name = "_".join(part for part in dataset_name.split() if part)
-    return f"Graph_gantt_{compact_name}"
+    result = f"Graph_gantt_{compact_name}"
+    get_active_analysis_logger().log_key_value(
+        "WINDOW_TITLE",
+        {"chart_title": chart_title, "window_title": result},
+        scope="gantt._window_title",
+    )
+    return result
 
 
 def _set_window_title(fig: plt.Figure, chart_title: str) -> None:
@@ -260,16 +388,25 @@ def _outer_spaces(fig: plt.Figure, ax: plt.Axes) -> tuple[float, float]:
 
 def _balance_horizontal_whitespace(fig: plt.Figure, ax: plt.Axes) -> None:
     """Center chart content by balancing outer left/right spaces."""
+    analysis_logger = get_active_analysis_logger()
+    scope = "gantt._balance_horizontal_whitespace"
     fig.canvas.draw()
     left_space, right_space = _outer_spaces(fig, ax)
     delta = left_space - right_space
+    analysis_logger.log_key_value(
+        "OUTER_SPACES",
+        {"left": left_space, "right": right_space, "delta": delta},
+        scope=scope,
+    )
     if abs(delta) <= 1e-3:
+        analysis_logger.log_step("BALANCE_SKIPPED", "already_balanced", scope=scope)
         return
 
     position = ax.get_position()
     min_width = 0.2
     shrink = min(abs(delta), max(0.0, position.width - min_width))
     if shrink <= 0.0:
+        analysis_logger.log_step("BALANCE_SKIPPED", "no_available_width", scope=scope)
         return
 
     if delta > 0.0:
@@ -290,6 +427,11 @@ def _balance_horizontal_whitespace(fig: plt.Figure, ax: plt.Axes) -> None:
         ]
     ax.set_position(new_position)
     fig.canvas.draw()
+    analysis_logger.log_key_value(
+        "BALANCED_POSITION",
+        new_position,
+        scope=scope,
+    )
 
 
 def _draw_rounded_bar(
@@ -302,8 +444,22 @@ def _draw_rounded_bar(
     color: RgbaColor,
 ) -> None:
     """Draw one rounded horizontal bar."""
+    analysis_logger = get_active_analysis_logger()
+    scope = "gantt._draw_rounded_bar"
     # Oblong capsule style: maximal corner radius within bar dimensions.
     rounding = max(0.02, min(height, width / 2.0))
+    analysis_logger.log_key_value(
+        "DRAW_BAR",
+        {
+            "start": start,
+            "width": width,
+            "center_y": center_y,
+            "height": height,
+            "rounding": rounding,
+            "color": color,
+        },
+        scope=scope,
+    )
     patch = FancyBboxPatch(
         (start, center_y - height / 2.0),
         width,
@@ -318,13 +474,24 @@ def _draw_rounded_bar(
 
 def render_chart(title: str, tasks_data: list[TaskPayload]) -> None:
     """Render the chart from validated task data."""
+    analysis_logger = get_active_analysis_logger()
+    scope = "gantt.render_chart"
+    analysis_logger.log_header("GANTT RENDER", scope=scope)
+    analysis_logger.log_key_value("TITLE", title, scope=scope)
+    analysis_logger.log_key_value("TASKS_DATA", tasks_data, scope=scope)
     task_order = _collect_task_order(tasks_data)
     lanes = len(task_order)
     height = _figure_height(lanes)
+    analysis_logger.log_key_value(
+        "FIGURE_INPUTS",
+        {"task_order": task_order, "lanes": lanes, "height": height},
+        scope=scope,
+    )
     fig, ax = plt.subplots(figsize=(10, height))
     _set_window_title(fig, title)
 
     if not tasks_data:
+        analysis_logger.log_step("EMPTY_TASKS_BRANCH", scope=scope)
         ax.set_xlabel("Temps")
         ax.set_ylabel("Taches")
         ax.set_title(title)
@@ -342,6 +509,7 @@ def render_chart(title: str, tasks_data: list[TaskPayload]) -> None:
         ax.grid(True, axis="x", which="minor", linestyle="-", linewidth=0.5, alpha=0.22)
         fig.tight_layout()
         _balance_horizontal_whitespace(fig, ax)
+        analysis_logger.log_step("PLOT_SHOW", scope=scope)
         plt.show()
         return
 
@@ -354,6 +522,11 @@ def render_chart(title: str, tasks_data: list[TaskPayload]) -> None:
             track_count_by_task.get(bar.task, 1),
             bar.track_count,
         )
+    analysis_logger.log_key_value(
+        "TRACK_COUNT_BY_TASK",
+        track_count_by_task,
+        scope=scope,
+    )
 
     colors = _color_map(task_order)
     global_track_count = max((bar.track_count for bar in bars), default=1)
@@ -367,6 +540,15 @@ def render_chart(title: str, tasks_data: list[TaskPayload]) -> None:
     else:
         desired_group_gap = 1.0
     desired_group_gap = max(track_band * 0.35, desired_group_gap)
+    analysis_logger.log_key_value(
+        "TRACK_LAYOUT",
+        {
+            "global_track_count": global_track_count,
+            "track_band": track_band,
+            "desired_group_gap": desired_group_gap,
+        },
+        scope=scope,
+    )
 
     task_first_center: dict[str, float] = {}
     task_label_center: dict[str, float] = {}
@@ -376,14 +558,21 @@ def render_chart(title: str, tasks_data: list[TaskPayload]) -> None:
         else:
             previous_task = task_order[index - 1]
             prev_count = track_count_by_task[previous_task]
-            prev_last_center = (
-                task_first_center[previous_task]
-                + track_band * (prev_count - 1)
+            prev_last_center = task_first_center[previous_task] + track_band * (
+                prev_count - 1
             )
             first_center = prev_last_center + desired_group_gap
         task_first_center[task] = first_center
         task_count = track_count_by_task[task]
         task_label_center[task] = first_center + track_band * (task_count - 1) / 2.0
+    analysis_logger.log_key_value(
+        "TASK_CENTERS",
+        {
+            "task_first_center": task_first_center,
+            "task_label_center": task_label_center,
+        },
+        scope=scope,
+    )
 
     max_last_center = max(
         task_first_center[task] + track_band * (track_count_by_task[task] - 1)
@@ -397,6 +586,16 @@ def render_chart(title: str, tasks_data: list[TaskPayload]) -> None:
     ax.set_ylim(-0.5, max_last_center + 0.5)
     ax.set_yticks([task_label_center[task] for task in task_order], labels=task_order)
     ax.set_axisbelow(True)
+    analysis_logger.log_key_value(
+        "AXIS_BOUNDS",
+        {
+            "max_last_center": max_last_center,
+            "max_end": max_end,
+            "visible_span": visible_span,
+            "x_margin": x_margin,
+        },
+        scope=scope,
+    )
 
     # Compute target bar height from label font height * golden ratio.
     target_height = PHI * _font_height_in_data_units()
@@ -404,9 +603,24 @@ def render_chart(title: str, tasks_data: list[TaskPayload]) -> None:
     bar_height = max(0.05, min(target_height, track_height_cap))
     progress_width_cache: dict[str, float] = {}
     right_padding = PROGRESS_PADDING_PX * _x_data_per_pixel(ax)
+    analysis_logger.log_key_value(
+        "BAR_LAYOUT",
+        {
+            "target_height": target_height,
+            "track_height_cap": track_height_cap,
+            "bar_height": bar_height,
+            "right_padding": right_padding,
+        },
+        scope=scope,
+    )
 
     for bar in bars:
         center_y = task_first_center[bar.task] + track_band * bar.track_index
+        analysis_logger.log_key_value(
+            "BAR_RENDER_START",
+            {"bar": bar, "center_y": center_y},
+            scope=scope,
+        )
 
         _draw_rounded_bar(
             ax=ax,
@@ -425,7 +639,19 @@ def render_chart(title: str, tasks_data: list[TaskPayload]) -> None:
                 PROGRESS_FONT_SIZE,
             )
         required = progress_width_cache[label] + right_padding * 2.0
-        if bar.display_duration >= required:
+        label_fits = bar.display_duration >= required
+        analysis_logger.log_key_value(
+            "PROGRESS_LABEL_DECISION",
+            {
+                "bar": bar,
+                "label": label,
+                "required_width": required,
+                "display_duration": bar.display_duration,
+                "label_fits": label_fits,
+            },
+            scope=scope,
+        )
+        if label_fits:
             ax.text(
                 bar.start + bar.display_duration - right_padding,
                 center_y,
@@ -446,6 +672,7 @@ def render_chart(title: str, tasks_data: list[TaskPayload]) -> None:
 
     fig.tight_layout()
     _balance_horizontal_whitespace(fig, ax)
+    analysis_logger.log_step("PLOT_SHOW", scope=scope)
     plt.show()
 
 
@@ -453,9 +680,20 @@ def main(argv: list[str] | None = None) -> int:
     """CLI entrypoint."""
     parser = build_parser()
     args = parser.parse_args(argv)
+    analysis_logger = AnalysisLogger(enabled=args.analysis_log)
+    set_active_analysis_logger(analysis_logger)
+    scope = "gantt.main"
+    analysis_logger.log_header("CLI ENTRYPOINT", scope=scope)
+    analysis_logger.log_key_value("PARSED_ARGS", vars(args), scope=scope)
 
     title, tasks = load_config(Path(args.config))
+    analysis_logger.log_step(
+        "RENDER_START",
+        {"title": title, "tasks": len(tasks)},
+        scope=scope,
+    )
     render_chart(title, tasks)
+    analysis_logger.log_key_value("EXIT_CODE", 0, scope=scope)
     return 0
 
 

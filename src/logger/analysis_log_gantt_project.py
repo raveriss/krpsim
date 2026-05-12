@@ -1,4 +1,4 @@
-"""Structured analysis logs for `krpsim_verif` CLI instrumentation."""
+"""Structured analysis logs for Gantt graph generation instrumentation."""
 
 from __future__ import annotations
 

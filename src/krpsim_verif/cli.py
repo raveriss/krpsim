@@ -9,13 +9,21 @@ from __future__ import annotations
 
 # Pour stabiliser l'interface CLI et ses erreurs utilisateur.
 import argparse
+
 # Pour rendre le diagnostic activable sans polluer la sortie.
 import logging
+
 # Pour eviter les chemins fragiles relies aux separateurs OS.
 from pathlib import Path
 
 # Pour reutiliser la logique canonique du simulateur sans duplication.
 from krpsim.parser import ParseError
+from logger.analysis_log_krpsim import (
+    set_active_analysis_logger as set_krpsim_analysis_logger,
+)
+
+# Pour centraliser les traces d'analyse du verificateur.
+from logger.analysis_log_krpsim_verif import AnalysisLogger, set_active_analysis_logger
 
 # Pour limiter le couplage aux composants internes necessaires.
 from .verifier import TraceError, verify_files
@@ -53,7 +61,13 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         # Pour rendre l'usage autonome sans lecture du code source.
         help="enable verbose logging",
-    # Pour clore le bloc sans ambiguite de structure.
+        # Pour clore le bloc sans ambiguite de structure.
+    )
+    # Pour figer l'interface publique attendue par les scripts externes.
+    parser.add_argument(
+        "--analysis-log",
+        action="store_true",
+        help="print detailed analysis logs for CLI pipeline and verification",
     )
     # Pour figer l'interface publique attendue par les scripts externes.
     parser.add_argument("--log", help="file to write logs to")
@@ -82,6 +96,18 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     # Pour permettre l'injection d'arguments en test unitaire.
     args = parser.parse_args(argv)
+    # Pour etiqueter clairement les logs emis par cette fonction.
+    scope = "main"
+    # Pour centraliser les traces d'analyse du comportement de la CLI.
+    analysis_logger = AnalysisLogger(enabled=args.analysis_log)
+    # Pour partager le logger d'analyse avec le module de verification.
+    set_active_analysis_logger(analysis_logger)
+    # Pour partager le meme logger avec la simulation de reference appelee ici.
+    set_krpsim_analysis_logger(analysis_logger)
+    # Pour exposer les arguments parsees dans un bloc d'entree unique.
+    analysis_logger.log_header("CLI ENTRYPOINT", scope=scope)
+    # Pour garder un format deterministe pour reproduire un run exact.
+    analysis_logger.log_key_value("PARSED_ARGS", vars(args), scope=scope)
 
     # Pour centraliser les sorties de logs sans multiplier la configuration.
     handlers: list[logging.Handler] = [logging.StreamHandler()]
@@ -99,19 +125,27 @@ def main(argv: list[str] | None = None) -> int:
         handlers=handlers,
         # Pour eviter l'empilement de handlers lors des appels repetes.
         force=True,
-    # Pour clore le bloc sans ambiguite de structure.
+        # Pour clore le bloc sans ambiguite de structure.
     )
 
     # Pour distinguer l'echec de verification d'une simulation valide.
     sim = None
     # Pour centraliser le statut final sans sorties anticipees.
     exit_code = 0
+    # Pour tracer les chemins qui seront transmis au coeur de verification.
+    analysis_logger.log_header("VERIFICATION PIPELINE", scope=scope)
+    # Pour exposer le fichier de configuration demande.
+    analysis_logger.log_key_value("CONFIG_PATH", args.config, scope=scope)
+    # Pour exposer le fichier de trace demande.
+    analysis_logger.log_key_value("TRACE_PATH", args.trace, scope=scope)
     # Pour convertir une erreur bas niveau en diagnostic exploitable.
     try:
         # Pour deleguer la verification complete a un point unique.
         sim = verify_files(Path(args.config), Path(args.trace))
     # Pour traduire un echec technique en message stable pour l'appelant.
     except ParseError as exc:
+        # Pour relier l'erreur metier a la phase qui a echoue.
+        analysis_logger.log_step("PARSE_ERROR", str(exc), scope=scope)
         # Pour conserver un diagnostic exploitable dans les logs machine.
         logging.error("invalid config: %s", exc)
         # Pour fournir un retour utilisateur directement lisible en CLI.
@@ -120,6 +154,8 @@ def main(argv: list[str] | None = None) -> int:
         exit_code = 1
     # Pour traduire un echec technique en message stable pour l'appelant.
     except (OSError, TraceError) as exc:
+        # Pour relier l'erreur de trace a la phase qui a echoue.
+        analysis_logger.log_step("TRACE_ERROR", str(exc), scope=scope)
         # Pour separer clairement les incidents de trace dans l'observabilite.
         logging.error("invalid trace: %s", exc)
         # Pour fournir un retour utilisateur directement lisible en CLI.
@@ -128,6 +164,8 @@ def main(argv: list[str] | None = None) -> int:
         exit_code = 1
     # Pour couvrir explicitement le cas complementaire du contrat.
     else:
+        # Pour marquer la verification positive avant affichage utilisateur.
+        analysis_logger.log_step("TRACE_VALID", scope=scope)
         # Pour laisser une preuve de succes en mode verbeux.
         logging.info("trace is valid")
         # Pour fournir un retour utilisateur directement lisible en CLI.
@@ -137,8 +175,18 @@ def main(argv: list[str] | None = None) -> int:
     if sim is not None:
         # Pour stabiliser l'ordre d'affichage des ressources finales.
         stock_names = sorted(sim.config.all_stock_names())
+        # Pour exposer l'ordre stable d'affichage des stocks.
+        analysis_logger.log_key_value("FINAL_STOCK_NAMES", stock_names, scope=scope)
         # Pour aligner la sortie et faciliter la lecture des diffs.
         max_len = max((len(name) for name in stock_names), default=0)
+        # Pour exposer l'etat final avant affichage.
+        analysis_logger.log_key_value(
+            "FINAL_STOCKS",
+            {name: sim.stocks.get(name, 0) for name in stock_names},
+            scope=scope,
+        )
+        # Pour exposer le dernier cycle valide.
+        analysis_logger.log_key_value("LAST_CYCLE", sim.time, scope=scope)
         # Pour fournir un retour utilisateur directement lisible en CLI.
         print("Final Stocks:")
         # Pour afficher les stocks dans un ordre deterministic.
@@ -147,6 +195,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  {name:<{max_len}}  => {sim.stocks.get(name, 0)}")
         # Pour fournir un retour utilisateur directement lisible en CLI.
         print(f"Last cycle: {sim.time}")
+    # Pour tracer la valeur de sortie renvoyee au shell.
+    analysis_logger.log_key_value("EXIT_CODE", exit_code, scope=scope)
     # Pour fournir au shell un code retour exploitable en automatisation.
     return exit_code
 

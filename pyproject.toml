@@ -12,7 +12,8 @@ description = "Simulation et vérification de graphes de processus pour la gesti
 authors = ["raveriss <raveriss@example.com>"]
 packages = [
   { include = "krpsim", from = "src" },
-  { include = "krpsim_verif", from = "src" }
+  { include = "krpsim_verif", from = "src" },
+  { include = "logger", from = "src" }
 ]
 
 [tool.poetry.dependencies]

@@ -6,7 +6,7 @@
 #   krpsim --help       -> dispo direct si ~/.local/bin est dans le PATH
 
 .PHONY: default install install-bin uninstall-bin \
-        lint format test krpsim analysis_log_krpsim krpsim_verif graph process_resources \
+        lint format test krpsim analysis_log_krpsim krpsim_verif analysis_log_krpsim_verif analysis_log_verif graph analysis_log_gantt_project analysis_log_gantt_projet process_resources \
         clean fclean re uninstall which-bin print-path help doctor \
 			show-activate
 
@@ -19,8 +19,10 @@ KRPSIM_INPUT = $(word 2,$(MAKECMDGOALS))
 KRPSIM_CYCLES = $(word 3,$(MAKECMDGOALS))
 KRPSIM_VERIF_INPUT = $(word 2,$(MAKECMDGOALS))
 KRPSIM_VERIF_TRACE = $(word 3,$(MAKECMDGOALS))
+GANTT_INPUT = $(word 2,$(MAKECMDGOALS))
+GANTT_TRACE = $(word 3,$(MAKECMDGOALS))
 KRPSIM_ARGS_COUNT = $(words $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS)))
-CLI_ARG_TARGETS = krpsim analysis_log_krpsim krpsim_verif
+CLI_ARG_TARGETS = krpsim analysis_log_krpsim krpsim_verif analysis_log_krpsim_verif analysis_log_verif analysis_log_gantt_project analysis_log_gantt_projet
 
 ifneq (,$(filter $(firstword $(MAKECMDGOALS)),$(CLI_ARG_TARGETS)))
 CLI_ARGS = $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
@@ -338,7 +340,82 @@ krpsim_verif: install
 	fi; \
 	rm -f "$$OUT"
 
-analysis_log_verif: install
+analysis_log_krpsim_verif: install
+	@set -u; \
+	HAS_ERROR=0; \
+	if [ "$(KRPSIM_ARGS_COUNT)" -ne 2 ]; then \
+		echo "[ANALYSIS_LOG_KRPSIM_VERIF][ERREUR] Arguments invalides."; \
+		echo "Usage: make analysis_log_krpsim_verif <resource_file> <trace_file>"; \
+		echo "Exemple: make analysis_log_krpsim_verif resources/simple trace_simple.txt"; \
+		echo "Action: fournis exactement 2 arguments."; \
+		HAS_ERROR=1; \
+	fi; \
+	if [ "$$HAS_ERROR" -eq 1 ]; then \
+		exit 0; \
+	fi; \
+	if [ ! -f "$(KRPSIM_VERIF_INPUT)" ]; then \
+		echo "[ANALYSIS_LOG_KRPSIM_VERIF][ERREUR] Fichier de configuration introuvable: $(KRPSIM_VERIF_INPUT)"; \
+		echo "Action: vérifie le chemin du fichier (ex: resources/simple)."; \
+		HAS_ERROR=1; \
+	fi; \
+	if [ ! -f "$(KRPSIM_VERIF_TRACE)" ]; then \
+		echo "[ANALYSIS_LOG_KRPSIM_VERIF][ERREUR] Fichier de trace introuvable: $(KRPSIM_VERIF_TRACE)"; \
+		echo "Action: génère d'abord une trace puis relance la vérification."; \
+		HAS_ERROR=1; \
+	fi; \
+	if [ "$$HAS_ERROR" -eq 1 ]; then \
+		exit 0; \
+	fi; \
+	echo "[ANALYSIS_LOG_KRPSIM_VERIF] Vérification: file=$(KRPSIM_VERIF_INPUT), trace=$(KRPSIM_VERIF_TRACE)"; \
+	$(POETRY) krpsim_verif "$(KRPSIM_VERIF_INPUT)" "$(KRPSIM_VERIF_TRACE)" --analysis-log
+
+analysis_log_verif: analysis_log_krpsim_verif
+
+analysis_log_gantt_project: install
+	@set -u; \
+	HAS_ERROR=0; \
+	if [ "$(KRPSIM_ARGS_COUNT)" -ne 2 ]; then \
+		echo "[ANALYSIS_LOG_GANTT_PROJECT][ERREUR] Arguments invalides."; \
+		echo "Usage: make analysis_log_gantt_project <resource_file> <trace_file>"; \
+		echo "Exemple: make analysis_log_gantt_project resources/simple trace_simple.txt"; \
+		echo "Action: fournis exactement 2 arguments."; \
+		HAS_ERROR=1; \
+	fi; \
+	if [ "$$HAS_ERROR" -eq 1 ]; then \
+		exit 0; \
+	fi; \
+	if [ ! -f "$(GANTT_INPUT)" ]; then \
+		echo "[ANALYSIS_LOG_GANTT_PROJECT][ERREUR] Fichier de configuration introuvable: $(GANTT_INPUT)"; \
+		echo "Action: vérifie le chemin du fichier (ex: resources/simple)."; \
+		HAS_ERROR=1; \
+	fi; \
+	if [ ! -f "$(GANTT_TRACE)" ]; then \
+		echo "[ANALYSIS_LOG_GANTT_PROJECT][ERREUR] Fichier de trace introuvable: $(GANTT_TRACE)"; \
+		echo "Action: génère d'abord une trace puis relance la génération Gantt."; \
+		HAS_ERROR=1; \
+	fi; \
+	if [ "$$HAS_ERROR" -eq 1 ]; then \
+		exit 0; \
+	fi; \
+	CONFIG_BASENAME="$$(basename "$(GANTT_INPUT)")"; \
+	CONFIG_STEM="$${CONFIG_BASENAME%.*}"; \
+	GRAPH_CONFIG_FILE="graph_config_$${CONFIG_STEM}.json"; \
+	echo "[ANALYSIS_LOG_GANTT_PROJECT] Config: file=$(GANTT_INPUT), trace=$(GANTT_TRACE)"; \
+	echo "[ANALYSIS_LOG_GANTT_PROJECT] Config graphe: $$GRAPH_CONFIG_FILE"; \
+	if $(POETRY) python gantt_project/build_graph_config.py \
+		--config "$(GANTT_INPUT)" \
+		--trace "$(GANTT_TRACE)" \
+		--output "$$GRAPH_CONFIG_FILE" \
+		--analysis-log; then \
+		echo "[ANALYSIS_LOG_GANTT_PROJECT] Génération du graphe Gantt"; \
+		$(POETRY) python gantt_project/gantt.py --config "$$GRAPH_CONFIG_FILE" --analysis-log; \
+	else \
+		CODE=$$?; \
+		echo "[ANALYSIS_LOG_GANTT_PROJECT][ERREUR] Génération de la config graphe échouée (code=$$CODE)."; \
+		echo "Action: vérifie le fichier de config, la trace, puis relance la commande."; \
+	fi
+
+analysis_log_gantt_projet: analysis_log_gantt_project
 
 graph: install
 	@echo "[GRAPH] Génération du graphe Gantt"; \
@@ -518,7 +595,10 @@ help:
 	@echo "  uninstall-bin -> supprime les symlinks utilisateur"
 	@echo "  krpsim <file> <cycles>          -> exécute via Poetry"
 	@echo "    sortie: trace_<file>.txt + graph_config_<file>.json"
+	@echo "  analysis_log_krpsim <file> <cycles> -> exécute krpsim avec logs d'analyse"
 	@echo "  krpsim_verif <file> <trace>     -> exécute via Poetry"
+	@echo "  analysis_log_krpsim_verif <file> <trace> -> exécute krpsim_verif avec logs d'analyse"
+	@echo "  analysis_log_gantt_project <file> <trace> -> génère la config graphe + Gantt avec logs d'analyse"
 	@echo "  note          -> si un argument commence par '-', utilise: make -- <target> ..."
 	@echo "  graph         -> génère le graphe Gantt"
 	@echo "  lint | format | test | process_resources"
