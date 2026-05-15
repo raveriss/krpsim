@@ -285,7 +285,8 @@ make test
 
 - **Rafael Verissimo** — [Portfolio](https://raveriss.dev/) · [LinkedIn](https://www.linkedin.com/in/verissimo-rafael/) · [GitHub](https://github.com/raveriss)
 - **Paul Beaudet** — [LinkedIn](https://www.linkedin.com/in/paul-beaudet-968860385/) · [GitHub](https://github.com/PaulBeaudet23)
-
+- **Sylvanna COURBIS** — [GitHub](https://github.com/Sycourbi)
+  
 ## 🛡️ Licence
 
 Projet distribué sous licence MIT.
