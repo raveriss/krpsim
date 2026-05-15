@@ -100,8 +100,8 @@ def test_verify_trace_short_and_extra(tmp_path: Path) -> None:
         verify_trace(cfg, parse_trace(extra_file))
 
 
-def test_verify_custom_finite(tmp_path: Path) -> None:
-    cfg = parser.parse_file(Path("resources/custom_finite"))
+def test_verify_finite_resource(tmp_path: Path) -> None:
+    cfg = parser.parse_file(Path("resources/finite"))
     sim = Simulator(cfg)
     events = sim.run(10)
     trace_file = tmp_path / "trace.txt"
@@ -109,8 +109,8 @@ def test_verify_custom_finite(tmp_path: Path) -> None:
     verify_trace(cfg, parse_trace(trace_file))
 
 
-def test_verify_custom_infinite(tmp_path: Path) -> None:
-    cfg = parser.parse_file(Path("resources/custom_infinite"))
+def test_verify_loop_resource(tmp_path: Path) -> None:
+    cfg = parser.parse_file(Path("resources/loop"))
     sim = Simulator(cfg)
     events = sim.run(5)
     trace_file = tmp_path / "trace.txt"

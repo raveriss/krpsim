@@ -218,28 +218,31 @@ Sortie:
 ├── pyproject.toml
 ├── README.md
 ├── resources
+│   ├── bad_proc
+│   ├── bad_ref
+│   ├── bad_stock
 │   ├── best
-│   ├── custom_finite
-│   ├── custom_infinite
-│   ├── duplicate_entries
-│   ├── exponential
+│   ├── big
+│   ├── delay0
+│   ├── dup
+│   ├── expo
+│   ├── finite
+│   ├── gantt_x
+│   ├── gantt_y
+│   ├── greedy
 │   ├── ikea
-│   ├── inception
-│   ├── invalid_bad_process
-│   ├── invalid_bad_stock
-│   ├── large_numbers
-│   ├── missing_input
-│   ├── multi_output_chain
+│   ├── init0
+│   ├── lexi
+│   ├── loop
+│   ├── multi_out
+│   ├── no_goal
+│   ├── obj2
 │   ├── pomme
 │   ├── recre
-│   ├── self_gen
+│   ├── self
 │   ├── simple
 │   ├── steak
-│   ├── stress_lexicographic_finite
-│   ├── stress_multi_objective
-│   ├── unreachable_target
-│   ├── zero_delay
-│   └── zero_initial
+│   └── time
 ├── src
 │   ├── krpsim
 │   └── krpsim_verif

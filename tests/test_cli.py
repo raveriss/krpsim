@@ -220,8 +220,8 @@ def test_cli_unreadable_file(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
 @pytest.mark.parametrize(
     "file",
     [
-        Path("resources/invalid_bad_stock"),
-        Path("resources/invalid_bad_process"),
+        Path("resources/bad_stock"),
+        Path("resources/bad_proc"),
     ],
 )
 def test_cli_invalid_config(file: Path, capsys: CaptureFixture[str]) -> None:
@@ -251,9 +251,9 @@ def test_verifier_cli_log(tmp_path: Path) -> None:
         ("ikea", 100),
         ("steak", 100),
         ("recre", 100),
-        ("inception", 100),
-        ("custom_finite", 100),
-        ("custom_infinite", 5),
+        ("time", 100),
+        ("finite", 100),
+        ("loop", 5),
     ],
 )
 def test_cli_run_resources(
@@ -263,12 +263,12 @@ def test_cli_run_resources(
     exit_code = cli.main([str(res), str(delay)])
     captured = capsys.readouterr()
     assert exit_code in (0, 1)
-    if resource == "custom_infinite":
+    if resource == "loop":
         assert exit_code == 1
         assert "Max time reached" in captured.out
 
 
-@pytest.mark.parametrize("resource", ["zero_delay", "pomme"])
+@pytest.mark.parametrize("resource", ["delay0", "pomme"])
 def test_cli_rejects_zero_delay_process_resources(
     resource: str,
     capsys: CaptureFixture[str],

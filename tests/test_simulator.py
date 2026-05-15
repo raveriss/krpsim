@@ -177,7 +177,7 @@ def test_ikea_limited_delay_does_not_overproduce_target_components() -> None:
 
 @pytest.mark.parametrize(
     "resource",
-    ["ikea", "steak", "recre", "inception"],
+    ["ikea", "steak", "recre", "time"],
 )
 def test_run_resources(resource: str) -> None:
     cfg = parser.parse_file(Path("resources") / resource)
@@ -186,8 +186,8 @@ def test_run_resources(resource: str) -> None:
     assert sim.time <= 51
 
 
-def test_custom_finite() -> None:
-    cfg = parser.parse_file(Path("resources/custom_finite"))
+def test_finite_resource() -> None:
+    cfg = parser.parse_file(Path("resources/finite"))
     sim = Simulator(cfg)
     trace = sim.run(10)
     assert trace == [(0, "finish")]
@@ -195,8 +195,8 @@ def test_custom_finite() -> None:
     assert sim.time == 2
 
 
-def test_custom_infinite() -> None:
-    cfg = parser.parse_file(Path("resources/custom_infinite"))
+def test_loop_resource() -> None:
+    cfg = parser.parse_file(Path("resources/loop"))
     sim = Simulator(cfg)
     trace = sim.run(5)
     # the loop process runs every cycle until max time
@@ -223,4 +223,4 @@ def test_recre_optimal() -> None:
 
 def test_zero_delay_process_rejected() -> None:
     with pytest.raises(parser.ParseError, match="Delay must be >= 1 cycle"):
-        parser.parse_file(Path("resources/zero_delay"))
+        parser.parse_file(Path("resources/delay0"))

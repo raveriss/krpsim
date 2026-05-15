@@ -23,7 +23,7 @@ def test_config_all_stock_names() -> None:
     }
 
 
-@pytest.mark.parametrize("fname", ["invalid_bad_stock", "invalid_bad_process"])
+@pytest.mark.parametrize("fname", ["bad_stock", "bad_proc"])
 def test_parse_invalid_files(fname):
     with pytest.raises(parser.ParseError):
         parser.parse_file(Path("resources") / fname)
@@ -203,7 +203,7 @@ def test_parse_unknown_resource(tmp_path: Path) -> None:
         parser.parse_file(config)
 
 
-@pytest.mark.parametrize("resource_file", ["zero_delay", "pomme"])
+@pytest.mark.parametrize("resource_file", ["delay0", "pomme"])
 def test_parse_rejects_zero_delay_processes(resource_file: str) -> None:
     with pytest.raises(
         parser.ParseError,

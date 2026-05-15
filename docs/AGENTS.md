@@ -38,7 +38,7 @@ krpsim/
 ├── krpsim.py
 ├── krpsim\_verif.py
 ├── resources/
-│   ├── simple, ikea, steak, pomme, recre, inception, (fichiers extrêmes/crash)
+│   ├── simple, ikea, steak, pomme, recre, time, (fichiers extrêmes/crash)
 ├── src/
 │   ├── **init**.py
 │   ├── parser.py        # Agent 1 : Analyseur
@@ -78,7 +78,7 @@ krpsim/
 
 ## 3. 📚 Corpus de Test de Référence
 
-- [ ] Utilisation de tous les fichiers : `simple`, `ikea`, `steak`, `pomme`, `recre`, `inception`, **et fichiers de stress/crash**.
+- [ ] Utilisation de tous les fichiers : `simple`, `ikea`, `steak`, `pomme`, `recre`, `time`, **et fichiers de stress/crash**.
 - [ ] Générer 2 fichiers custom : un qui termine, un “boucle infinie”.
 
 ---
