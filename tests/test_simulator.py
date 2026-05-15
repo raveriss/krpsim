@@ -109,6 +109,72 @@ def test_optimize_stock_priority():
     assert trace[0] == (0, "p1")
 
 
+def test_optimize_stock_prefers_lower_needs_when_target_output_ties() -> None:
+    cfg = parser.Config(
+        stocks={"raw": 4},
+        processes={
+            "aa_expensive_goal": parser.Process(
+                "aa_expensive_goal",
+                {"raw": 4},
+                {"goal": 1},
+                1,
+            ),
+            "zz_efficient_goal": parser.Process(
+                "zz_efficient_goal",
+                {"raw": 2},
+                {"goal": 1},
+                1,
+            ),
+        },
+        optimize=["goal"],
+    )
+    sim = Simulator(cfg)
+    trace = sim.run(10)
+
+    assert trace == [(0, "zz_efficient_goal"), (1, "zz_efficient_goal")]
+    assert sim.stocks["goal"] == 2
+    assert sim.stocks["raw"] == 0
+
+
+def test_ikea_prioritizes_components_for_target() -> None:
+    cfg = parser.parse_file(Path("resources/ikea"))
+    sim = Simulator(cfg)
+    trace = sim.run(100)
+
+    assert trace == [
+        (0, "do_etagere"),
+        (0, "do_montant"),
+        (0, "do_fond"),
+        (1, "do_etagere"),
+        (1, "do_montant"),
+        (2, "do_etagere"),
+        (20, "do_armoire_ikea"),
+    ]
+    assert sim.stocks["armoire"] == 1
+    assert sim.stocks["etagere"] == 0
+    assert sim.stocks["fond"] == 0
+    assert sim.stocks["montant"] == 0
+    assert sim.stocks["planche"] == 0
+
+
+def test_ikea_limited_delay_does_not_overproduce_target_components() -> None:
+    cfg = parser.parse_file(Path("resources/ikea"))
+    sim = Simulator(cfg)
+    trace = sim.run(15)
+
+    assert trace == [
+        (0, "do_etagere"),
+        (0, "do_montant"),
+        (1, "do_etagere"),
+        (2, "do_etagere"),
+    ]
+    assert sim.stocks.get("armoire", 0) == 0
+    assert sim.stocks["etagere"] == 3
+    assert sim.stocks.get("fond", 0) == 0
+    assert sim.stocks["montant"] == 1
+    assert sim.stocks["planche"] == 3
+
+
 @pytest.mark.parametrize(
     "resource",
     ["ikea", "steak", "recre", "inception"],

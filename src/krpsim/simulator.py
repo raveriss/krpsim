@@ -122,6 +122,38 @@ class Simulator:
             # Pour retirer seulement les processus reellement termines.
             self._running.remove(rp)
 
+    def _projected_stock(self, resource: str) -> int:
+        """Retourne le stock disponible en incluant les productions en cours."""
+        projected = self.stocks.get(resource, 0)
+        for running in self._running:
+            projected += running.process.results.get(resource, 0)
+        return projected
+
+    def _target_need_cap_reached(self, process: Process) -> bool:
+        """Indique si un processus surproduirait un composant de la cible."""
+        target = self._single_target()
+        if not target:
+            return False
+
+        target_process = self._target_process(target)
+        if target_process is None or process is target_process:
+            return False
+        if process.results.get(target, 0) > 0:
+            return False
+
+        produced_components = [
+            resource
+            for resource in process.results
+            if resource in target_process.needs
+        ]
+        if not produced_components:
+            return False
+
+        return all(
+            self._projected_stock(resource) >= target_process.needs[resource]
+            for resource in produced_components
+        )
+
     # Pour isoler _start_processes et faciliter son evolution sous tests.
     def _start_processes(self) -> tuple[bool, bool]:
         """Demarre tous les processus executables au cycle courant.
@@ -147,6 +179,8 @@ class Simulator:
         logger = logging.getLogger(__name__)
         # Pour appliquer uniformement la regle a chaque element concerne.
         for process in order_processes(self.config):
+            if self._target_need_cap_reached(process):
+                continue
             # Pour expliciter une decision qui impacte le flux metier.
             if self.time + process.delay > self._max_time:
                 # Pour ignorer ce cas et laisser la boucle traiter les suivants.

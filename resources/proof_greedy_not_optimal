@@ -1,0 +1,25 @@
+#
+# Demonstration: the greedy scheduler is deterministic, but not globally optimal.
+#
+# Both processes produce exactly 1 "goal", so optimize:(goal) gives them the
+# same priority. The tie-break is the process name, so aa_expensive_goal is
+# tried before zz_efficient_goal.
+#
+# Greedy result:
+#   0:aa_expensive_goal
+#   final goal = 1
+#
+# Better possible planning:
+#   0:zz_efficient_goal
+#   1:zz_efficient_goal
+#   final goal = 2
+# stock      name:quantity
+raw:4
+
+#
+# process   name:(need1:qty1;need2:qty2;[...]):(result1:qty1;result2:qty2;[...]):delay
+#
+aa_expensive_goal:(raw:4):(goal:1):1
+zz_efficient_goal:(raw:2):(goal:1):1
+
+optimize:(goal)
