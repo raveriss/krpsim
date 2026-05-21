@@ -181,6 +181,13 @@ Exemple de diagramme généré à partir du cas `resources/ikea`:
 Sur un environnement sans affichage graphique interactif (par exemple Fedora avec
 le backend Matplotlib `Agg`), le graphe est sauvegardé dans
 `docs/graphs/diagramme_gantt_<nom>.png`.
+Les commandes `make krpsim_verif`, `make graph` et `make analysis_log_gantt_project`
+ouvrent automatiquement ce fichier quand un ouvreur système est disponible.
+Pour générer sans ouvrir l'image:
+
+```bash
+KRPSIM_OPEN_GRAPH=0 make krpsim_verif resources/ikea trace_ikea.txt
+```
 
 <div align="center">
   <img src="docs/diagramme_gantt_ikea.png" alt="Diagramme de Gantt IKEA">

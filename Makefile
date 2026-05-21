@@ -17,6 +17,7 @@ POETRY_INSTALL_URL = https://install.python-poetry.org
 VENV_DIR = .venv
 VENV_PYTHON = $(VENV_DIR)/bin/python
 VENV_STAMP = $(VENV_DIR)/.install-stamp
+OPEN_GRAPH_IMAGE = if [ "$${KRPSIM_OPEN_GRAPH:-1}" = "0" ]; then echo "[GRAPH] Ouverture ignorée: $$GRAPH_IMAGE"; elif command -v code >/dev/null 2>&1 && { [ "$${TERM_PROGRAM:-}" = "vscode" ] || [ -n "$${VSCODE_IPC_HOOK_CLI:-}" ]; }; then code --reuse-window "$$GRAPH_IMAGE" >/dev/null 2>&1 && echo "[GRAPH] Ouverture: $$GRAPH_IMAGE" || echo "[GRAPH] Graphe généré: $$GRAPH_IMAGE"; elif command -v xdg-open >/dev/null 2>&1; then xdg-open "$$GRAPH_IMAGE" >/dev/null 2>&1 && echo "[GRAPH] Ouverture: $$GRAPH_IMAGE" || echo "[GRAPH] Graphe généré: $$GRAPH_IMAGE"; elif command -v gio >/dev/null 2>&1; then gio open "$$GRAPH_IMAGE" >/dev/null 2>&1 && echo "[GRAPH] Ouverture: $$GRAPH_IMAGE" || echo "[GRAPH] Graphe généré: $$GRAPH_IMAGE"; else echo "[GRAPH] Graphe généré: $$GRAPH_IMAGE"; fi
 KRPSIM_INPUT = $(word 2,$(MAKECMDGOALS))
 KRPSIM_CYCLES = $(word 3,$(MAKECMDGOALS))
 KRPSIM_VERIF_INPUT = $(word 2,$(MAKECMDGOALS))
@@ -355,6 +356,7 @@ krpsim_verif: install
 			GRAPH_OUT="$$(mktemp)"; \
 			if $(POETRY) python gantt_project/gantt.py --config "$$GRAPH_CONFIG_FILE" --output "$$GRAPH_IMAGE" --no-show >"$$GRAPH_OUT" 2>&1; then \
 				[ -s "$$GRAPH_OUT" ] && cat "$$GRAPH_OUT"; \
+				$(OPEN_GRAPH_IMAGE); \
 			else \
 				GRAPH_CODE=$$?; \
 				echo "[GRAPH][ERREUR] La génération a échoué (code=$$GRAPH_CODE)."; \
@@ -450,6 +452,7 @@ analysis_log_gantt_project: install
 		echo "[ANALYSIS_LOG_GANTT_PROJECT] Génération du graphe Gantt"; \
 		GRAPH_IMAGE="docs/graphs/diagramme_gantt_$${CONFIG_STEM}.png"; \
 		$(POETRY) python gantt_project/gantt.py --config "$$GRAPH_CONFIG_FILE" --output "$$GRAPH_IMAGE" --no-show --analysis-log; \
+		$(OPEN_GRAPH_IMAGE); \
 	else \
 		CODE=$$?; \
 		echo "[ANALYSIS_LOG_GANTT_PROJECT][ERREUR] Génération de la config graphe échouée (code=$$CODE)."; \
@@ -460,9 +463,11 @@ analysis_log_gantt_projet: analysis_log_gantt_project
 
 graph: install
 	@echo "[GRAPH] Génération du graphe Gantt"; \
+	GRAPH_IMAGE="docs/graphs/diagramme_gantt_simple.png"; \
 	OUT="$$(mktemp)"; \
-	if $(POETRY) python gantt_project/gantt.py --config graph_config_simple.json --output docs/graphs/diagramme_gantt_simple.png --no-show >"$$OUT" 2>&1; then \
+	if $(POETRY) python gantt_project/gantt.py --config graph_config_simple.json --output "$$GRAPH_IMAGE" --no-show >"$$OUT" 2>&1; then \
 		cat "$$OUT"; \
+		$(OPEN_GRAPH_IMAGE); \
 	else \
 		CODE=$$?; \
 		echo "[GRAPH][ERREUR] La génération a échoué (code=$$CODE)."; \
