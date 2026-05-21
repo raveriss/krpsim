@@ -8,6 +8,7 @@ __pycache__/
 *.so
 
 # Virtual environments
+.venv
 .venv/
 
 # Coverage reports
@@ -25,3 +26,5 @@ dist/
 
 # Divers
 *.txt
+graph_config_*.json
+docs/graphs/

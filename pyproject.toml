@@ -17,7 +17,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.13"
+python = ">=3.10,<3.14"
 matplotlib = ">=3.8,<4.0"
 pandas = ">=2.2,<3.0"
 
@@ -30,7 +30,7 @@ dynamic = ["version"]
 description     = "Simulation et vérification de graphes de processus pour la gestion de ressources"
 readme          = "README.md"
 license         = { text = "MIT" }
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.10,<3.14"
 authors         = [
   { name = "raveriss", email = "raveriss@example.com" }
 ]
@@ -45,6 +45,9 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 
@@ -196,7 +199,7 @@ hooks = [
 repo = "https://github.com/psf/black"
 rev  = "24.1.1"
 hooks = [
-  { id = "black", language_version = "python3.10" }
+  { id = "black", language_version = "python3" }
 ]
 
 [[tool.pre-commit.repos]]

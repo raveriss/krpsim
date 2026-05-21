@@ -5,7 +5,7 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/raveriss/krpsim/ci.yml?branch=main&logo=githubactions&logoColor=white)](https://github.com/raveriss/krpsim/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/codecov/c/github/raveriss/krpsim?logo=codecov&logoColor=white)](https://codecov.io/gh/raveriss/krpsim)
 ![pre-commit](https://img.shields.io/badge/pre--commit-enabled-FAB040?logo=precommit&logoColor=white)
-![Python](https://img.shields.io/badge/Python-%3E%3D3.10%2C%3C3.13-3776AB?logo=python&logoColor=white)
+![Python](https://img.shields.io/badge/Python-%3E%3D3.10%2C%3C3.14-3776AB?logo=python&logoColor=white)
 ![Poetry](https://img.shields.io/badge/Poetry-packaging-60A5FA?logo=poetry&logoColor=white)
 ![Ruff](https://img.shields.io/badge/Ruff-lint-46A35E?logo=ruff&logoColor=white)
 ![MyPy](https://img.shields.io/badge/MyPy-types-2A6DB2?logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0iI2ZmZmZmZiIgZD0iTTMgMTlWNWgzLjJMMTIgMTIuNCAxNy44IDVIMjF2MTRoLTNWMTAuMWwtNC44IDYuMUgxMC44TDYgMTAuMVYxOXoiLz48L3N2Zz4%3D)
@@ -51,7 +51,7 @@ Projet réalisé dans le cadre du cursus **École 42** (projet KRPSIM), avec un 
 
 ## 🧰 Stack
 
-- **Langage & packaging** : Python `>=3.10,<3.13`, Poetry
+- **Langage & packaging** : Python `>=3.10,<3.14`, Poetry
 - **Runtime** : pandas, matplotlib
 - **Tests** : pytest, pytest-cov, Hypothesis
 - **Qualité** : Ruff, MyPy, Black, isort, pre-commit
@@ -62,11 +62,14 @@ Projet réalisé dans le cadre du cursus **École 42** (projet KRPSIM), avec un 
 git clone https://github.com/raveriss/krpsim.git
 cd krpsim
 make install
-make show-activate 
-source "/home/raveriss/Desktop/krpsim/.venv/bin/activate"
+make show-activate
+source "$(poetry env info -p)/bin/activate"
 ```
 
 `make install` installe automatiquement Poetry (si absent), crée le virtualenv et installe les dépendances.
+`make show-activate` affiche aussi la commande d'activation exacte pour la machine courante.
+
+Sur Fedora 42, le Python système est `3.13`; il est supporté par cette configuration.
 
 ## 🚀 Quick Start
 
@@ -174,6 +177,10 @@ Last cycle: 51
 ## 📊 Visualisation Gantt
 
 Exemple de diagramme généré à partir du cas `resources/ikea`:
+
+Sur un environnement sans affichage graphique interactif (par exemple Fedora avec
+le backend Matplotlib `Agg`), le graphe est sauvegardé dans
+`docs/graphs/diagramme_gantt_<nom>.png`.
 
 <div align="center">
   <img src="docs/diagramme_gantt_ikea.png" alt="Diagramme de Gantt IKEA">

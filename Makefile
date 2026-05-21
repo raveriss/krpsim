@@ -8,13 +8,15 @@
 .PHONY: default install install-bin uninstall-bin \
         lint format test krpsim analysis_log_krpsim krpsim_verif analysis_log_krpsim_verif analysis_log_verif graph analysis_log_gantt_project analysis_log_gantt_projet process_resources \
         clean fclean re uninstall which-bin print-path help doctor \
-			show-activate
+			ensure-poetry show-activate
 
 MAKEFLAGS += --no-print-directory
 POETRY_BIN = $(shell command -v poetry 2>/dev/null || printf '%s' "$(HOME)/.local/bin/poetry")
 POETRY = $(POETRY_BIN) run
 POETRY_INSTALL_URL = https://install.python-poetry.org
 VENV_DIR = .venv
+VENV_PYTHON = $(VENV_DIR)/bin/python
+VENV_STAMP = $(VENV_DIR)/.install-stamp
 KRPSIM_INPUT = $(word 2,$(MAKECMDGOALS))
 KRPSIM_CYCLES = $(word 3,$(MAKECMDGOALS))
 KRPSIM_VERIF_INPUT = $(word 2,$(MAKECMDGOALS))
@@ -23,6 +25,7 @@ GANTT_INPUT = $(word 2,$(MAKECMDGOALS))
 GANTT_TRACE = $(word 3,$(MAKECMDGOALS))
 KRPSIM_ARGS_COUNT = $(words $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS)))
 CLI_ARG_TARGETS = krpsim analysis_log_krpsim krpsim_verif analysis_log_krpsim_verif analysis_log_verif analysis_log_gantt_project analysis_log_gantt_projet
+INSTALL_GOAL_REQUESTED = $(filter install,$(MAKECMDGOALS))
 
 ifneq (,$(filter $(firstword $(MAKECMDGOALS)),$(CLI_ARG_TARGETS)))
 CLI_ARGS = $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
@@ -38,11 +41,11 @@ default: install install-bin
 	@echo "   Ex.: krpsim --help"
 
 # ------------------------------------------------------------
-# INSTALL avec cache basé sur .venv :
-# Relance l'installation si pyproject.toml/poetry.lock sont plus récents.
+# INSTALL avec cache basé sur le vrai venv :
+# Relance l'installation si pyproject.toml/poetry.lock sont plus récents,
+# ou si le venv vérifié n'a pas de stamp d'installation.
 # ------------------------------------------------------------
-$(VENV_DIR): pyproject.toml poetry.lock
-	@echo "# Installation de l'Environnement virtuel des dépendances et du package"
+ensure-poetry:
 	@set -eu; \
 	POETRY_BIN="$(POETRY_BIN)"; \
 	if [ ! -x "$$POETRY_BIN" ]; then \
@@ -70,13 +73,49 @@ $(VENV_DIR): pyproject.toml poetry.lock
 		fi; \
 		POETRY_VERSION="$$( "$$POETRY_BIN" --version 2>/dev/null || true )"; \
 		[ -n "$$POETRY_VERSION" ] && echo "✅ $$POETRY_VERSION"; \
+	fi
+
+$(VENV_STAMP): pyproject.toml poetry.lock | ensure-poetry
+	@echo "# Installation de l'Environnement virtuel des dépendances et du package"
+	@set -eu; \
+	POETRY_BIN="$(POETRY_BIN)"; \
+	if [ -e "$(VENV_DIR)" ] && [ ! -d "$(VENV_DIR)" ]; then \
+		echo "# Suppression d'un ancien marqueur $(VENV_DIR) qui n'est pas un venv."; \
+		rm -f "$(VENV_DIR)"; \
 	fi; \
-	"$$POETRY_BIN" install; \
-	touch "$(VENV_DIR)"; \
+	CURRENT_VENV="$$( POETRY_VIRTUALENVS_IN_PROJECT=true "$$POETRY_BIN" env info -p 2>/dev/null || true )"; \
+	PROJECT_VENV="$$(pwd)/$(VENV_DIR)"; \
+	if [ -n "$$CURRENT_VENV" ] && [ "$$CURRENT_VENV" != "$$PROJECT_VENV" ]; then \
+		echo "# Migration du venv Poetry vers $$PROJECT_VENV"; \
+		"$$POETRY_BIN" env remove "$$CURRENT_VENV" >/dev/null 2>&1 || true; \
+	fi; \
+	POETRY_VIRTUALENVS_IN_PROJECT=true "$$POETRY_BIN" install; \
+	if [ ! -x "$(VENV_PYTHON)" ]; then \
+		echo "❌ Installation incomplète: $(VENV_PYTHON) est introuvable."; \
+		exit 1; \
+	fi; \
+	touch "$(VENV_STAMP)"; \
 	echo "✅ Dépendances installées."
 
 
-install: $(VENV_DIR)
+install: ensure-poetry
+	@set -eu; \
+	if [ -x "$(VENV_PYTHON)" ] \
+		&& [ -f "$(VENV_STAMP)" ] \
+		&& [ "$(VENV_STAMP)" -nt pyproject.toml ] \
+		&& [ "$(VENV_STAMP)" -nt poetry.lock ]; then \
+		if [ -n "$(INSTALL_GOAL_REQUESTED)" ]; then \
+			echo "✅ Installation déjà faite."; \
+		fi; \
+	else \
+		$(MAKE) "$(VENV_STAMP)"; \
+	fi; \
+	if [ -n "$(INSTALL_GOAL_REQUESTED)" ]; then \
+		echo "Prochaine commande :"; \
+		echo "  source \"$(VENV_DIR)/bin/activate\""; \
+		echo "Puis lance par exemple :"; \
+		echo "  make krpsim resources/ikea 10"; \
+	fi
 
 # ------------------------------------------------------------
 # Installe les binaires dans ~/.local/bin via symlinks (idempotent)
@@ -312,8 +351,9 @@ krpsim_verif: install
 			--output "$$GRAPH_CONFIG_FILE" >"$$CFG_OUT" 2>&1; then \
 			[ -s "$$CFG_OUT" ] && cat "$$CFG_OUT"; \
 			echo "[GRAPH] Génération du graphe Gantt"; \
+			GRAPH_IMAGE="docs/graphs/diagramme_gantt_$${CONFIG_STEM}.png"; \
 			GRAPH_OUT="$$(mktemp)"; \
-			if $(POETRY) python gantt_project/gantt.py --config "$$GRAPH_CONFIG_FILE" >"$$GRAPH_OUT" 2>&1; then \
+			if $(POETRY) python gantt_project/gantt.py --config "$$GRAPH_CONFIG_FILE" --output "$$GRAPH_IMAGE" --no-show >"$$GRAPH_OUT" 2>&1; then \
 				[ -s "$$GRAPH_OUT" ] && cat "$$GRAPH_OUT"; \
 			else \
 				GRAPH_CODE=$$?; \
@@ -408,7 +448,8 @@ analysis_log_gantt_project: install
 		--output "$$GRAPH_CONFIG_FILE" \
 		--analysis-log; then \
 		echo "[ANALYSIS_LOG_GANTT_PROJECT] Génération du graphe Gantt"; \
-		$(POETRY) python gantt_project/gantt.py --config "$$GRAPH_CONFIG_FILE" --analysis-log; \
+		GRAPH_IMAGE="docs/graphs/diagramme_gantt_$${CONFIG_STEM}.png"; \
+		$(POETRY) python gantt_project/gantt.py --config "$$GRAPH_CONFIG_FILE" --output "$$GRAPH_IMAGE" --no-show --analysis-log; \
 	else \
 		CODE=$$?; \
 		echo "[ANALYSIS_LOG_GANTT_PROJECT][ERREUR] Génération de la config graphe échouée (code=$$CODE)."; \
@@ -420,7 +461,7 @@ analysis_log_gantt_projet: analysis_log_gantt_project
 graph: install
 	@echo "[GRAPH] Génération du graphe Gantt"; \
 	OUT="$$(mktemp)"; \
-	if $(POETRY) python gantt_project/gantt.py --config graph_config_simple.json >"$$OUT" 2>&1; then \
+	if $(POETRY) python gantt_project/gantt.py --config graph_config_simple.json --output docs/graphs/diagramme_gantt_simple.png --no-show >"$$OUT" 2>&1; then \
 		cat "$$OUT"; \
 	else \
 		CODE=$$?; \
@@ -510,8 +551,8 @@ fclean:
 		if [ -n "$$VENV_PATH" ] && [ -d "$$VENV_PATH" ]; then \
 			rm -rf "$$VENV_PATH"; \
 		fi; \
-		: # 3) Fallback additionnel: cas in-project .venv; \
-		if [ -d ".venv" ]; then \
+		: # 3) Fallback additionnel: cas in-project .venv ou ancien marqueur; \
+		if [ -e ".venv" ]; then \
 			rm -rf ".venv"; \
 		fi; \
 		}; true

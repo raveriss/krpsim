@@ -138,8 +138,6 @@ class Simulator:
         target_process = self._target_process(target)
         if target_process is None or process is target_process:
             return False
-        if process.results.get(target, 0) > 0:
-            return False
 
         produced_components = [
             resource

@@ -59,6 +59,27 @@ def test_gantt_render_chart_handles_zero_and_empty_tasks(monkeypatch: object) ->
     gantt.render_chart("empty", [])
 
 
+def test_gantt_render_chart_writes_output_file(tmp_path: Path) -> None:
+    output_path = tmp_path / "chart.png"
+
+    saved_path = gantt.render_chart(
+        "saved",
+        [{"Task": "instant", "Start": 0, "Duration": 0}],
+        output_path=output_path,
+        show=False,
+    )
+
+    assert saved_path == output_path
+    assert output_path.is_file()
+    assert output_path.stat().st_size > 0
+
+
+def test_gantt_default_output_path_from_graph_config() -> None:
+    assert gantt._default_output_path(
+        Path("graph_config_ikea.json")
+    ) == Path("docs/graphs/diagramme_gantt_ikea.png")
+
+
 def test_gantt_figure_height_is_capped() -> None:
     assert gantt._figure_height(1) == 3.0
     assert gantt._figure_height(10_000) == gantt.MAX_FIGURE_HEIGHT

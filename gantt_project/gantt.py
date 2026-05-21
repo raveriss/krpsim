@@ -25,6 +25,8 @@ MAJOR_TICK_STEP = 10
 MINOR_TICK_STEP = 1
 MIN_TIMELINE_SPAN = float(MAJOR_TICK_STEP)
 TASK_LANE_SPAN = 0.82
+DEFAULT_GRAPH_DIR = Path("docs/graphs")
+NON_INTERACTIVE_BACKENDS = {"agg", "cairo", "pdf", "pgf", "ps", "svg", "template"}
 PHI = 1.618
 TRACK_GAP_RATIO = 0.12
 PROGRESS_FONT_SIZE = 8.5
@@ -61,6 +63,16 @@ def build_parser() -> argparse.ArgumentParser:
         "--analysis-log",
         action="store_true",
         help="print detailed analysis logs for Gantt rendering",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        help="path where the chart image should be saved",
+    )
+    parser.add_argument(
+        "--no-show",
+        action="store_true",
+        help="do not open an interactive chart window",
     )
     return parser
 
@@ -377,6 +389,54 @@ def _set_window_title(fig: plt.Figure, chart_title: str) -> None:
         setter(_window_title(chart_title))
 
 
+def _can_show_plot() -> bool:
+    """Return whether the active Matplotlib backend can show GUI windows."""
+    backend = plt.get_backend().lower()
+    if backend.startswith("module://matplotlib_inline"):
+        return False
+    return backend not in NON_INTERACTIVE_BACKENDS
+
+
+def _default_output_path(config_path: Path) -> Path:
+    """Build a deterministic output path for a graph configuration."""
+    stem = config_path.stem
+    prefix = "graph_config_"
+    if stem.startswith(prefix):
+        stem = stem[len(prefix) :]
+    return DEFAULT_GRAPH_DIR / f"diagramme_gantt_{stem}.png"
+
+
+def _finish_figure(
+    fig: plt.Figure,
+    *,
+    output_path: Path | None,
+    show: bool,
+) -> Path | None:
+    """Save and/or display the rendered figure according to runtime support."""
+    analysis_logger = get_active_analysis_logger()
+    scope = "gantt._finish_figure"
+    saved_path: Path | None = None
+
+    if output_path is not None:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(output_path, dpi=160, bbox_inches="tight")
+        saved_path = output_path
+        analysis_logger.log_step("PLOT_SAVE", str(output_path), scope=scope)
+        print(f"[GRAPH] Fichier genere: {output_path}")
+
+    if show:
+        if _can_show_plot():
+            analysis_logger.log_step("PLOT_SHOW", plt.get_backend(), scope=scope)
+            plt.show()
+        elif output_path is not None:
+            print(
+                "[GRAPH] Affichage interactif indisponible "
+                f"(backend Matplotlib: {plt.get_backend()})."
+            )
+
+    return saved_path
+
+
 def _outer_spaces(fig: plt.Figure, ax: plt.Axes) -> tuple[float, float]:
     """Return current left/right outer spaces in figure fraction."""
     renderer = fig.canvas.get_renderer()
@@ -472,7 +532,13 @@ def _draw_rounded_bar(
     ax.add_patch(patch)
 
 
-def render_chart(title: str, tasks_data: list[TaskPayload]) -> None:
+def render_chart(
+    title: str,
+    tasks_data: list[TaskPayload],
+    *,
+    output_path: Path | None = None,
+    show: bool = True,
+) -> Path | None:
     """Render the chart from validated task data."""
     analysis_logger = get_active_analysis_logger()
     scope = "gantt.render_chart"
@@ -509,9 +575,7 @@ def render_chart(title: str, tasks_data: list[TaskPayload]) -> None:
         ax.grid(True, axis="x", which="minor", linestyle="-", linewidth=0.5, alpha=0.22)
         fig.tight_layout()
         _balance_horizontal_whitespace(fig, ax)
-        analysis_logger.log_step("PLOT_SHOW", scope=scope)
-        plt.show()
-        return
+        return _finish_figure(fig, output_path=output_path, show=show)
 
     bars = _build_bars(tasks_data)
     _assign_tracks(bars)
@@ -672,8 +736,7 @@ def render_chart(title: str, tasks_data: list[TaskPayload]) -> None:
 
     fig.tight_layout()
     _balance_horizontal_whitespace(fig, ax)
-    analysis_logger.log_step("PLOT_SHOW", scope=scope)
-    plt.show()
+    return _finish_figure(fig, output_path=output_path, show=show)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -686,13 +749,19 @@ def main(argv: list[str] | None = None) -> int:
     analysis_logger.log_header("CLI ENTRYPOINT", scope=scope)
     analysis_logger.log_key_value("PARSED_ARGS", vars(args), scope=scope)
 
-    title, tasks = load_config(Path(args.config))
+    config_path = Path(args.config)
+    output_path = Path(args.output) if args.output else None
+    show = not args.no_show
+    if output_path is None and show and not _can_show_plot():
+        output_path = _default_output_path(config_path)
+
+    title, tasks = load_config(config_path)
     analysis_logger.log_step(
         "RENDER_START",
         {"title": title, "tasks": len(tasks)},
         scope=scope,
     )
-    render_chart(title, tasks)
+    render_chart(title, tasks, output_path=output_path, show=show)
     analysis_logger.log_key_value("EXIT_CODE", 0, scope=scope)
     return 0
 
