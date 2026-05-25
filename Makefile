@@ -8,7 +8,7 @@
 .PHONY: default install install-bin uninstall-bin \
         lint format test krpsim analysis_log_krpsim krpsim_verif analysis_log_krpsim_verif analysis_log_verif graph analysis_log_gantt_project analysis_log_gantt_projet process_resources \
         clean fclean re uninstall which-bin print-path help doctor \
-			ensure-poetry show-activate
+			ensure-poetry shell venv-shell
 
 MAKEFLAGS += --no-print-directory
 POETRY_BIN = $(shell command -v poetry 2>/dev/null || printf '%s' "$(HOME)/.local/bin/poetry")
@@ -112,10 +112,10 @@ install: ensure-poetry
 		$(MAKE) "$(VENV_STAMP)"; \
 	fi; \
 	if [ -n "$(INSTALL_GOAL_REQUESTED)" ]; then \
-		echo "Prochaine commande :"; \
-		echo "  source \"$(VENV_DIR)/bin/activate\""; \
-		echo "Puis lance par exemple :"; \
+		echo "Les cibles Makefile utilisent déjà le venv automatiquement."; \
+		echo "Exemple :"; \
 		echo "  make krpsim resources/ikea 10"; \
+		echo "Option debug manuel : make shell"; \
 	fi
 
 # ------------------------------------------------------------
@@ -504,7 +504,7 @@ process_resources: install
 	  fi; \
 	} >> "$$LOG" 2>&1
 
-show-activate:
+shell venv-shell: install
 	@set -eu; \
 	POETRY_BIN="$(POETRY_BIN)"; \
 	if [ ! -x "$$POETRY_BIN" ]; then \
@@ -518,10 +518,29 @@ show-activate:
 		echo "   Action: lance d'abord 'make install'."; \
 		exit 1; \
 	fi; \
-	echo "Commande d'activation (POSIX, compatible /bin/sh) :"; \
-	echo ". \"$$VENV_PATH/bin/activate\""; \
-	echo "Commande équivalente (bash/zsh) :"; \
-	echo "source \"$$VENV_PATH/bin/activate\""
+	if [ ! -f "$$VENV_PATH/bin/activate" ]; then \
+		echo "❌ Script d'activation introuvable: $$VENV_PATH/bin/activate"; \
+		echo "   Action: relance 'make install'."; \
+		exit 1; \
+	fi; \
+	if [ ! -t 0 ]; then \
+		echo "❌ 'make shell' doit être lancé depuis un terminal interactif."; \
+		exit 1; \
+	fi; \
+	echo "Shell virtuel: $$VENV_PATH"; \
+	echo "Tape 'deactivate' pour désactiver le venv, ou 'exit' pour revenir au shell précédent."; \
+	if command -v bash >/dev/null 2>&1; then \
+		RC_FILE="$$(mktemp)"; \
+		printf '%s\n' \
+			'[ -f "$$HOME/.bashrc" ] && . "$$HOME/.bashrc"' \
+			". \"$$VENV_PATH/bin/activate\"" > "$$RC_FILE"; \
+		bash --rcfile "$$RC_FILE" -i; \
+		STATUS="$$?"; \
+		rm -f "$$RC_FILE"; \
+		exit "$$STATUS"; \
+	fi; \
+	. "$$VENV_PATH/bin/activate"; \
+	exec "$${SHELL:-/bin/sh}" -i
 
 # -------------------------------------------------------------------
 # Uninstall / Clean / Fclean / Re
@@ -639,6 +658,7 @@ help:
 	@echo "  install       -> auto-installe Poetry si absent, puis installe les deps"
 	@echo "  install-bin   -> symlinks vers ~/.local/bin (idempotent)"
 	@echo "  uninstall-bin -> supprime les symlinks utilisateur"
+	@echo "  shell         -> ouvre un shell interactif dans le venv"
 	@echo "  krpsim <file> <cycles>          -> exécute via Poetry"
 	@echo "    sortie: trace_<file>.txt + graph_config_<file>.json"
 	@echo "  analysis_log_krpsim <file> <cycles> -> exécute krpsim avec logs d'analyse"

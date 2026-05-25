@@ -62,12 +62,12 @@ Projet réalisé dans le cadre du cursus **École 42** (projet KRPSIM), avec un 
 git clone https://github.com/raveriss/krpsim.git
 cd krpsim
 make install
-make show-activate
-source "$(poetry env info -p)/bin/activate"
 ```
 
 `make install` installe automatiquement Poetry (si absent), crée le virtualenv et installe les dépendances.
-`make show-activate` affiche aussi la commande d'activation exacte pour la machine courante.
+Les cibles Make exécutent déjà les commandes dans ce virtualenv; vous pouvez donc lancer directement
+`make krpsim ...`, `make krpsim_verif ...` ou `make test` après installation.
+`make shell` reste disponible pour ouvrir un shell interactif dans le virtualenv lors du debug manuel.
 
 Sur Fedora 42, le Python système est `3.13`; il est supporté par cette configuration.
 
@@ -85,6 +85,7 @@ make krpsim_verif resources/ikea trace_ikea.txt
 | `make` | Installation complète (`install` + `install-bin`) |
 | `make install` | Installe Poetry (si absent) et les dépendances |
 | `make install-bin` | Crée les symlinks `krpsim` / `krpsim_verif` dans `~/.local/bin` |
+| `make shell` | Ouvre un shell interactif dans le virtualenv |
 | `make krpsim <resource_file> <max_cycles>` | Lance la simulation |
 | `make krpsim_verif <resource_file> <trace_file>` | Vérifie une trace |
 | `make graph` | Génère le graphe Gantt |
