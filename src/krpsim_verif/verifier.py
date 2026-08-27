@@ -23,7 +23,7 @@ from krpsim.parser import Config, parse_file
 from krpsim.simulator import Simulator
 
 # Pour partager les logs d'analyse entre la CLI et le verificateur.
-from logger.analysis_log_krpsim_verif import get_active_analysis_logger
+from logger.analysis_log_krpsim_verif import AnalysisLogger, get_active_analysis_logger
 
 
 # Pour encapsuler TraceError autour d'un contrat clairement borne.
@@ -213,7 +213,7 @@ def parse_trace(path: Path) -> list[TraceEntry]:
 def _expected_trace(
     # Pour typer explicitement le champ et fiabiliser le contrat de donnees.
     config: Config,
-    max_time: int
+    max_time: int,
     # Pour ouvrir un bloc qui porte une contrainte locale explicite.
 ) -> tuple[list[TraceEntry], Simulator]:
     """Produit la trace canonique attendue pour ``config``.
@@ -272,6 +272,97 @@ def _expected_trace(
     return entries, sim
 
 
+def _verify_empty_trace(
+    config: Config, analysis_logger: AnalysisLogger, scope: str
+) -> Simulator:
+    """Validate and execute the special empty-trace case."""
+    if not config.optimize:
+        for proc in config.processes.values():
+            can_start = all(config.stocks.get(n, 0) >= q for n, q in proc.needs.items())
+            analysis_logger.log_key_value(
+                "EMPTY_TRACE_PROCESS_CHECK",
+                {
+                    "process_name": proc.name,
+                    "needs": proc.needs,
+                    "initial_stocks": config.stocks,
+                    "can_start": can_start,
+                },
+                scope=scope,
+            )
+            if can_start:
+                analysis_logger.log_step(
+                    "EMPTY_TRACE_ERROR", f"process '{proc.name}' can start", scope=scope
+                )
+                raise TraceError("empty trace")
+    sim = Simulator(config)
+    analysis_logger.log_step("EMPTY_TRACE_SIM_RUN_START", {"max_time": 0}, scope)
+    sim.run(0)
+    analysis_logger.log_key_value(
+        "SIMULATOR_STATE_AFTER_EMPTY_TRACE_RUN",
+        _serialize_simulator_state(sim),
+        scope=scope,
+    )
+    return sim
+
+
+def _trace_run_until(
+    config: Config, trace: list[TraceEntry], analysis_logger: AnalysisLogger, scope: str
+) -> int:
+    """Resolve the simulation horizon required to reproduce a trace."""
+    run_until = 0
+    for entry in trace:
+        process = config.processes.get(entry.process)
+        analysis_logger.log_key_value(
+            "TRACE_ENTRY_PROCESS_LOOKUP",
+            {
+                "entry": _serialize_trace_entry(entry),
+                "process_found": process is not None,
+                "process_delay": process.delay if process else None,
+            },
+            scope=scope,
+        )
+        if process is None:
+            analysis_logger.log_step(
+                "UNKNOWN_PROCESS_ERROR", entry.process, scope=scope
+            )
+            raise TraceError(f"unknown process '{entry.process}' in trace")
+        candidate = entry.cycle + process.delay
+        run_until = max(run_until, candidate)
+    return run_until
+
+
+def _compare_traces(
+    expected: list[TraceEntry],
+    trace: list[TraceEntry],
+    analysis_logger: AnalysisLogger,
+    scope: str,
+) -> None:
+    """Raise a precise error when input and expected traces diverge."""
+    for idx, (got, exp) in enumerate(zip(trace, expected), start=1):
+        analysis_logger.log_key_value(
+            "TRACE_COMPARE",
+            {
+                "line": idx,
+                "got": _serialize_trace_entry(got),
+                "expected": _serialize_trace_entry(exp),
+            },
+            scope=scope,
+        )
+        if got != exp:
+            analysis_logger.log_step("TRACE_MISMATCH_ERROR", {"line": idx}, scope=scope)
+            raise TraceError(
+                f"line {idx}: expected {exp.cycle}:{exp.process} "
+                f"but got {got.cycle}:{got.process}"
+            )
+    if len(trace) > len(expected):
+        analysis_logger.log_step(
+            "TRACE_EXTRA_EVENTS_ERROR",
+            {"first_extra_line": len(expected) + 1},
+            scope=scope,
+        )
+        raise TraceError(f"trace has extra events starting at line {len(expected)+1}")
+
+
 # Pour isoler verify_trace et faciliter son evolution sous tests.
 def verify_trace(config: Config, trace: list[TraceEntry]) -> Simulator:
     """Valide une trace par rapport a une configuration donnee.
@@ -308,52 +399,9 @@ def verify_trace(config: Config, trace: list[TraceEntry]) -> Simulator:
         scope=scope,
     )
 
-    # Pour traiter explicitement le cas de trace vide a verifier.
     if not trace:
-        # Pour distinguer la branche trace vide du cas nominal.
         analysis_logger.log_step("EMPTY_TRACE_BRANCH", scope=scope)
-        # Pour appliquer la logique specifique au mode optimisation.
-        if not config.optimize:
-            # Pour appliquer uniformement la regle a chaque element concerne.
-            for proc in config.processes.values():
-                # Pour verifier si la trace vide masque un processus executable.
-                can_start = all(
-                    config.stocks.get(n, 0) >= q for n, q in proc.needs.items()
-                )
-                # Pour exposer la decision de rejet potentielle.
-                analysis_logger.log_key_value(
-                    "EMPTY_TRACE_PROCESS_CHECK",
-                    {
-                        "process_name": proc.name,
-                        "needs": proc.needs,
-                        "initial_stocks": config.stocks,
-                        "can_start": can_start,
-                    },
-                    scope=scope,
-                )
-                # Pour proteger un invariant de comparaison critique ici.
-                if can_start:
-                    # Pour rendre visible la raison exacte du rejet.
-                    analysis_logger.log_step(
-                        "EMPTY_TRACE_ERROR",
-                        f"process '{proc.name}' can start",
-                        scope=scope,
-                    )
-                    # Pour signaler sans delai une violation explicite du
-                    # contrat.
-                    raise TraceError("empty trace")
-        # Pour executer la logique metier via l'implementation de reference.
-        sim = Simulator(config)
-        # Pour exposer le lancement minimal du simulateur en trace vide.
-        analysis_logger.log_step("EMPTY_TRACE_SIM_RUN_START", {"max_time": 0}, scope)
-        # Pour valider un etat final minimal quand la trace est vide.
-        sim.run(0)
-        # Pour exposer l'etat final retenu pour la trace vide.
-        analysis_logger.log_key_value(
-            "SIMULATOR_STATE_AFTER_EMPTY_TRACE_RUN",
-            _serialize_simulator_state(sim),
-            scope=scope,
-        )
+        sim = _verify_empty_trace(config, analysis_logger, scope)
         # Pour laisser une preuve exploitable du succes de verification.
         logger.info("trace validated successfully")
         # Pour marquer la fin positive de cette branche.
@@ -361,47 +409,7 @@ def verify_trace(config: Config, trace: list[TraceEntry]) -> Simulator:
         # Pour rendre a l'appelant le resultat promis par le contrat.
         return sim
 
-    # Pour borner la simulation en tenant compte de tous les evenements.
-    run_until = 0
-    # Pour appliquer uniformement la regle a chaque element concerne.
-    for entry in trace:
-        # Pour isoler une etape de validation et garder un diagnostic clair.
-        process = config.processes.get(entry.process)
-        # Pour exposer la resolution du processus mentionne dans la trace.
-        analysis_logger.log_key_value(
-            "TRACE_ENTRY_PROCESS_LOOKUP",
-            {
-                "entry": _serialize_trace_entry(entry),
-                "process_found": process is not None,
-                "process_delay": process.delay if process else None,
-            },
-            scope=scope,
-        )
-        # Pour arreter la verification sur une reference de processus inconnue.
-        if process is None:
-            # Pour rendre visible la raison exacte du rejet.
-            analysis_logger.log_step(
-                "UNKNOWN_PROCESS_ERROR",
-                entry.process,
-                scope=scope,
-            )
-            # Pour signaler sans delai une violation explicite du contrat.
-            raise TraceError(f"unknown process '{entry.process}' in trace")
-        # Pour inclure les processus lents demarres au meme cycle que le dernier.
-        candidate_run_until = entry.cycle + process.delay
-        # Pour expliquer le calcul de la borne de reexecution.
-        analysis_logger.log_calculation(
-            "RUN_UNTIL_UPDATE",
-            [
-                "candidate_run_until = entry.cycle + process.delay",
-                f"entry.cycle = {entry.cycle}",
-                f"process.delay = {process.delay}",
-                f"previous_run_until = {run_until}",
-            ],
-            max(run_until, candidate_run_until),
-            scope=scope,
-        )
-        run_until = max(run_until, candidate_run_until)
+    run_until = _trace_run_until(config, trace, analysis_logger, scope)
     # Pour comparer la trace utilisateur a une reference reproduite.
     expected, sim = _expected_trace(config, run_until)
     # Pour exposer les deux tailles avant comparaison element par element.
@@ -410,49 +418,7 @@ def verify_trace(config: Config, trace: list[TraceEntry]) -> Simulator:
         {"input": len(trace), "expected": len(expected), "run_until": run_until},
         scope=scope,
     )
-    # Pour appliquer uniformement la regle a chaque element concerne.
-    for idx, (got, exp) in enumerate(zip(trace, expected), start=1):
-        # Pour tracer chaque comparaison atomique.
-        analysis_logger.log_key_value(
-            "TRACE_COMPARE",
-            {
-                "line": idx,
-                "got": _serialize_trace_entry(got),
-                "expected": _serialize_trace_entry(exp),
-            },
-            scope=scope,
-        )
-        # Pour expliciter une decision qui impacte le flux metier.
-        if got != exp:
-            # Pour rendre visible la divergence avant l'exception.
-            analysis_logger.log_step(
-                "TRACE_MISMATCH_ERROR",
-                {
-                    "line": idx,
-                    "got": _serialize_trace_entry(got),
-                    "expected": _serialize_trace_entry(exp),
-                },
-                scope=scope,
-            )
-            # Pour signaler sans delai une violation explicite du contrat.
-            raise TraceError(
-                # Pour localiser precisement la divergence dans la trace.
-                f"line {idx}: expected {exp.cycle}:{exp.process} "
-                # Pour fournir un ecart exact et directement actionnable.
-                f"but got {got.cycle}:{got.process}"
-                # Pour clore le bloc sans ambiguite de structure.
-            )
-
-    # Pour rejeter une trace qui declare des evenements non reproductibles.
-    if len(trace) > len(expected):
-        # Pour rendre visible la divergence de longueur avant l'exception.
-        analysis_logger.log_step(
-            "TRACE_EXTRA_EVENTS_ERROR",
-            {"first_extra_line": len(expected) + 1},
-            scope=scope,
-        )
-        # Pour signaler sans delai une violation explicite du contrat.
-        raise TraceError(f"trace has extra events starting at line {len(expected)+1}")
+    _compare_traces(expected, trace, analysis_logger, scope)
 
     # Pour laisser une preuve exploitable du succes de verification.
     logger.info("trace validated successfully")

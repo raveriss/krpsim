@@ -14,8 +14,8 @@ Ce document est à la fois :
 - [ ] Initialiser dépôt **Git** et créer le `README.md` (description, usage, badges CI/CD)
 - [ ] Ajouter `LICENSE` (MIT) et fichier `author`
 
-### 0.2 Environnement & Dépendances (`poetry`)
-- [ ] `poetry init` + dépendances dev : `pytest`, `pytest-cov`, `black`, `ruff`, `isort`, `mypy`, `flake8`
+### 0.2 Environnement & Dépendances (`uv`)
+- [ ] Initialiser le projet avec uv et déclarer les dépendances dev dans `dependency-groups` : `pytest`, `pytest-cov`, `black`, `ruff`, `isort`, `mypy`
 
 ### 0.3 Qualité, Formatage, Linting
 - [ ] Configurer : `black`, `isort`, `ruff`, `mypy` dans `pyproject.toml`

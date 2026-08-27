@@ -9,10 +9,13 @@ from __future__ import annotations
 
 # Pour rendre le diagnostic activable sans polluer la sortie.
 import logging
+
 # Pour appliquer des verifications d'acces dependantes du systeme.
 import os
+
 # Pour eviter les chemins fragiles relies aux separateurs OS.
 from pathlib import Path
+
 # Pour garder des signatures stables sur les objets iterables.
 from typing import Iterable
 
@@ -72,7 +75,7 @@ def print_header(config: Config) -> None:
         # Pour conserver une phrase naturelle sans logique de pluralisation
         # dupliquee.
         f"{len(config.processes)} {_pluralize('process', len(config.processes))}"
-    # Pour clore le bloc sans ambiguite de structure.
+        # Pour clore le bloc sans ambiguite de structure.
     )
     # Pour calculer un total unique avant composition du message.
     stock_count = len(config.all_stock_names())

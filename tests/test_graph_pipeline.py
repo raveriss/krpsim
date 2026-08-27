@@ -8,12 +8,19 @@ import pytest
 
 matplotlib.use("Agg")
 
+import matplotlib.pyplot as plt  # noqa: E402
+from matplotlib.axes import Axes  # noqa: E402
+
 import gantt_project.build_graph_config as graph_builder  # noqa: E402
 import gantt_project.gantt as gantt  # noqa: E402
 
 
 def _write_config(path: Path, body: str) -> None:
     path.write_text(body, encoding="utf-8")
+
+
+def _current_axes() -> Axes:
+    return plt.gcf().axes[-1]
 
 
 def test_build_graph_config_accepts_comment_trace(tmp_path: Path) -> None:
@@ -53,8 +60,10 @@ def test_gantt_load_config_accepts_zero_duration(tmp_path: Path) -> None:
     assert tasks == [{"Task": "instant", "Start": 0, "Duration": 0, "Progress": 100.0}]
 
 
-def test_gantt_render_chart_handles_zero_and_empty_tasks(monkeypatch: object) -> None:
-    monkeypatch.setattr(gantt.plt, "show", lambda: None)
+def test_gantt_render_chart_handles_zero_and_empty_tasks(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(plt, "show", lambda: None)
     gantt.render_chart("zero", [{"Task": "instant", "Start": 0, "Duration": 0}])
     gantt.render_chart("empty", [])
 
@@ -75,9 +84,9 @@ def test_gantt_render_chart_writes_output_file(tmp_path: Path) -> None:
 
 
 def test_gantt_default_output_path_from_graph_config() -> None:
-    assert gantt._default_output_path(
-        Path("graph_config_ikea.json")
-    ) == Path("docs/graphs/diagramme_gantt_ikea.png")
+    assert gantt._default_output_path(Path("graph_config_ikea.json")) == Path(
+        "docs/graphs/diagramme_gantt_ikea.png"
+    )
 
 
 def test_gantt_figure_height_is_capped() -> None:
@@ -85,7 +94,9 @@ def test_gantt_figure_height_is_capped() -> None:
     assert gantt._figure_height(10_000) == gantt.MAX_FIGURE_HEIGHT
 
 
-def test_gantt_render_uses_unique_task_lanes(monkeypatch: object) -> None:
+def test_gantt_render_uses_unique_task_lanes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     seen: dict[str, int] = {}
 
     def fake_height(task_count: int) -> float:
@@ -93,7 +104,7 @@ def test_gantt_render_uses_unique_task_lanes(monkeypatch: object) -> None:
         return 3.0
 
     monkeypatch.setattr(gantt, "_figure_height", fake_height)
-    monkeypatch.setattr(gantt.plt, "show", lambda: None)
+    monkeypatch.setattr(plt, "show", lambda: None)
     gantt.render_chart(
         "dense",
         [{"Task": "rapide", "Start": index, "Duration": 1} for index in range(100)],
@@ -116,8 +127,10 @@ def test_gantt_assign_tracks_separates_overlapping_repetitions() -> None:
     assert [bar.track_count for bar in bars] == [3, 3, 3]
 
 
-def test_gantt_render_repeated_task_uses_same_color(monkeypatch: object) -> None:
-    monkeypatch.setattr(gantt.plt, "show", lambda: None)
+def test_gantt_render_repeated_task_uses_same_color(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(plt, "show", lambda: None)
     gantt.render_chart(
         "repeated",
         [
@@ -127,7 +140,7 @@ def test_gantt_render_repeated_task_uses_same_color(monkeypatch: object) -> None
         ],
     )
 
-    ax = gantt.plt.gca()
+    ax = _current_axes()
     colors = {patch.get_facecolor() for patch in ax.patches}
     assert len(colors) == 1
 
@@ -136,8 +149,10 @@ def test_gantt_window_title_from_chart_title() -> None:
     assert gantt._window_title("Diagramme de Gantt - ikea") == "Graph_gantt_ikea"
 
 
-def test_gantt_render_uses_uniform_height_and_spacing(monkeypatch: object) -> None:
-    monkeypatch.setattr(gantt.plt, "show", lambda: None)
+def test_gantt_render_uses_uniform_height_and_spacing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(plt, "show", lambda: None)
     gantt.render_chart(
         "uniform",
         [
@@ -149,7 +164,7 @@ def test_gantt_render_uses_uniform_height_and_spacing(monkeypatch: object) -> No
         ],
     )
 
-    ax = gantt.plt.gca()
+    ax = _current_axes()
     patches = ax.patches
 
     heights = [patch.get_height() for patch in patches]
@@ -164,9 +179,9 @@ def test_gantt_render_uses_uniform_height_and_spacing(monkeypatch: object) -> No
 
 
 def test_gantt_render_shows_progress_label_only_when_it_fits(
-    monkeypatch: object,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(gantt.plt, "show", lambda: None)
+    monkeypatch.setattr(plt, "show", lambda: None)
     gantt.render_chart(
         "progress",
         [
@@ -175,13 +190,15 @@ def test_gantt_render_shows_progress_label_only_when_it_fits(
         ],
     )
 
-    labels = {text.get_text() for text in gantt.plt.gca().texts}
+    labels = {text.get_text() for text in _current_axes().texts}
     assert "75%" in labels
     assert "50%" not in labels
 
 
-def test_gantt_render_balances_outer_horizontal_spaces(monkeypatch: object) -> None:
-    monkeypatch.setattr(gantt.plt, "show", lambda: None)
+def test_gantt_render_balances_outer_horizontal_spaces(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(plt, "show", lambda: None)
     gantt.render_chart(
         "Diagramme de Gantt - ikea",
         [
@@ -195,16 +212,16 @@ def test_gantt_render_balances_outer_horizontal_spaces(monkeypatch: object) -> N
         ],
     )
 
-    fig = gantt.plt.gcf()
-    ax = gantt.plt.gca()
+    fig = plt.gcf()
+    ax = _current_axes()
     left_space, right_space = gantt._outer_spaces(fig, ax)
     assert left_space == pytest.approx(right_space, abs=0.01)
 
 
 def test_gantt_render_uses_same_gap_between_adjacent_task_groups(
-    monkeypatch: object,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(gantt.plt, "show", lambda: None)
+    monkeypatch.setattr(plt, "show", lambda: None)
     gantt.render_chart(
         "groups-gap",
         [
@@ -219,8 +236,7 @@ def test_gantt_render_uses_same_gap_between_adjacent_task_groups(
     )
 
     centers = [
-        patch.get_y() + patch.get_height() / 2.0
-        for patch in gantt.plt.gca().patches
+        patch.get_y() + patch.get_height() / 2.0 for patch in _current_axes().patches
     ]
     e0, e1, e2, m0, m1, f0, a0 = centers
     gap_em = m0 - e2
@@ -231,14 +247,14 @@ def test_gantt_render_uses_same_gap_between_adjacent_task_groups(
 
 
 def test_gantt_render_single_instant_task_keeps_timeline_span(
-    monkeypatch: object,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(gantt.plt, "show", lambda: None)
+    monkeypatch.setattr(plt, "show", lambda: None)
     gantt.render_chart(
         "instant",
         [{"Task": "do_benef", "Start": 0, "Duration": 0}],
     )
 
-    x_min, x_max = gantt.plt.gca().get_xlim()
+    x_min, x_max = _current_axes().get_xlim()
     assert x_min == 0
     assert x_max >= gantt.MIN_TIMELINE_SPAN

@@ -9,25 +9,32 @@ from __future__ import annotations
 
 # Pour stabiliser l'interface CLI et ses erreurs utilisateur.
 import argparse
+
 # Pour rendre le diagnostic activable sans polluer la sortie.
 import logging
+
 # Pour appliquer des verifications d'acces dependantes du systeme.
 import os
+
 # Pour aligner les flux CLI avec les attentes du shell.
 import sys
+
 # Pour eviter les chemins fragiles relies aux separateurs OS.
 from pathlib import Path
 
+from logger.analysis_log_krpsim import AnalysisLogger, set_active_analysis_logger
+
 # Pour limiter le couplage aux composants internes necessaires.
 from . import parser as parser_mod
+
 # Pour limiter le couplage aux composants internes necessaires.
 from .display import format_trace, print_header, save_trace
+
 # Pour limiter le couplage aux composants internes necessaires.
 from .parser import ParseError
+
 # Pour limiter le couplage aux composants internes necessaires.
 from .simulator import Simulator
-
-from logger.analysis_log_krpsim import AnalysisLogger, set_active_analysis_logger
 
 
 def _serialize_simulator_state(sim: Simulator) -> dict[str, object]:
@@ -99,9 +106,9 @@ def build_parser() -> argparse.ArgumentParser:
             "maximum delay allowed (inclusive upper bound, cycles run while "
             # Pour stabiliser le message utilisateur expose par la CLI.
             "time <= delay)"
-        # Pour clore le bloc sans ambiguite de structure.
+            # Pour clore le bloc sans ambiguite de structure.
         ),
-    # Pour clore le bloc sans ambiguite de structure.
+        # Pour clore le bloc sans ambiguite de structure.
     )
     # Pour figer l'interface publique attendue par les scripts externes.
     parser.add_argument(
@@ -111,7 +118,7 @@ def build_parser() -> argparse.ArgumentParser:
         default="trace.txt",
         # Pour rendre l'usage autonome sans lecture du code source.
         help="path of the file to write machine trace to",
-    # Pour clore le bloc sans ambiguite de structure.
+        # Pour clore le bloc sans ambiguite de structure.
     )
     # Pour figer l'interface publique attendue par les scripts externes.
     parser.add_argument(
@@ -123,7 +130,7 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         # Pour rendre l'usage autonome sans lecture du code source.
         help="enable verbose logging",
-    # Pour clore le bloc sans ambiguite de structure.
+        # Pour clore le bloc sans ambiguite de structure.
     )
     # Pour activer une vue d'analyse detaillee sans toucher aux logs standards.
     parser.add_argument(
@@ -137,7 +144,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--log",
         # Pour rendre l'usage autonome sans lecture du code source.
         help="path to write logs to",
-    # Pour clore le bloc sans ambiguite de structure.
+        # Pour clore le bloc sans ambiguite de structure.
     )
     # Pour rendre a l'appelant le resultat promis par le contrat.
     return parser
@@ -345,6 +352,61 @@ def _run_simulation(
     return sim, ignore_delay
 
 
+def _configure_logging(args: argparse.Namespace) -> None:
+    """Configure CLI log sinks from parsed arguments."""
+    handlers: list[logging.Handler] = [logging.StreamHandler(sys.stdout)]
+    if args.log:
+        handlers.append(logging.FileHandler(args.log))
+    logging.basicConfig(
+        level=logging.INFO if args.verbose else logging.WARNING,
+        format="%(message)s",
+        handlers=handlers,
+        force=True,
+    )
+
+
+def _run_checked_simulation(
+    args: argparse.Namespace, analysis_logger: AnalysisLogger
+) -> tuple[Simulator, bool]:
+    """Run the simulation and convert parse errors to the CLI contract."""
+    try:
+        return _run_simulation(args, analysis_logger)
+    except ParseError as exc:
+        analysis_logger.log_step("PARSE_ERROR", str(exc), scope="main")
+        print(f"invalid config: {exc}")
+        raise SystemExit(1) from exc
+
+
+def _exit_code_for_simulation(
+    sim: Simulator,
+    requested_delay: int,
+    ignore_delay: bool,
+    analysis_logger: AnalysisLogger,
+) -> int:
+    """Log the simulation outcome and return its process exit code."""
+    logger = logging.getLogger(__name__)
+    scope = "main"
+    analysis_logger.log_header("EXIT DECISION", scope=scope)
+    analysis_logger.log_key_value("IGNORE_DELAY", ignore_delay, scope=scope)
+    analysis_logger.log_key_value("SIM_TIME", sim.time, scope=scope)
+    analysis_logger.log_key_value("REQUESTED_DELAY", requested_delay, scope=scope)
+    analysis_logger.log_key_value("SIM_DEADLOCK", sim.deadlock, scope=scope)
+    if not ignore_delay and sim.time >= requested_delay:
+        limit = requested_delay if sim.time > requested_delay else sim.time
+        logger.warning("Max time reached at time %d", limit)
+        analysis_logger.log_step(
+            "EXIT_REASON", f"max_time_reached(limit={limit})", scope=scope
+        )
+        return 1
+    if sim.deadlock:
+        logger.warning("Deadlock detected at time %d", sim.time)
+        analysis_logger.log_step("EXIT_REASON", "deadlock", scope=scope)
+        return 1
+    logger.warning("No more process doable at time %d", sim.time)
+    analysis_logger.log_step("EXIT_REASON", "no_more_process_doable", scope=scope)
+    return 0
+
+
 # Pour isoler main et faciliter son evolution sous tests.
 def main(argv: list[str] | None = None) -> int:
     """Point d'entree principal du binaire ``krpsim``.
@@ -378,87 +440,18 @@ def main(argv: list[str] | None = None) -> int:
     # Pour garder un format deterministe pour reproduire un run exact.
     analysis_logger.log_key_value("PARSED_ARGS", vars(args), scope=scope)
 
-    # Pour centraliser les sorties de logs sans multiplier la configuration.
-    handlers: list[logging.Handler] = [logging.StreamHandler(sys.stdout)]
-    # Pour n'ouvrir un fichier de log que sur demande explicite.
-    if args.log:
-        # Pour conserver une trace persistante utile en CI et support.
-        handlers.append(logging.FileHandler(args.log))
-    # Pour imposer un format de logs stable entre execution et tests.
-    logging.basicConfig(
-        # Pour activer le detail seulement sur demande explicite.
-        level=logging.INFO if args.verbose else logging.WARNING,
-        # Pour garder des logs sobres et diffables en automatisation.
-        format="%(message)s",
-        # Pour centraliser tous les sinks de logs dans une seule config.
-        handlers=handlers,
-        # Pour eviter l'empilement de handlers lors des appels repetes.
-        force=True,
-    # Pour clore le bloc sans ambiguite de structure.
-    )
+    _configure_logging(args)
 
     # Pour echouer tot avant toute operation couteuse ou irreversible.
     _validate_args(args, parser, analysis_logger)
 
     # Pour convertir une erreur bas niveau en diagnostic exploitable.
-    try:
-        # Pour separer clairement execution metier et gestion du code retour.
-        sim, ignore_delay = _run_simulation(args, analysis_logger)
-    # Pour traduire un echec technique en message stable pour l'appelant.
-    except ParseError as exc:
-        # Pour relier l'erreur metier a la phase qui a echoue.
-        analysis_logger.log_step("PARSE_ERROR", str(exc), scope=scope)
-        # Pour fournir un retour utilisateur directement lisible en CLI.
-        print(f"invalid config: {exc}")
-        # Pour signaler sans delai une violation explicite du contrat.
-        raise SystemExit(1)
+    sim, ignore_delay = _run_checked_simulation(args, analysis_logger)
 
     # Pour garder un canal de diagnostic coherent dans tout le module.
-    logger = logging.getLogger(__name__)
-    # Pour centraliser le statut final sans sorties anticipees.
-    exit_code = 0
-    # Pour tracer les valeurs qui pilotent le code retour final.
-    analysis_logger.log_header("EXIT DECISION", scope=scope)
-    # Pour exposer les signaux utilises pour choisir la branche finale.
-    analysis_logger.log_key_value("IGNORE_DELAY", ignore_delay, scope=scope)
-    # Pour exposer les signaux utilises pour choisir la branche finale.
-    analysis_logger.log_key_value("SIM_TIME", sim.time, scope=scope)
-    # Pour exposer les signaux utilises pour choisir la branche finale.
-    analysis_logger.log_key_value("REQUESTED_DELAY", args.delay, scope=scope)
-    # Pour exposer les signaux utilises pour choisir la branche finale.
-    analysis_logger.log_key_value("SIM_DEADLOCK", sim.deadlock, scope=scope)
-    # Pour traiter explicitement un cas d'entree invalide ou absent.
-    if not ignore_delay and sim.time >= args.delay:
-        # Pour afficher une borne coherente meme en cas de depassement.
-        limit = args.delay if sim.time > args.delay else sim.time
-        # Pour distinguer les terminaisons anormales dans les diagnostics.
-        logger.warning("Max time reached at time %d", limit)
-        # Pour rendre explicite la raison associee au code retour non nul.
-        analysis_logger.log_step(
-            "EXIT_REASON",
-            f"max_time_reached(limit={limit})",
-            scope=scope,
-        )
-        # Pour centraliser le statut final sans sorties anticipees.
-        exit_code = 1
-    # Pour maintenir un ordre de priorite stable entre cas exclusifs.
-    elif sim.deadlock:
-        # Pour distinguer les terminaisons anormales dans les diagnostics.
-        logger.warning("Deadlock detected at time %d", sim.time)
-        # Pour rendre explicite la raison associee au code retour non nul.
-        analysis_logger.log_step("EXIT_REASON", "deadlock", scope=scope)
-        # Pour centraliser le statut final sans sorties anticipees.
-        exit_code = 1
-    # Pour couvrir explicitement le cas complementaire du contrat.
-    else:
-        # Pour distinguer les terminaisons anormales dans les diagnostics.
-        logger.warning("No more process doable at time %d", sim.time)
-        # Pour rendre explicite la raison associee a une fin normale.
-        analysis_logger.log_step(
-            "EXIT_REASON",
-            "no_more_process_doable",
-            scope=scope,
-        )
+    exit_code = _exit_code_for_simulation(
+        sim, args.delay, ignore_delay, analysis_logger
+    )
 
     # Pour stabiliser l'ordre d'affichage des ressources finales.
     stock_names = sorted(sim.config.all_stock_names())

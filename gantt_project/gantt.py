@@ -7,9 +7,14 @@ import json
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, Protocol, cast
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.backend_bases import RendererBase
 from matplotlib.colors import to_rgba
+from matplotlib.figure import Figure
 from matplotlib.patches import FancyBboxPatch
 from matplotlib.ticker import MultipleLocator
 
@@ -35,6 +40,10 @@ PROGRESS_PADDING_PX = 4.0
 TaskField = int | float | str
 TaskPayload = dict[str, TaskField]
 RgbaColor = tuple[float, float, float, float]
+
+
+class _RendererCanvas(Protocol):
+    def get_renderer(self) -> RendererBase: ...
 
 
 @dataclass
@@ -156,7 +165,7 @@ def load_config(path: Path) -> tuple[str, list[TaskPayload]]:
                 scope=scope,
             )
             raise ValueError(f"task #{index} has invalid 'Progress' value")
-        normalized_task = {
+        normalized_task: TaskPayload = {
             "Task": name,
             "Start": start,
             "Duration": duration,
@@ -293,10 +302,10 @@ def _assign_tracks(bars: list[_TaskBar]) -> None:
 
 def _color_map(task_order: list[str]) -> dict[str, RgbaColor]:
     """Build a stable color map with one color per distinct task."""
-    cmap = plt.get_cmap("tab20")
+    cmap = cast(Any, mpl).colormaps["tab20"]
     palette = [cmap(idx) for idx in range(cmap.N)]
     colors = {
-        task: to_rgba(palette[index % len(palette)])
+        task: cast(RgbaColor, to_rgba(cast(Any, palette[index % len(palette)])))
         for index, task in enumerate(task_order)
     }
     get_active_analysis_logger().log_key_value(
@@ -317,10 +326,10 @@ def _edge_color(color: RgbaColor) -> RgbaColor:
 def _font_height_in_data_units() -> float:
     """Estimate Y-axis label font height in data units."""
     fig = plt.gcf()
-    ax = plt.gca()
+    ax = fig.gca()
     fig.canvas.draw()
 
-    labels = ax.get_yticklabels()
+    labels = cast(Any, ax).get_yticklabels()
     if labels:
         font_size_pt = float(labels[0].get_fontsize())
     else:
@@ -330,25 +339,25 @@ def _font_height_in_data_units() -> float:
         else:
             font_size_pt = float(base)
 
-    font_height_px = font_size_pt * fig.dpi / 72.0
+    font_height_px = font_size_pt * fig.get_dpi() / 72.0
     y_min, y_max = ax.get_ylim()
-    data_per_px = abs(y_max - y_min) / max(ax.bbox.height, 1.0)
+    data_per_px = abs(y_max - y_min) / max(ax.get_window_extent().height, 1.0)
     return font_height_px * data_per_px
 
 
-def _x_data_per_pixel(ax: plt.Axes) -> float:
+def _x_data_per_pixel(ax: Axes) -> float:
     """Return horizontal data units represented by one display pixel."""
     x_min, x_max = ax.get_xlim()
-    return abs(x_max - x_min) / max(ax.bbox.width, 1.0)
+    return abs(x_max - x_min) / max(ax.get_window_extent().width, 1.0)
 
 
-def _text_width_in_data_units(ax: plt.Axes, text: str, font_size: float) -> float:
+def _text_width_in_data_units(ax: Axes, text: str, font_size: float) -> float:
     """Measure text width in X-axis data units."""
-    renderer = ax.figure.canvas.get_renderer()
+    renderer = cast(_RendererCanvas, ax.figure.canvas).get_renderer()
     probe = ax.text(0.0, 0.0, text, fontsize=font_size, alpha=0.0)
     bbox = probe.get_window_extent(renderer=renderer)
     probe.remove()
-    return bbox.width * _x_data_per_pixel(ax)
+    return float(bbox.width) * _x_data_per_pixel(ax)
 
 
 def _progress_label(progress: float) -> str:
@@ -379,7 +388,7 @@ def _window_title(chart_title: str) -> str:
     return result
 
 
-def _set_window_title(fig: plt.Figure, chart_title: str) -> None:
+def _set_window_title(fig: Figure, chart_title: str) -> None:
     """Apply window title when the backend manager supports it."""
     manager = getattr(fig.canvas, "manager", None)
     if manager is None:
@@ -391,7 +400,7 @@ def _set_window_title(fig: plt.Figure, chart_title: str) -> None:
 
 def _can_show_plot() -> bool:
     """Return whether the active Matplotlib backend can show GUI windows."""
-    backend = plt.get_backend().lower()
+    backend = mpl.get_backend().lower()
     if backend.startswith("module://matplotlib_inline"):
         return False
     return backend not in NON_INTERACTIVE_BACKENDS
@@ -407,7 +416,7 @@ def _default_output_path(config_path: Path) -> Path:
 
 
 def _finish_figure(
-    fig: plt.Figure,
+    fig: Figure,
     *,
     output_path: Path | None,
     show: bool,
@@ -426,27 +435,28 @@ def _finish_figure(
 
     if show:
         if _can_show_plot():
-            analysis_logger.log_step("PLOT_SHOW", plt.get_backend(), scope=scope)
+            analysis_logger.log_step("PLOT_SHOW", mpl.get_backend(), scope=scope)
             plt.show()
         elif output_path is not None:
             print(
                 "[GRAPH] Affichage interactif indisponible "
-                f"(backend Matplotlib: {plt.get_backend()})."
+                f"(backend Matplotlib: {mpl.get_backend()})."
             )
 
     return saved_path
 
 
-def _outer_spaces(fig: plt.Figure, ax: plt.Axes) -> tuple[float, float]:
+def _outer_spaces(fig: Figure, ax: Axes) -> tuple[float, float]:
     """Return current left/right outer spaces in figure fraction."""
-    renderer = fig.canvas.get_renderer()
-    tight_box = ax.get_tightbbox(renderer).transformed(fig.transFigure.inverted())
+    renderer = cast(_RendererCanvas, fig.canvas).get_renderer()
+    transform = cast(Any, fig).transFigure
+    tight_box = ax.get_tightbbox(renderer).transformed(transform.inverted())
     left_space = tight_box.x0
     right_space = 1.0 - tight_box.x1
     return left_space, right_space
 
 
-def _balance_horizontal_whitespace(fig: plt.Figure, ax: plt.Axes) -> None:
+def _balance_horizontal_whitespace(fig: Figure, ax: Axes) -> None:
     """Center chart content by balancing outer left/right spaces."""
     analysis_logger = get_active_analysis_logger()
     scope = "gantt._balance_horizontal_whitespace"
@@ -496,7 +506,7 @@ def _balance_horizontal_whitespace(fig: plt.Figure, ax: plt.Axes) -> None:
 
 def _draw_rounded_bar(
     *,
-    ax: plt.Axes,
+    ax: Axes,
     start: float,
     width: float,
     center_y: float,
@@ -648,7 +658,8 @@ def render_chart(
     x_margin = max(1.0, visible_span * 0.02)
     ax.set_xlim(0, visible_span + x_margin)
     ax.set_ylim(-0.5, max_last_center + 0.5)
-    ax.set_yticks([task_label_center[task] for task in task_order], labels=task_order)
+    cast(Any, ax).set_yticks([task_label_center[task] for task in task_order])
+    cast(Any, ax).set_yticklabels(task_order)
     ax.set_axisbelow(True)
     analysis_logger.log_key_value(
         "AXIS_BOUNDS",

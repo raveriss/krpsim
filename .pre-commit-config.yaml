@@ -21,7 +21,14 @@ repos:
       - id: mypy
         pass_filenames: false
         args: ["--config-file=pyproject.toml", "src", "tests"]
-        additional_dependencies: ["pytest", "hypothesis"]
+        additional_dependencies:
+          - pytest
+          - hypothesis
+          - "numpy<2.3"
+          - "matplotlib>=3.8,<4"
+          - "matplotlib-stubs>=0.3.2,<0.4"
+          - "pandas>=2.2,<3"
+          - "pandas-stubs>=2.3.0.250703,<3"
   - repo: https://github.com/PyCQA/bandit
     rev: 1.8.6
     hooks:
@@ -40,4 +47,3 @@ repos:
         entry: xenon --max-absolute B --max-modules A --max-average A src
         language: system
         pass_filenames: false
-

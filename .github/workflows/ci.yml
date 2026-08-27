@@ -10,7 +10,8 @@ on:
 
 env:
   PYTHON_VERSION: "3.10"
-  POETRY_HOME: "${{ github.workspace }}/.poetry"
+  UV_PYTHON: "3.10"
+  UV_VERSION: "0.11.32"
 
 jobs:
   pre-commit:
@@ -20,37 +21,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
+          version: ${{ env.UV_VERSION }}
           python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
 
       - name: Install system dependencies
         run: sudo apt-get update && sudo apt-get install -y libasound2-dev
 
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: latest
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
-      - name: Cache virtualenv
-        id: cache-poetry
-        uses: actions/cache@v3
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
-
-      - name: Install dependencies (cache miss)
-        if: steps.cache-poetry.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --with dev --no-root
-
-      - name: Install project in editable mode
-        run: poetry install --no-interaction --with dev
+      - name: Sync project and dependencies
+        run: uv sync --locked --python "${PYTHON_VERSION}"
 
       - name: Run pre-commit
-        run: poetry run pre-commit run --all-files
+        run: uv run --no-sync pre-commit run --all-files
 
   static-analysis:
     name: Static Analysis
@@ -58,33 +44,23 @@ jobs:
     needs: pre-commit
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
+          version: ${{ env.UV_VERSION }}
           python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
       - run: sudo apt-get update && sudo apt-get install -y libasound2-dev
-      - uses: snok/install-poetry@v1
-        with:
-          version: latest
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-      - uses: actions/cache@v3
-        id: cache-poetry
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
-      - name: Install dependencies (cache miss)
-        if: steps.cache-poetry.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --with dev --no-root
-      - name: Install project
-        run: poetry install --no-interaction --with dev
+      - name: Sync project and dependencies
+        run: uv sync --locked --python "${PYTHON_VERSION}"
       - name: Run Ruff
-        run: poetry run ruff check .
+        run: uv run --no-sync ruff check .
       - name: Run MyPy
-        run: poetry run mypy src tests
+        run: uv run --no-sync mypy src tests
       - name: Run Black check
-        run: poetry run black --check .
+        run: uv run --no-sync black --check .
       - name: Run isort check
-        run: poetry run isort --check-only .
+        run: uv run --no-sync isort --check-only .
 
   tests:
     runs-on: ubuntu-latest
@@ -94,37 +70,21 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
+          version: ${{ env.UV_VERSION }}
           python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
 
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: latest
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
-      - name: Cache virtualenv
-        id: cache-poetry
-        uses: actions/cache@v3
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
-
-      - name: Install dependencies (with dev)
-        if: steps.cache-poetry.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --with dev
-
-      - name: Ensure project installed
-        if: steps.cache-poetry.outputs.cache-hit == 'true'
-        run: poetry install --no-interaction --with dev
+      - name: Sync project and dependencies
+        run: uv sync --locked --python "${PYTHON_VERSION}"
 
       - name: Run tests with coverage (XML at repo root)
         run: |
-          poetry run pytest --cov=src --cov-branch --cov-report=xml:coverage.xml \
-                            --junitxml=junit.xml -o junit_family=legacy
+          uv run --no-sync pytest --cov=src --cov-branch --cov-report=xml:coverage.xml \
+                                --junitxml=junit.xml -o junit_family=legacy
           ls -lah
           head -n 20 coverage.xml || true
           test -f coverage.xml || (echo "coverage.xml missing" && exit 1)
@@ -146,18 +106,17 @@ jobs:
     needs: [static-analysis, tests]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
+          version: ${{ env.UV_VERSION }}
           python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
       - run: sudo apt-get update && sudo apt-get install -y libasound2-dev
-      - uses: snok/install-poetry@v1
-        with:
-          version: latest
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-      - run: poetry install --no-interaction --no-root
+      - name: Sync runtime dependencies
+        run: uv sync --locked --no-dev --python "${PYTHON_VERSION}"
       - name: Build package
-        run: poetry build
+        run: uv build --no-sources
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -169,17 +128,17 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
+          version: ${{ env.UV_VERSION }}
           python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
       - run: sudo apt-get update && sudo apt-get install -y libasound2-dev
-      - uses: snok/install-poetry@v1
-        with:
-          version: latest
-          virtualenvs-create: true
-          virtualenvs-in-project: true
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
@@ -197,8 +156,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish to PyPI
         env:
-          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
-        run: poetry publish
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        run: uv publish dist/*
 
   version-badge:
     name: Update version badge

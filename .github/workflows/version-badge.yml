@@ -26,25 +26,27 @@ jobs:
         id: ver
         run: |
           python - << 'PY'
-          import tomllib, json, pathlib
-          py = pathlib.Path("pyproject.toml").read_bytes()
-          data = tomllib.loads(py)
-          ver = (
-            data.get("tool", {}).get("poetry", {}).get("version")
-            or data.get("project", {}).get("version")
-          )
+          import json
+          import os
+          import pathlib
+          import tomllib
+
+          with pathlib.Path("pyproject.toml").open("rb") as pyproject:
+              data = tomllib.load(pyproject)
+          ver = data.get("project", {}).get("version")
           if not ver:
-            raise SystemExit("Version not found in pyproject.toml")
+              raise SystemExit("project.version not found in pyproject.toml")
           out = {
-            "schemaVersion": 1,
-            "label": "version",
-            "message": ver,
-            "color": "blue"
+              "schemaVersion": 1,
+              "label": "version",
+              "message": ver,
+              "color": "blue",
           }
           p = pathlib.Path("docs/badges")
           p.mkdir(parents=True, exist_ok=True)
           (p / "version.json").write_text(json.dumps(out), encoding="utf-8")
-          print(f"::set-output name=version::{ver}")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"version={ver}\n")
           PY
 
       - name: Commit badge json if changed

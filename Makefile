@@ -8,15 +8,16 @@
 .PHONY: default install install-bin uninstall-bin \
         lint format test krpsim analysis_log_krpsim krpsim_verif analysis_log_krpsim_verif analysis_log_verif graph analysis_log_gantt_project analysis_log_gantt_projet process_resources \
         clean fclean re uninstall which-bin print-path help doctor \
-			ensure-poetry shell venv-shell
+			ensure-uv shell venv-shell
 
 MAKEFLAGS += --no-print-directory
-POETRY_BIN = $(shell command -v poetry 2>/dev/null || printf '%s' "$(HOME)/.local/bin/poetry")
-POETRY = $(POETRY_BIN) run
-POETRY_INSTALL_URL = https://install.python-poetry.org
+UV_BIN ?= $(shell command -v uv 2>/dev/null || printf '%s' "$(HOME)/.local/bin/uv")
+UV_LINK_MODE ?= copy
 VENV_DIR = .venv
 VENV_PYTHON = $(VENV_DIR)/bin/python
-VENV_STAMP = $(VENV_DIR)/.install-stamp
+PROJECT_VENV = $(abspath $(VENV_DIR))
+UV_RUN = UV_PROJECT_ENVIRONMENT="$(PROJECT_VENV)" $(UV_BIN) run --no-sync
+PINNED_PYTHON_VERSION := $(strip $(shell sed -n '1p' .python-version 2>/dev/null || printf '3.13'))
 OPEN_GRAPH_IMAGE = GRAPH_IMAGE_ABS="$$(realpath "$$GRAPH_IMAGE" 2>/dev/null || printf '%s' "$$GRAPH_IMAGE")"; if [ "$${KRPSIM_OPEN_GRAPH:-1}" = "0" ]; then echo "[GRAPH] Ouverture ignorée: $$GRAPH_IMAGE_ABS"; elif command -v xdg-open >/dev/null 2>&1; then xdg-open "$$GRAPH_IMAGE_ABS" >/dev/null 2>&1 && echo "[GRAPH] Ouverture: $$GRAPH_IMAGE_ABS" || echo "[GRAPH] Graphe généré: $$GRAPH_IMAGE_ABS"; elif command -v gio >/dev/null 2>&1; then gio open "$$GRAPH_IMAGE_ABS" >/dev/null 2>&1 && echo "[GRAPH] Ouverture: $$GRAPH_IMAGE_ABS" || echo "[GRAPH] Graphe généré: $$GRAPH_IMAGE_ABS"; elif command -v open >/dev/null 2>&1; then open "$$GRAPH_IMAGE_ABS" >/dev/null 2>&1 && echo "[GRAPH] Ouverture: $$GRAPH_IMAGE_ABS" || echo "[GRAPH] Graphe généré: $$GRAPH_IMAGE_ABS"; elif command -v code >/dev/null 2>&1; then code --new-window "$$GRAPH_IMAGE_ABS" >/dev/null 2>&1 && echo "[GRAPH] Ouverture: $$GRAPH_IMAGE_ABS" || echo "[GRAPH] Graphe généré: $$GRAPH_IMAGE_ABS"; else echo "[GRAPH] Graphe généré: $$GRAPH_IMAGE_ABS"; fi
 KRPSIM_INPUT = $(word 2,$(MAKECMDGOALS))
 KRPSIM_CYCLES = $(word 3,$(MAKECMDGOALS))
@@ -42,75 +43,32 @@ default: install install-bin
 	@echo "   Ex.: krpsim --help"
 
 # ------------------------------------------------------------
-# INSTALL avec cache basé sur le vrai venv :
-# Relance l'installation si pyproject.toml/poetry.lock sont plus récents,
-# ou si le venv vérifié n'a pas de stamp d'installation.
+# INSTALL : uv choisit/télécharge Python, crée .venv et synchronise uv.lock.
+# Les appels suivants sont incrémentaux grâce au cache natif de uv.
 # ------------------------------------------------------------
-ensure-poetry:
+ensure-uv:
 	@set -eu; \
-	POETRY_BIN="$(POETRY_BIN)"; \
-	if [ ! -x "$$POETRY_BIN" ]; then \
-		echo "# Poetry introuvable dans la session : installation automatique (sans sudo)."; \
-		if ! command -v curl >/dev/null 2>&1; then \
-			echo "❌ 'curl' est requis pour installer Poetry automatiquement."; \
-			echo "   Action: installe curl ou installe Poetry manuellement via $(POETRY_INSTALL_URL)."; \
-			exit 1; \
-		fi; \
-		if ! command -v python3 >/dev/null 2>&1; then \
-			echo "❌ 'python3' est requis pour installer Poetry automatiquement."; \
-			echo "   Action: installe Python 3 puis relance 'make install'."; \
-			exit 1; \
-		fi; \
-		if ! curl -sSL "$(POETRY_INSTALL_URL)" | python3 -; then \
-			echo "❌ L'installation automatique de Poetry a échoué."; \
-			echo "   Action: vérifie la connexion réseau, puis relance 'make install'."; \
-			exit 1; \
-		fi; \
-		POETRY_BIN="$$HOME/.local/bin/poetry"; \
-		if [ ! -x "$$POETRY_BIN" ]; then \
-			echo "❌ Poetry semble installé mais binaire introuvable: $$POETRY_BIN"; \
-			echo "   Action: ajoute $$HOME/.local/bin au PATH puis relance 'make install'."; \
-			exit 1; \
-		fi; \
-		POETRY_VERSION="$$( "$$POETRY_BIN" --version 2>/dev/null || true )"; \
-		[ -n "$$POETRY_VERSION" ] && echo "✅ $$POETRY_VERSION"; \
+	if [ ! -x "$(UV_BIN)" ]; then \
+		echo "❌ uv est requis mais introuvable: $(UV_BIN)"; \
+		echo "   Installation: curl -LsSf https://astral.sh/uv/install.sh | sh"; \
+		echo "   Puis relance: make"; \
+		exit 1; \
 	fi
 
-$(VENV_STAMP): pyproject.toml poetry.lock | ensure-poetry
-	@echo "# Installation de l'Environnement virtuel des dépendances et du package"
+install: ensure-uv
+	@echo "# Synchronisation de l'environnement avec uv"
 	@set -eu; \
-	POETRY_BIN="$(POETRY_BIN)"; \
-	if [ -e "$(VENV_DIR)" ] && [ ! -d "$(VENV_DIR)" ]; then \
-		echo "# Suppression d'un ancien marqueur $(VENV_DIR) qui n'est pas un venv."; \
-		rm -f "$(VENV_DIR)"; \
-	fi; \
-	CURRENT_VENV="$$( POETRY_VIRTUALENVS_IN_PROJECT=true "$$POETRY_BIN" env info -p 2>/dev/null || true )"; \
-	PROJECT_VENV="$$(pwd)/$(VENV_DIR)"; \
-	if [ -n "$$CURRENT_VENV" ] && [ "$$CURRENT_VENV" != "$$PROJECT_VENV" ]; then \
-		echo "# Migration du venv Poetry vers $$PROJECT_VENV"; \
-		"$$POETRY_BIN" env remove "$$CURRENT_VENV" >/dev/null 2>&1 || true; \
-	fi; \
-	POETRY_VIRTUALENVS_IN_PROJECT=true "$$POETRY_BIN" install; \
+	if ! $(UV_BIN) python find --no-python-downloads "$(PINNED_PYTHON_VERSION)" >/dev/null 2>&1; then \
+		echo "# Installation de Python $(PINNED_PYTHON_VERSION) avec uv"; \
+		$(UV_BIN) python install "$(PINNED_PYTHON_VERSION)"; \
+	fi
+	@UV_PROJECT_ENVIRONMENT="$(PROJECT_VENV)" $(UV_BIN) sync --locked --python "$(PINNED_PYTHON_VERSION)" --link-mode "$(UV_LINK_MODE)"
+	@set -eu; \
 	if [ ! -x "$(VENV_PYTHON)" ]; then \
 		echo "❌ Installation incomplète: $(VENV_PYTHON) est introuvable."; \
 		exit 1; \
 	fi; \
-	touch "$(VENV_STAMP)"; \
-	echo "✅ Dépendances installées."
-
-
-install: ensure-poetry
-	@set -eu; \
-	if [ -x "$(VENV_PYTHON)" ] \
-		&& [ -f "$(VENV_STAMP)" ] \
-		&& [ "$(VENV_STAMP)" -nt pyproject.toml ] \
-		&& [ "$(VENV_STAMP)" -nt poetry.lock ]; then \
-		if [ -n "$(INSTALL_GOAL_REQUESTED)" ]; then \
-			echo "✅ Installation déjà faite."; \
-		fi; \
-	else \
-		$(MAKE) "$(VENV_STAMP)"; \
-	fi; \
+	echo "✅ Dépendances synchronisées avec uv."; \
 	if [ -n "$(INSTALL_GOAL_REQUESTED)" ]; then \
 		echo "Les cibles Makefile utilisent déjà le venv automatiquement."; \
 		echo "Exemple :"; \
@@ -123,12 +81,11 @@ install: ensure-poetry
 # ------------------------------------------------------------
 install-bin: install
 	@set -eu; \
-	POETRY_BIN="$(POETRY_BIN)"; \
-	VENV_PATH="$$( "$$POETRY_BIN" env info -p 2>/dev/null || true )"; \
-	if [ -z "$$VENV_PATH" ] || [ ! -d "$$VENV_PATH" ]; then \
-		echo "❌ Venv Poetry introuvable. Lance d'abord: make install"; \
+	if [ ! -d "$(VENV_DIR)" ]; then \
+		echo "❌ Environnement uv introuvable. Lance d'abord: make install"; \
 		exit 1; \
 	fi; \
+	VENV_PATH="$$(cd "$(VENV_DIR)" && pwd -P)"; \
 	mkdir -p "$$HOME/.local/bin"; \
 	for B in krpsim krpsim_verif; do \
 		SRC="$$VENV_PATH/bin/$$B"; \
@@ -141,23 +98,23 @@ install-bin: install
 				echo "🔗 $$DST -> $$SRC"; \
 			fi; \
 		else \
-			echo "⚠️  Binaire '$$B' introuvable dans le venv (??)"; \
+			echo "❌ Binaire '$$B' introuvable dans le venv: $$SRC"; \
+			exit 1; \
 		fi; \
 	done; \
 	echo "💡 Assure-toi que $$HOME/.local/bin est dans le PATH (make print-path)"
 
 # Désinstalle les symlinks utilisateur si présents
 uninstall-bin:
-	@set -eu; \
-	rm -f "$$HOME/.local/bin/krpsim" "$$HOME/.local/bin/krpsim_verif"; \
+	@rm -f "$$HOME/.local/bin/krpsim" "$$HOME/.local/bin/krpsim_verif"
 
 # ------------------------------------------------------------
 # Qualité de code : lint et typage statique
 # ------------------------------------------------------------
 lint: install
 	@echo "# Lint (ruff) + type-check (mypy)"
-	$(POETRY) ruff check src tests || true
-	$(POETRY) mypy src tests || true
+	$(UV_RUN) ruff check src tests
+	$(UV_RUN) mypy src tests
 
 # ------------------------------------------------------------
 # Mise en forme automatique du code
@@ -165,10 +122,11 @@ lint: install
 PY_FILES := $(shell git ls-files '*.py')
 
 format: install
-	@if [ -n "$(PY_FILES)" ]; then \
+	@set -e; \
+	if [ -n "$(PY_FILES)" ]; then \
 		echo "# Format (black + isort)"; \
-		$(POETRY) black $(PY_FILES) || true; \
-		$(POETRY) isort $(PY_FILES) || true; \
+		$(UV_RUN) black $(PY_FILES); \
+		$(UV_RUN) isort $(PY_FILES); \
 	else \
 		echo "Aucun fichier Python détecté via git ls-files."; \
 	fi
@@ -177,10 +135,10 @@ format: install
 # Tests
 # ------------------------------------------------------------
 test: install
-	$(POETRY) pytest || true
+	$(UV_RUN) pytest
 
 # ------------------------------------------------------------
-# Exécutions (via Poetry)
+# Exécutions (via uv)
 # ------------------------------------------------------------
 krpsim: install
 	@set -u; \
@@ -227,10 +185,10 @@ krpsim: install
 	echo "[KRPSIM] Trace de sortie: $$TRACE_FILE"; \
 	echo "[KRPSIM] Config graphe: $$GRAPH_CONFIG_FILE"; \
 	OUT="$$(mktemp)"; \
-	if $(POETRY) krpsim "$(KRPSIM_INPUT)" "$(KRPSIM_CYCLES)" --trace "$$TRACE_FILE" >"$$OUT" 2>&1; then \
+	if $(UV_RUN) krpsim "$(KRPSIM_INPUT)" "$(KRPSIM_CYCLES)" --trace "$$TRACE_FILE" >"$$OUT" 2>&1; then \
 		cat "$$OUT"; \
 		CFG_OUT="$$(mktemp)"; \
-		if $(POETRY) python gantt_project/build_graph_config.py \
+		if $(UV_RUN) python gantt_project/build_graph_config.py \
 			--config "$(KRPSIM_INPUT)" \
 			--trace "$$TRACE_FILE" \
 			--output "$$GRAPH_CONFIG_FILE" >"$$CFG_OUT" 2>&1; then \
@@ -310,7 +268,7 @@ analysis_log_krpsim: install
 	TRACE_FILE="trace_$${CONFIG_STEM}.txt"; \
 	echo "[ANALYSIS_LOG_KRPSIM] Exécution: file=$(KRPSIM_INPUT), max_cycles=$(KRPSIM_CYCLES)"; \
 	echo "[ANALYSIS_LOG_KRPSIM] Trace de sortie: $$TRACE_FILE"; \
-	$(POETRY) krpsim "$(KRPSIM_INPUT)" "$(KRPSIM_CYCLES)" --trace "$$TRACE_FILE" --analysis-log
+	$(UV_RUN) krpsim "$(KRPSIM_INPUT)" "$(KRPSIM_CYCLES)" --trace "$$TRACE_FILE" --analysis-log
 
 krpsim_verif: install
 	@set -u; \
@@ -340,13 +298,13 @@ krpsim_verif: install
 	fi; \
 	echo "[KRPSIM_VERIF] Vérification: file=$(KRPSIM_VERIF_INPUT), trace=$(KRPSIM_VERIF_TRACE)"; \
 	OUT="$$(mktemp)"; \
-	if $(POETRY) krpsim_verif "$(KRPSIM_VERIF_INPUT)" "$(KRPSIM_VERIF_TRACE)" >"$$OUT" 2>&1; then \
+	if $(UV_RUN) krpsim_verif "$(KRPSIM_VERIF_INPUT)" "$(KRPSIM_VERIF_TRACE)" >"$$OUT" 2>&1; then \
 		cat "$$OUT"; \
 		CONFIG_BASENAME="$$(basename "$(KRPSIM_VERIF_INPUT)")"; \
 		CONFIG_STEM="$${CONFIG_BASENAME%.*}"; \
 		GRAPH_CONFIG_FILE="graph_config_$${CONFIG_STEM}.json"; \
 		CFG_OUT="$$(mktemp)"; \
-		if $(POETRY) python gantt_project/build_graph_config.py \
+		if $(UV_RUN) python gantt_project/build_graph_config.py \
 			--config "$(KRPSIM_VERIF_INPUT)" \
 			--trace "$(KRPSIM_VERIF_TRACE)" \
 			--output "$$GRAPH_CONFIG_FILE" >"$$CFG_OUT" 2>&1; then \
@@ -354,7 +312,7 @@ krpsim_verif: install
 			echo "[GRAPH] Génération du graphe Gantt"; \
 			GRAPH_IMAGE="docs/graphs/diagramme_gantt_$${CONFIG_STEM}.png"; \
 			GRAPH_OUT="$$(mktemp)"; \
-			if $(POETRY) python gantt_project/gantt.py --config "$$GRAPH_CONFIG_FILE" --output "$$GRAPH_IMAGE" --no-show >"$$GRAPH_OUT" 2>&1; then \
+			if $(UV_RUN) python gantt_project/gantt.py --config "$$GRAPH_CONFIG_FILE" --output "$$GRAPH_IMAGE" --no-show >"$$GRAPH_OUT" 2>&1; then \
 				[ -s "$$GRAPH_OUT" ] && cat "$$GRAPH_OUT"; \
 				$(OPEN_GRAPH_IMAGE); \
 			else \
@@ -409,7 +367,7 @@ analysis_log_krpsim_verif: install
 		exit 0; \
 	fi; \
 	echo "[ANALYSIS_LOG_KRPSIM_VERIF] Vérification: file=$(KRPSIM_VERIF_INPUT), trace=$(KRPSIM_VERIF_TRACE)"; \
-	$(POETRY) krpsim_verif "$(KRPSIM_VERIF_INPUT)" "$(KRPSIM_VERIF_TRACE)" --analysis-log
+	$(UV_RUN) krpsim_verif "$(KRPSIM_VERIF_INPUT)" "$(KRPSIM_VERIF_TRACE)" --analysis-log
 
 analysis_log_verif: analysis_log_krpsim_verif
 
@@ -444,14 +402,14 @@ analysis_log_gantt_project: install
 	GRAPH_CONFIG_FILE="graph_config_$${CONFIG_STEM}.json"; \
 	echo "[ANALYSIS_LOG_GANTT_PROJECT] Config: file=$(GANTT_INPUT), trace=$(GANTT_TRACE)"; \
 	echo "[ANALYSIS_LOG_GANTT_PROJECT] Config graphe: $$GRAPH_CONFIG_FILE"; \
-	if $(POETRY) python gantt_project/build_graph_config.py \
+	if $(UV_RUN) python gantt_project/build_graph_config.py \
 		--config "$(GANTT_INPUT)" \
 		--trace "$(GANTT_TRACE)" \
 		--output "$$GRAPH_CONFIG_FILE" \
 		--analysis-log; then \
 		echo "[ANALYSIS_LOG_GANTT_PROJECT] Génération du graphe Gantt"; \
 		GRAPH_IMAGE="docs/graphs/diagramme_gantt_$${CONFIG_STEM}.png"; \
-		$(POETRY) python gantt_project/gantt.py --config "$$GRAPH_CONFIG_FILE" --output "$$GRAPH_IMAGE" --no-show --analysis-log; \
+		$(UV_RUN) python gantt_project/gantt.py --config "$$GRAPH_CONFIG_FILE" --output "$$GRAPH_IMAGE" --no-show --analysis-log; \
 		$(OPEN_GRAPH_IMAGE); \
 	else \
 		CODE=$$?; \
@@ -465,7 +423,7 @@ graph: install
 	@echo "[GRAPH] Génération du graphe Gantt"; \
 	GRAPH_IMAGE="docs/graphs/diagramme_gantt_simple.png"; \
 	OUT="$$(mktemp)"; \
-	if $(POETRY) python gantt_project/gantt.py --config graph_config_simple.json --output "$$GRAPH_IMAGE" --no-show >"$$OUT" 2>&1; then \
+	if $(UV_RUN) python gantt_project/gantt.py --config graph_config_simple.json --output "$$GRAPH_IMAGE" --no-show >"$$OUT" 2>&1; then \
 		cat "$$OUT"; \
 		$(OPEN_GRAPH_IMAGE); \
 	else \
@@ -493,9 +451,9 @@ process_resources: install
 	    set +e; \
 	    for f in $$files; do \
 	      echo "=== Traitement de $$f ==="; \
-	      $(POETRY) krpsim "$$f" 10 || echo "⚠️  Échec krpsim sur $$f"; \
+	      $(UV_RUN) krpsim "$$f" 10 || echo "⚠️  Échec krpsim sur $$f"; \
 	      echo "=== Vérification de $$f ==="; \
-	      $(POETRY) krpsim_verif "$$f" trace.txt || echo "⚠️  Échec krpsim_verif sur $$f"; \
+	      $(UV_RUN) krpsim_verif "$$f" trace.txt || echo "⚠️  Échec krpsim_verif sur $$f"; \
 	      echo ""; \
 	      sleep 1; \
 	    done; \
@@ -506,18 +464,12 @@ process_resources: install
 
 shell venv-shell: install
 	@set -eu; \
-	POETRY_BIN="$(POETRY_BIN)"; \
-	if [ ! -x "$$POETRY_BIN" ]; then \
-		echo "❌ Poetry introuvable: $$POETRY_BIN"; \
+	if [ ! -d "$(VENV_DIR)" ]; then \
+		echo "❌ Environnement uv introuvable."; \
 		echo "   Action: lance d'abord 'make install'."; \
 		exit 1; \
 	fi; \
-	VENV_PATH="$$( "$$POETRY_BIN" env info -p 2>/dev/null || true )"; \
-	if [ -z "$$VENV_PATH" ] || [ ! -d "$$VENV_PATH" ]; then \
-		echo "❌ Environnement Poetry introuvable."; \
-		echo "   Action: lance d'abord 'make install'."; \
-		exit 1; \
-	fi; \
+	VENV_PATH="$$(cd "$(VENV_DIR)" && pwd -P)"; \
 	if [ ! -f "$$VENV_PATH/bin/activate" ]; then \
 		echo "❌ Script d'activation introuvable: $$VENV_PATH/bin/activate"; \
 		echo "   Action: relance 'make install'."; \
@@ -545,9 +497,14 @@ shell venv-shell: install
 # -------------------------------------------------------------------
 # Uninstall / Clean / Fclean / Re
 # -------------------------------------------------------------------
-uninstall:
+uninstall: uninstall-bin
 	@set -eu; \
-	POETRY_BIN="$(POETRY_BIN)"; \
+	if [ -e "$(VENV_DIR)" ]; then \
+		rm -rf "$(VENV_DIR)"; \
+		echo "✅ Environnement uv supprimé: $(VENV_DIR)"; \
+	else \
+		echo "Environnement uv déjà absent: $(VENV_DIR)"; \
+	fi
 
 clean:
 	@rm -rf \
@@ -563,60 +520,6 @@ fclean:
 	@echo "🧹 Nettoyage"
 	@$(MAKE) clean
 	@$(MAKE) uninstall
-	@{ \
-		set -eu; \
-		POETRY_BIN="$(POETRY_BIN)"; \
-		VENV_PATH="$$( "$$POETRY_BIN" env info -p 2>/dev/null || true )"; \
-		: # 1) Suppression via Poetry par chemin (plus fiable); \
-		if [ -n "$$VENV_PATH" ]; then \
-			"$$POETRY_BIN" env remove "$$VENV_PATH" >/dev/null 2>&1 || true; \
-		fi; \
-		: # 2) Fallback: si le dossier existe encore, on l'enlève; \
-		if [ -n "$$VENV_PATH" ] && [ -d "$$VENV_PATH" ]; then \
-			rm -rf "$$VENV_PATH"; \
-		fi; \
-		: # 3) Fallback additionnel: cas in-project .venv ou ancien marqueur; \
-		if [ -e ".venv" ]; then \
-			rm -rf ".venv"; \
-		fi; \
-		}; true
-	@$(MAKE) uninstall-bin
-	@set -eu; \
-	POETRY_LINK="$$HOME/.local/bin/poetry"; \
-	POETRY_HOME="$$HOME/.local/share/pypoetry"; \
-	if [ -L "$$POETRY_LINK" ] && [ ! -x "$$POETRY_LINK" ] && [ ! -d "$$POETRY_HOME" ]; then \
-		echo "# Nettoyage d'un symlink Poetry cassé: $$POETRY_LINK"; \
-		rm -f "$$POETRY_LINK"; \
-		echo "✅ Symlink Poetry cassé supprimé."; \
-	elif [ -x "$$POETRY_LINK" ] || [ -d "$$POETRY_HOME" ]; then \
-		echo "# Désinstallation de Poetry utilisateur (~/.local)"; \
-		if ! command -v curl >/dev/null 2>&1; then \
-			echo "❌ Impossible de désinstaller Poetry automatiquement: 'curl' est absent."; \
-			echo "   Action: installe curl, ou lance manuellement: curl -sSL $(POETRY_INSTALL_URL) | python3 - --uninstall"; \
-			exit 1; \
-		fi; \
-		if ! command -v python3 >/dev/null 2>&1; then \
-			echo "❌ Impossible de désinstaller Poetry automatiquement: 'python3' est absent."; \
-			echo "   Action: installe Python 3, ou désinstalle Poetry manuellement."; \
-			exit 1; \
-		fi; \
-		if ! curl -sSL "$(POETRY_INSTALL_URL)" | python3 - --uninstall; then \
-			echo "❌ La désinstallation automatique de Poetry a échoué."; \
-			echo "   Action: relance 'make fclean' avec Internet, ou exécute la commande manuelle d'uninstall."; \
-			exit 1; \
-		fi; \
-		if [ -L "$$POETRY_LINK" ] && [ ! -e "$$POETRY_LINK" ]; then \
-			rm -f "$$POETRY_LINK"; \
-		fi; \
-		if [ -L "$$POETRY_LINK" ] || [ -x "$$POETRY_LINK" ] || [ -d "$$POETRY_HOME" ]; then \
-			echo "❌ Poetry semble encore présent dans ~/.local après désinstallation."; \
-			echo "   Action: vérifie les permissions puis supprime ~/.local/bin/poetry et ~/.local/share/pypoetry."; \
-			exit 1; \
-		fi; \
-		echo "✅ Poetry utilisateur supprimé."; \
-	else \
-		rm -rf .venv; \
-	fi
 
 
 re:
@@ -628,9 +531,12 @@ re:
 # ------------------------------------------------------------
 which-bin:
 	@set -e; \
-	echo "Poetry venv:"; \
-	POETRY_BIN="$(POETRY_BIN)"; \
-	if [ -x "$$POETRY_BIN" ]; then "$$POETRY_BIN" env info -p || true; else echo "(poetry non installé)"; fi; \
+	echo "Environnement uv du projet:"; \
+	if [ -x "$(VENV_PYTHON)" ]; then \
+		"$(VENV_PYTHON)" -c 'import sys; print(sys.prefix)'; \
+	else \
+		echo "(environnement non installé)"; \
+	fi; \
 	echo; \
 	echo "which krpsim:"; which krpsim || echo "(non trouvé dans le PATH)"; \
 	echo; \
@@ -639,34 +545,55 @@ which-bin:
 print-path:
 	@echo "PATH = $$PATH"
 
-doctor:
+doctor: ensure-uv
 	@set -eu; \
-	POETRY_BIN="$(POETRY_BIN)"; \
+	STATUS=0; \
 	echo "— Doctor —"; \
-	[ -x "$$POETRY_BIN" ] && echo "Poetry: OK ($$POETRY_BIN)" || echo "Poetry: ABSENT"; \
-	if [ -x "$$POETRY_BIN" ]; then \
-		VENV="$$( "$$POETRY_BIN" env info -p 2>/dev/null || true )"; \
-		[ -n "$$VENV" ] && echo "Venv: $$VENV" || echo "Venv: ABSENT"; \
+	UV_VERSION="$$("$(UV_BIN)" --version 2>&1)"; \
+	echo "uv: OK ($$UV_VERSION, $(UV_BIN))"; \
+	PYTHON_PATH="$$("$(UV_BIN)" python find --no-python-downloads "$(PINNED_PYTHON_VERSION)" 2>/dev/null || true)"; \
+	if [ -n "$$PYTHON_PATH" ] && [ -x "$$PYTHON_PATH" ]; then \
+		echo "Python: OK ($$("$$PYTHON_PATH" --version 2>&1), $$PYTHON_PATH)"; \
+	else \
+		echo "Python $(PINNED_PYTHON_VERSION): ABSENT"; \
+		STATUS=1; \
 	fi; \
-	which krpsim >/dev/null 2>&1 && echo "krpsim dans PATH: $$([ -n "$$(which krpsim 2>/dev/null)" ] && which krpsim)" || echo "krpsim dans PATH: NON"; \
-	[ -d "$(VENV_DIR)" ] && echo "Dossier venv présent: $(VENV_DIR)" || echo "Dossier venv: ABSENT"; \
-	echo "——————"
+	if "$(UV_BIN)" lock --check >/dev/null 2>&1; then \
+		echo "uv.lock: OK"; \
+	else \
+		echo "uv.lock: ABSENT ou obsolète"; \
+		STATUS=1; \
+	fi; \
+	if [ -x "$(VENV_PYTHON)" ]; then \
+		echo "Venv: OK ($$(cd "$(VENV_DIR)" && pwd -P))"; \
+	else \
+		echo "Venv: ABSENT"; \
+		STATUS=1; \
+	fi; \
+	if command -v krpsim >/dev/null 2>&1; then \
+		echo "krpsim dans PATH: $$(command -v krpsim)"; \
+	else \
+		echo "krpsim dans PATH: NON (lance make install-bin)"; \
+	fi; \
+	echo "——————"; \
+	exit "$$STATUS"
 
 help:
 	@echo "Cibles :"
 	@echo "  (défaut)      -> install + install-bin"
-	@echo "  install       -> auto-installe Poetry si absent, puis installe les deps"
+	@echo "  install       -> synchronise uv.lock dans .venv avec Python $(PINNED_PYTHON_VERSION)"
 	@echo "  install-bin   -> symlinks vers ~/.local/bin (idempotent)"
 	@echo "  uninstall-bin -> supprime les symlinks utilisateur"
 	@echo "  shell         -> ouvre un shell interactif dans le venv"
-	@echo "  krpsim <file> <cycles>          -> exécute via Poetry"
+	@echo "  krpsim <file> <cycles>          -> exécute via uv"
 	@echo "    sortie: trace_<file>.txt + graph_config_<file>.json"
 	@echo "  analysis_log_krpsim <file> <cycles> -> exécute krpsim avec logs d'analyse"
-	@echo "  krpsim_verif <file> <trace>     -> exécute via Poetry"
+	@echo "  krpsim_verif <file> <trace>     -> exécute via uv"
 	@echo "  analysis_log_krpsim_verif <file> <trace> -> exécute krpsim_verif avec logs d'analyse"
 	@echo "  analysis_log_gantt_project <file> <trace> -> génère la config graphe + Gantt avec logs d'analyse"
 	@echo "  note          -> si un argument commence par '-', utilise: make -- <target> ..."
 	@echo "  graph         -> génère le graphe Gantt"
 	@echo "  lint | format | test | process_resources"
-	@echo "  clean | fclean (supprime aussi Poetry user) | re | uninstall"
-	@echo "  which-bin | print-path | doctor | help"
+	@echo "  clean | fclean | re | uninstall (supprime .venv et les liens)"
+	@echo "  doctor        -> vérifie uv, Python, uv.lock et l'environnement"
+	@echo "  which-bin | print-path | help"

@@ -9,10 +9,13 @@ from __future__ import annotations
 
 # Pour appliquer des verifications d'acces dependantes du systeme.
 import os
+
 # Pour imposer une grammaire stricte via des motifs explicites.
 import re
+
 # Pour formaliser des contrats de donnees clairs et compacts.
 from dataclasses import dataclass
+
 # Pour eviter les chemins fragiles relies aux separateurs OS.
 from pathlib import Path
 
@@ -244,7 +247,7 @@ def _parse_process(line: str) -> Process:
         results=results,
         # Pour construire un objet Process coherant avec les valeurs validees.
         delay=delay,
-    # Pour clore le bloc sans ambiguite de structure.
+        # Pour clore le bloc sans ambiguite de structure.
     )
 
 
@@ -382,8 +385,10 @@ def _handle_stock(line: str, stocks: dict[str, int]) -> None:
 # Pour isoler _validate_optimize et faciliter son evolution sous tests.
 def _validate_optimize(
     # Pour typer explicitement le champ et fiabiliser le contrat de donnees.
-    optimize: list[str], stocks: dict[str, int], processes: dict[str, Process]
-# Pour ouvrir un bloc qui porte une contrainte locale explicite.
+    optimize: list[str],
+    stocks: dict[str, int],
+    processes: dict[str, Process],
+    # Pour ouvrir un bloc qui porte une contrainte locale explicite.
 ) -> None:
     """Verifie que les cibles ``optimize`` existent dans le modele.
 
@@ -422,8 +427,9 @@ def _validate_optimize(
 # Pour isoler _validate_process_resources et faciliter son evolution sous tests.
 def _validate_process_resources(
     # Pour typer explicitement le champ et fiabiliser le contrat de donnees.
-    stocks: dict[str, int], processes: dict[str, Process]
-# Pour ouvrir un bloc qui porte une contrainte locale explicite.
+    stocks: dict[str, int],
+    processes: dict[str, Process],
+    # Pour ouvrir un bloc qui porte une contrainte locale explicite.
 ) -> None:
     """Garantit que tous les besoins de processus sont resolvables.
 
@@ -459,7 +465,7 @@ def _validate_process_resources(
                     # Pour inclure le processus fautif dans le diagnostic
                     # utilisateur.
                     f"unknown resource '{res}' used in process '{proc.name}'"
-                # Pour clore le bloc sans ambiguite de structure.
+                    # Pour clore le bloc sans ambiguite de structure.
                 )
 
 
@@ -517,7 +523,7 @@ def _read_lines(path: Path) -> list[str]:
 def _parse_lines(
     # Pour typer explicitement le champ et fiabiliser le contrat de donnees.
     lines: list[str],
-# Pour ouvrir un bloc qui porte une contrainte locale explicite.
+    # Pour ouvrir un bloc qui porte une contrainte locale explicite.
 ) -> tuple[dict[str, int], dict[str, Process], list[str] | None]:
     """Parse les lignes valides en structures metier.
 

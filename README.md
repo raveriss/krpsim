@@ -6,7 +6,7 @@
 [![Coverage](https://img.shields.io/codecov/c/github/raveriss/krpsim?logo=codecov&logoColor=white)](https://codecov.io/gh/raveriss/krpsim)
 ![pre-commit](https://img.shields.io/badge/pre--commit-enabled-FAB040?logo=precommit&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-%3E%3D3.10%2C%3C3.14-3776AB?logo=python&logoColor=white)
-![Poetry](https://img.shields.io/badge/Poetry-packaging-60A5FA?logo=poetry&logoColor=white)
+[![uv](https://img.shields.io/badge/uv-project%20manager-DE5FE9?logo=uv&logoColor=white)](https://docs.astral.sh/uv/)
 ![Ruff](https://img.shields.io/badge/Ruff-lint-46A35E?logo=ruff&logoColor=white)
 ![MyPy](https://img.shields.io/badge/MyPy-types-2A6DB2?logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0iI2ZmZmZmZiIgZD0iTTMgMTlWNWgzLjJMMTIgMTIuNCAxNy44IDVIMjF2MTRoLTNWMTAuMWwtNC44IDYuMUgxMC44TDYgMTAuMVYxOXoiLz48L3N2Zz4%3D)
 ![pandas](https://img.shields.io/badge/pandas-%3E%3D2.2-150458?logo=pandas&logoColor=white)
@@ -51,7 +51,7 @@ Projet réalisé dans le cadre du cursus **École 42** (projet KRPSIM), avec un 
 
 ## 🧰 Stack
 
-- **Langage & packaging** : Python `>=3.10,<3.14`, Poetry
+- **Langage & packaging** : Python `>=3.10,<3.14`, uv, Hatchling
 - **Runtime** : pandas, matplotlib
 - **Tests** : pytest, pytest-cov, Hypothesis
 - **Qualité** : Ruff, MyPy, Black, isort, pre-commit
@@ -61,15 +61,43 @@ Projet réalisé dans le cadre du cursus **École 42** (projet KRPSIM), avec un 
 ```bash
 git clone https://github.com/raveriss/krpsim.git
 cd krpsim
+curl -LsSf https://astral.sh/uv/install.sh | sh
 make install
 ```
 
-`make install` installe automatiquement Poetry (si absent), crée le virtualenv et installe les dépendances.
-Les cibles Make exécutent déjà les commandes dans ce virtualenv; vous pouvez donc lancer directement
-`make krpsim ...`, `make krpsim_verif ...` ou `make test` après installation.
-`make shell` reste disponible pour ouvrir un shell interactif dans le virtualenv lors du debug manuel.
+Python `3.13` est la version de développement recommandée et elle est déclarée dans
+`.python-version`. Le projet reste compatible avec Python `>=3.10,<3.14`. Lors de la
+synchronisation, uv utilise cette version et peut la télécharger si elle n'est pas
+encore disponible.
 
-Sur Fedora 42, le Python système est `3.13`; il est supporté par cette configuration.
+Pour installer explicitement l'interpréteur avant la synchronisation :
+
+```bash
+uv python install 3.13
+make install
+```
+
+`make install` vérifie la présence de uv, crée `.venv` et synchronise exactement les
+dépendances verrouillées dans `uv.lock`. La commande `make` effectue aussi
+`make install-bin`, qui expose `krpsim` et `krpsim_verif` dans `~/.local/bin`.
+Les autres cibles Make exécutent les outils dans cet environnement ; vous pouvez donc
+lancer directement `make krpsim ...`, `make krpsim_verif ...` ou `make test`.
+`make shell` ouvre un shell interactif dans le virtualenv pour le debug manuel et
+`make doctor` contrôle uv, Python, le lockfile et l'environnement.
+
+### Utilisation directe de uv
+
+Le même environnement peut être synchronisé et utilisé sans Make :
+
+```bash
+uv sync --locked
+uv run --locked krpsim resources/ikea 10
+uv run --locked krpsim_verif resources/ikea trace_ikea.txt
+uv run --locked pytest
+```
+
+L'option `--locked` garantit que ces commandes n'altèrent pas `uv.lock` et échoue si
+le lockfile n'est plus cohérent avec `pyproject.toml`.
 
 ## 🚀 Quick Start
 
@@ -83,7 +111,7 @@ make krpsim_verif resources/ikea trace_ikea.txt
 | Commande | Description |
 | --- | --- |
 | `make` | Installation complète (`install` + `install-bin`) |
-| `make install` | Installe Poetry (si absent) et les dépendances |
+| `make install` | Synchronise `.venv` depuis `uv.lock` avec uv |
 | `make install-bin` | Crée les symlinks `krpsim` / `krpsim_verif` dans `~/.local/bin` |
 | `make shell` | Ouvre un shell interactif dans le virtualenv |
 | `make krpsim <resource_file> <max_cycles>` | Lance la simulation |
@@ -94,8 +122,8 @@ make krpsim_verif resources/ikea trace_ikea.txt
 | `make format` | Formate le code (`black`, `isort`) |
 | `make process_resources` | Batch sur tous les fichiers de `resources` |
 | `make clean` | Nettoie les artefacts temporaires |
-| `make fclean` | Nettoyage complet (inclut venv et Poetry user) |
-| `make doctor` | Vérifie l’état de l’environnement |
+| `make fclean` | Nettoyage complet, y compris `.venv` |
+| `make doctor` | Vérifie uv, Python, `uv.lock` et l'état de l'environnement |
 | `make help` | Affiche l’aide des cibles |
 
 <a id="formats-entree"></a>
@@ -206,6 +234,7 @@ Sortie:
 
 ```txt
 .
+├── .python-version
 ├── author
 ├── codecov.yml
 ├── docs
@@ -229,7 +258,6 @@ Sortie:
 ├── graph_config_simple.json
 ├── LICENSE
 ├── Makefile
-├── poetry.lock
 ├── pyproject.toml
 ├── README.md
 ├── resources
@@ -272,7 +300,8 @@ Sortie:
 │   ├── test_verifier.py
 │   └── test_version.py
 ├── trace_ikea.txt
-└── trace_simple.txt
+├── trace_simple.txt
+└── uv.lock
 
 7 directories, 57 files
 ```

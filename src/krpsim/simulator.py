@@ -9,11 +9,13 @@ from __future__ import annotations
 
 # Pour rendre le diagnostic activable sans polluer la sortie.
 import logging
+
 # Pour formaliser des contrats de donnees clairs et compacts.
 from dataclasses import dataclass
 
 # Pour limiter le couplage aux composants internes necessaires.
 from .optimizer import order_processes
+
 # Pour limiter le couplage aux composants internes necessaires.
 from .parser import Config, Process
 
@@ -140,9 +142,7 @@ class Simulator:
             return False
 
         produced_components = [
-            resource
-            for resource in process.results
-            if resource in target_process.needs
+            resource for resource in process.results if resource in target_process.needs
         ]
         if not produced_components:
             return False
@@ -187,8 +187,9 @@ class Simulator:
             if all(
                 # Pour verifier tous les prerequis avant de consommer des
                 # ressources.
-                self.stocks.get(name, 0) >= qty for name, qty in process.needs.items()
-            # Pour ouvrir un bloc qui porte une contrainte locale explicite.
+                self.stocks.get(name, 0) >= qty
+                for name, qty in process.needs.items()
+                # Pour ouvrir un bloc qui porte une contrainte locale explicite.
             ):
                 # Pour appliquer uniformement la regle a chaque element
                 # concerne.
@@ -403,7 +404,7 @@ class Simulator:
             (n for n, q in proc.needs.items() if proc.results.get(n, 0) >= q),
             # Pour marquer explicitement l'absence de valeur dans ce tuple.
             None,
-        # Pour clore le bloc sans ambiguite de structure.
+            # Pour clore le bloc sans ambiguite de structure.
         )
         # Pour deduire les preconditions de la strategie sans heuristique
         # cachee.
@@ -414,8 +415,11 @@ class Simulator:
     # Pour isoler _find_booster et faciliter son evolution sous tests.
     def _find_booster(
         # Pour typer explicitement les preconditions de recherche du booster.
-        self, token: str, main_res: str, target_proc: Process
-    # Pour ouvrir un bloc qui porte une contrainte locale explicite.
+        self,
+        token: str,
+        main_res: str,
+        target_proc: Process,
+        # Pour ouvrir un bloc qui porte une contrainte locale explicite.
     ) -> Process | None:
         """Trouve un processus qui enrichit la ressource principale.
 
@@ -447,7 +451,7 @@ class Simulator:
                 # Pour retenir seulement un booster qui enrichit la ressource
                 # limitante.
                 and proc.results.get(main_res, 0) > proc.needs.get(main_res, 0)
-            # Pour ouvrir un bloc qui porte une contrainte locale explicite.
+                # Pour ouvrir un bloc qui porte une contrainte locale explicite.
             ):
                 # Pour rendre a l'appelant le resultat promis par le contrat.
                 return proc
@@ -457,8 +461,12 @@ class Simulator:
     # Pour isoler _best_loops et faciliter son evolution sous tests.
     def _best_loops(
         # Pour typer les parametres du calcul de compromis loops/targets.
-        self, booster: Process, target_proc: Process, main_res: str, max_time: int
-    # Pour ouvrir un bloc qui porte une contrainte locale explicite.
+        self,
+        booster: Process,
+        target_proc: Process,
+        main_res: str,
+        max_time: int,
+        # Pour ouvrir un bloc qui porte une contrainte locale explicite.
     ) -> tuple[int, int]:
         """Calcule le meilleur compromis boucles booster / cibles produites.
 
@@ -493,15 +501,17 @@ class Simulator:
             # Pour projeter le stock disponible apres les boucles booster.
             main_qty = init_main + loops * (
                 # Pour calculer le gain net reel apporte par une boucle booster.
-                booster.results.get(main_res, 0) - booster.needs.get(main_res, 0)
-            # Pour clore le bloc sans ambiguite de structure.
+                booster.results.get(main_res, 0)
+                - booster.needs.get(main_res, 0)
+                # Pour clore le bloc sans ambiguite de structure.
             )
             # Pour retenir la borne la plus contraignante de production.
             produced = min(
                 # Pour combiner limites temporelle et materielle sans
                 # surestimer.
-                possible_targets, main_qty // target_proc.needs.get(main_res, 0)
-            # Pour clore le bloc sans ambiguite de structure.
+                possible_targets,
+                main_qty // target_proc.needs.get(main_res, 0),
+                # Pour clore le bloc sans ambiguite de structure.
             )
             # Pour expliciter une decision qui impacte le flux metier.
             if produced > best_targets:
@@ -526,7 +536,7 @@ class Simulator:
         targets: int,
         # Pour typer explicitement le champ et fiabiliser le contrat de donnees.
         max_time: int,
-    # Pour ouvrir un bloc qui porte une contrainte locale explicite.
+        # Pour ouvrir un bloc qui porte une contrainte locale explicite.
     ) -> None:
         """Applique le plan calcule et remplace l'etat courant.
 

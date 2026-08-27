@@ -113,8 +113,8 @@ Voici un **WBS (Work Breakdown Structure)** à granularité **extrême**, conçu
 
 ## 9. Packaging & déploiement
 
-9.1. Setup.py / pyproject ; installation pip
-9.2. Distribution tar/wheel ; README clair iconfi
+9.1. `pyproject.toml` (PEP 621) ; environnement et dépendances avec `uv sync --locked`
+9.2. Distribution sdist/wheel avec `uv build` ; publication avec `uv publish`
 9.3. Version affichée (`krpsim –version`)
 9.4. Installation dans venv, clean uninstall
 9.5. Cross-platform support
@@ -173,4 +173,3 @@ Avec cette WBS, tu couvres **absolument chaque point** de la loi de Murphy : l
 
 [1]: https://arxiv.org/abs/1308.2876?utm_source=chatgpt.com "Work Breakdown Structure: A Tool for Software Project Scope Verification"
 [2]: https://www.pmi.org/learning/library/work-breakdown-structure-basics-5919?utm_source=chatgpt.com "The ABC basics of the WBS Paul Burek. - PMI"
-

@@ -125,7 +125,7 @@ def build_payload(config_path: Path, trace_path: Path) -> dict[str, object]:
         tasks.append(task)
 
     config_stem = config_path.stem if config_path.stem else config_path.name
-    payload = {
+    payload: dict[str, object] = {
         "title": f"Diagramme de Gantt - {config_stem}",
         "tasks": tasks,
         "config_file": str(config_path),
