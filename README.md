@@ -78,10 +78,12 @@ make install
 ```
 
 `make install` vérifie la présence de uv, crée `.venv` et synchronise exactement les
-dépendances verrouillées dans `uv.lock`. La commande `make` effectue aussi
-`make install-bin`, qui expose `krpsim` et `krpsim_verif` dans `~/.local/bin`.
-Les autres cibles Make exécutent les outils dans cet environnement ; vous pouvez donc
-lancer directement `make krpsim ...`, `make krpsim_verif ...` ou `make test`.
+dépendances verrouillées dans `uv.lock`. La commande `make` effectue cette même
+installation locale au projet, sans écrire dans `~/.local/bin`. La cible facultative
+`make install-bin` permet d'exposer explicitement `krpsim` et `krpsim_verif` dans
+`~/.local/bin`. Les autres cibles Make exécutent les outils dans cet environnement ;
+vous pouvez donc lancer directement `make krpsim ...`, `make krpsim_verif ...` ou
+`make test`.
 `make shell` ouvre un shell interactif dans le virtualenv pour le debug manuel et
 `make doctor` contrôle uv, Python, le lockfile et l'environnement.
 
@@ -110,7 +112,7 @@ make krpsim_verif resources/ikea trace_ikea.txt
 
 | Commande | Description |
 | --- | --- |
-| `make` | Installation complète (`install` + `install-bin`) |
+| `make` | Synchronise le projet dans `.venv`, sans écrire dans le dossier personnel |
 | `make install` | Synchronise `.venv` depuis `uv.lock` avec uv |
 | `make install-bin` | Crée les symlinks `krpsim` / `krpsim_verif` dans `~/.local/bin` |
 | `make shell` | Ouvre un shell interactif dans le virtualenv |

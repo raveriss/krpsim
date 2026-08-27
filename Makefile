@@ -2,8 +2,8 @@
 # le formatage, les tests et l'exécution de krpsim
 #
 # Usage express :
-#   make                -> install + install-bin
-#   krpsim --help       -> dispo direct si ~/.local/bin est dans le PATH
+#   make                -> installe le projet dans .venv
+#   make krpsim ...     -> exécute krpsim depuis .venv
 
 .PHONY: default install install-bin uninstall-bin \
         lint format test krpsim analysis_log_krpsim krpsim_verif analysis_log_krpsim_verif analysis_log_verif graph analysis_log_gantt_project analysis_log_gantt_projet process_resources \
@@ -36,11 +36,11 @@ $(foreach arg,$(CLI_ARGS),$(eval $(arg):;@:))
 endif
 
 # ------------------------------------------------------------
-# [DEFAULT] Installation complète (deps + binaires user)
+# [DEFAULT] Installation locale au projet
 # ------------------------------------------------------------
-default: install install-bin
-	@echo "✅ Installation terminée. 'krpsim' est utilisable directement."
-	@echo "   Ex.: krpsim --help"
+default: install
+	@echo "✅ Installation terminée."
+	@echo "   Ex.: make krpsim resources/ikea 10"
 
 # ------------------------------------------------------------
 # INSTALL : uv choisit/télécharge Python, crée .venv et synchronise uv.lock.
@@ -80,7 +80,7 @@ install: ensure-uv
 # Installe les binaires dans ~/.local/bin via symlinks (idempotent)
 # ------------------------------------------------------------
 install-bin: install
-	@set -eu; \
+	@set -u; \
 	if [ ! -d "$(VENV_DIR)" ]; then \
 		echo "❌ Environnement uv introuvable. Lance d'abord: make install"; \
 		exit 1; \
@@ -94,15 +94,19 @@ install-bin: install
 			if [ -L "$$DST" ] && [ "$$(readlink -f "$$DST" 2>/dev/null || true)" = "$$SRC" ]; then \
 				echo "≡ Lien déjà correct: $$DST -> $$SRC"; \
 			else \
-				ln -sf "$$SRC" "$$DST"; \
-				echo "🔗 $$DST -> $$SRC"; \
+				if ln -sf "$$SRC" "$$DST" 2>/dev/null; then \
+					echo "🔗 $$DST -> $$SRC"; \
+				else \
+					echo "⚠️  Lien utilisateur ignoré pour '$$B' (espace insuffisant dans $$HOME)."; \
+					echo "   Le binaire reste disponible via: $(UV_RUN) $$B"; \
+				fi; \
 			fi; \
 		else \
 			echo "❌ Binaire '$$B' introuvable dans le venv: $$SRC"; \
 			exit 1; \
 		fi; \
 	done; \
-	echo "💡 Assure-toi que $$HOME/.local/bin est dans le PATH (make print-path)"
+	echo "💡 Si les liens ont été créés, assure-toi que $$HOME/.local/bin est dans le PATH (make print-path)"
 
 # Désinstalle les symlinks utilisateur si présents
 uninstall-bin:
@@ -580,7 +584,7 @@ doctor: ensure-uv
 
 help:
 	@echo "Cibles :"
-	@echo "  (défaut)      -> install + install-bin"
+	@echo "  (défaut)      -> synchronise le projet dans .venv"
 	@echo "  install       -> synchronise uv.lock dans .venv avec Python $(PINNED_PYTHON_VERSION)"
 	@echo "  install-bin   -> symlinks vers ~/.local/bin (idempotent)"
 	@echo "  uninstall-bin -> supprime les symlinks utilisateur"
