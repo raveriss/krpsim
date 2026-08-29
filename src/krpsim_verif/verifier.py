@@ -53,6 +53,17 @@ class TraceEntry:
     process: str
 
 
+@dataclass
+class _VerificationState:
+    """État mutable minimal nécessaire au rejeu d'une trace."""
+
+    stocks: dict[str, int]
+    running: list[tuple[int, int, Process]]
+    previous_cycle: int = 0
+    last_cycle: int = 0
+    sequence: int = 0
+
+
 def _serialize_config(config: Config) -> dict[str, object]:
     """Retourne une representation lisible de la configuration verifiee."""
     return {
@@ -212,6 +223,84 @@ def _complete_until(
     return last_completion
 
 
+def _resolve_process(config: Config, process_name: str) -> Process:
+    """Retourne le processus demandé ou signale une entrée inconnue."""
+
+    process = config.processes.get(process_name)
+    if process is None:
+        raise TraceError(f"unknown process '{process_name}' in trace")
+    return process
+
+
+def _missing_resources(process: Process, stocks: dict[str, int]) -> dict[str, int]:
+    """Calcule les quantités absentes pour une exécution."""
+
+    return {
+        resource: quantity - stocks.get(resource, 0)
+        for resource, quantity in process.needs.items()
+        if stocks.get(resource, 0) < quantity
+    }
+
+
+def _consume_and_schedule(
+    entry: TraceEntry,
+    process: Process,
+    state: _VerificationState,
+) -> None:
+    """Consomme les entrées et crédite ou programme les résultats."""
+
+    for resource, quantity in process.needs.items():
+        state.stocks[resource] -= quantity
+    if process.delay == 0:
+        for resource, quantity in process.results.items():
+            state.stocks[resource] = state.stocks.get(resource, 0) + quantity
+        return
+    state.sequence += 1
+    heapq.heappush(
+        state.running,
+        (entry.cycle + process.delay, state.sequence, process),
+    )
+
+
+def _verify_entry(
+    config: Config,
+    entry: TraceEntry,
+    line_number: int,
+    state: _VerificationState,
+) -> None:
+    """Valide puis applique une entrée individuelle de trace."""
+
+    if entry.cycle < state.previous_cycle:
+        raise TraceError(
+            f"line {line_number}: cycle {entry.cycle} is before "
+            f"cycle {state.previous_cycle}"
+        )
+    completion = _complete_until(entry.cycle, state.running, state.stocks)
+    state.last_cycle = max(state.last_cycle, completion)
+    process = _resolve_process(config, entry.process)
+    missing = _missing_resources(process, state.stocks)
+    if missing:
+        raise TraceError(
+            f"line {line_number} at cycle {entry.cycle}: process "
+            f"'{process.name}' lacks resources {missing}"
+        )
+    _consume_and_schedule(entry, process, state)
+    state.previous_cycle = entry.cycle
+    state.last_cycle = max(state.last_cycle, entry.cycle)
+
+
+def _build_verified_simulator(config: Config, state: _VerificationState) -> Simulator:
+    """Finalise les productions et matérialise l'état validé."""
+
+    completion = _complete_until(2**63 - 1, state.running, state.stocks)
+    state.last_cycle = max(state.last_cycle, completion)
+    sim = Simulator(config)
+    sim.stocks = state.stocks
+    sim.time = state.last_cycle
+    sim._max_time = state.last_cycle
+    return sim
+
+
 # Pour isoler verify_trace et faciliter son evolution sous tests.
 def verify_trace(config: Config, trace: list[TraceEntry]) -> Simulator:
     """Valide une trace par rapport a une configuration donnee.
@@ -253,47 +342,11 @@ def verify_trace(config: Config, trace: list[TraceEntry]) -> Simulator:
         # Pour rendre a l'appelant le resultat promis par le contrat.
         return sim
 
-    stocks = config.stocks.copy()
-    running: list[tuple[int, int, Process]] = []
-    previous_cycle = 0
-    last_cycle = 0
-    sequence = 0
+    state = _VerificationState(config.stocks.copy(), [])
     for line_number, entry in enumerate(trace, start=1):
-        if entry.cycle < previous_cycle:
-            raise TraceError(
-                f"line {line_number}: cycle {entry.cycle} is before "
-                f"cycle {previous_cycle}"
-            )
-        last_cycle = max(last_cycle, _complete_until(entry.cycle, running, stocks))
-        process = config.processes.get(entry.process)
-        if process is None:
-            raise TraceError(f"unknown process '{entry.process}' in trace")
-        missing = {
-            resource: quantity - stocks.get(resource, 0)
-            for resource, quantity in process.needs.items()
-            if stocks.get(resource, 0) < quantity
-        }
-        if missing:
-            raise TraceError(
-                f"line {line_number} at cycle {entry.cycle}: process "
-                f"'{process.name}' lacks resources {missing}"
-            )
-        for resource, quantity in process.needs.items():
-            stocks[resource] -= quantity
-        if process.delay == 0:
-            for resource, quantity in process.results.items():
-                stocks[resource] = stocks.get(resource, 0) + quantity
-        else:
-            sequence += 1
-            heapq.heappush(running, (entry.cycle + process.delay, sequence, process))
-        previous_cycle = entry.cycle
-        last_cycle = max(last_cycle, entry.cycle)
+        _verify_entry(config, entry, line_number, state)
 
-    last_cycle = max(last_cycle, _complete_until(2**63 - 1, running, stocks))
-    sim = Simulator(config)
-    sim.stocks = stocks
-    sim.time = last_cycle
-    sim._max_time = last_cycle
+    sim = _build_verified_simulator(config, state)
 
     # Pour laisser une preuve exploitable du succes de verification.
     logger.info("trace validated successfully")

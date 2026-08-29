@@ -83,7 +83,8 @@ jobs:
 
       - name: Run tests with coverage (XML at repo root)
         run: |
-          uv run --no-sync pytest --cov=src --cov-branch --cov-report=xml:coverage.xml \
+          uv run --no-sync pytest --cov=krpsim --cov=krpsim_verif --cov-branch \
+                                --cov-report=xml:coverage.xml \
                                 --junitxml=junit.xml -o junit_family=legacy
           ls -lah
           head -n 20 coverage.xml || true

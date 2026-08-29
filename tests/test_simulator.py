@@ -307,6 +307,35 @@ def test_planner_without_target_has_no_batch() -> None:
     assert planner.build_batch({"a": 1}) is None
 
 
+def test_planner_ignores_non_positive_results() -> None:
+    cfg = parser.Config(
+        stocks={"raw": 1},
+        processes={
+            "noop": parser.Process("noop", {"raw": 1}, {"goal": 0}, 1),
+        },
+        optimize=["goal"],
+    )
+
+    assert ProductionPlanner(cfg).build_batch(cfg.stocks) is None
+
+
+def test_planner_expansion_limit_stops_finite_batch_extension() -> None:
+    cfg = parser.Config(
+        stocks={"raw": 2},
+        processes={
+            "make": parser.Process("make", {"raw": 1}, {"goal": 1}, 1),
+        },
+        optimize=["goal"],
+    )
+    planner = ProductionPlanner(cfg)
+    planner._MAX_EXPANSIONS = 1
+
+    plan = planner.build_batch(cfg.stocks)
+
+    assert plan is not None
+    assert plan.counts == {"make": 1}
+
+
 def test_instant_self_producer_is_not_a_terminal_converter() -> None:
     cfg = parser.Config(
         stocks={"goal": 1},
@@ -342,3 +371,15 @@ def test_order_processes_covers_time_and_component_priorities() -> None:
     )
 
     assert [process.name for process in order_processes(cfg)] == ["fast", "slow"]
+
+
+def test_order_processes_skips_target_without_unique_producer() -> None:
+    cfg = parser.Config(
+        stocks={"raw": 1},
+        processes={
+            "make": parser.Process("make", {"raw": 1}, {"goal": 1}, 1),
+        },
+        optimize=["missing", "goal"],
+    )
+
+    assert [process.name for process in order_processes(cfg)] == ["make"]

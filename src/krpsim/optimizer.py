@@ -25,6 +25,16 @@ class BatchPlan:
     expected_gain: tuple[int, ...]
 
 
+@dataclass(frozen=True)
+class _BatchCandidate:
+    """Candidate interne évalué avant sélection du meilleur lot."""
+
+    quality: tuple[object, ...]
+    process: Process
+    state: dict[str, int]
+    counts: dict[str, int]
+
+
 class ProductionPlanner:
     """Construit des lots generiques par expansion inverse des dependances.
 
@@ -91,45 +101,85 @@ class ProductionPlanner:
 
         if self.goal is None:
             return None
-        best: (
-            tuple[tuple[object, ...], str, Process, dict[str, int], dict[str, int]]
-            | None
-        ) = None
+        candidates: list[_BatchCandidate] = []
         for process in self._producers.get(self.goal, []):
-            state = stocks.copy()
-            counts: dict[str, int] = {}
-            expansions = [0]
-            if not self._plan_process(process, state, counts, set(), expansions):
-                continue
-            gain = self._gain(stocks, state)
-            if not gain or gain[0] <= 0:
-                continue
-            material_cost = sum(
-                quantity * count
-                for name, count in counts.items()
-                for resource, quantity in self.config.processes[name].needs.items()
-                if self.config.processes[name].results.get(resource, 0) < quantity
-            )
-            duration = sum(
-                self.config.processes[name].delay * count
-                for name, count in counts.items()
-            )
-            if self.config.optimize and self.config.optimize[0] == "time":
-                quality: tuple[object, ...] = (-duration, gain, -material_cost)
-            else:
-                quality = (gain, -material_cost, -duration)
-            candidate = (quality, process.name, process, state, counts)
-            if (
-                best is None
-                or quality > best[0]
-                or (quality == best[0] and process.name < best[1])
-            ):
-                best = candidate
+            candidate = self._build_candidate(process, stocks)
+            if candidate is not None:
+                candidates.append(candidate)
+        best = self._select_candidate(candidates)
         if best is None:
             return None
-        _, _, process, state, counts = best
-        self._extend_finite_batch(process, stocks, state, counts)
-        return BatchPlan(counts=counts, expected_gain=self._gain(stocks, state))
+        self._extend_finite_batch(best.process, stocks, best.state, best.counts)
+        return BatchPlan(
+            counts=best.counts,
+            expected_gain=self._gain(stocks, best.state),
+        )
+
+    def _build_candidate(
+        self,
+        process: Process,
+        stocks: dict[str, int],
+    ) -> _BatchCandidate | None:
+        """Construit et évalue un candidat de production."""
+
+        state = stocks.copy()
+        counts: dict[str, int] = {}
+        if not self._plan_process(process, state, counts, set(), [0]):
+            return None
+        gain = self._gain(stocks, state)
+        if not gain or gain[0] <= 0:
+            return None
+        material_cost = self._material_cost(counts)
+        duration = self._batch_duration(counts)
+        quality = self._candidate_quality(gain, material_cost, duration)
+        return _BatchCandidate(quality, process, state, counts)
+
+    def _material_cost(self, counts: dict[str, int]) -> int:
+        """Calcule le coût des ressources réellement consommées."""
+
+        return sum(
+            quantity * count
+            for name, count in counts.items()
+            for resource, quantity in self.config.processes[name].needs.items()
+            if self.config.processes[name].results.get(resource, 0) < quantity
+        )
+
+    def _batch_duration(self, counts: dict[str, int]) -> int:
+        """Calcule la durée cumulée d'un lot candidat."""
+
+        return sum(
+            self.config.processes[name].delay * count for name, count in counts.items()
+        )
+
+    def _candidate_quality(
+        self,
+        gain: tuple[int, ...],
+        material_cost: int,
+        duration: int,
+    ) -> tuple[object, ...]:
+        """Construit la clé de comparaison adaptée à l'objectif."""
+
+        if self.config.optimize and self.config.optimize[0] == "time":
+            return (-duration, gain, -material_cost)
+        return (gain, -material_cost, -duration)
+
+    def _select_candidate(
+        self,
+        candidates: list[_BatchCandidate],
+    ) -> _BatchCandidate | None:
+        """Sélectionne la meilleure qualité, puis le nom le plus petit."""
+
+        if not candidates:
+            return None
+        best_quality = max(candidate.quality for candidate in candidates)
+        return min(
+            (
+                candidate
+                for candidate in candidates
+                if candidate.quality == best_quality
+            ),
+            key=lambda candidate: candidate.process.name,
+        )
 
     def _extend_finite_batch(
         self,
@@ -167,9 +217,11 @@ class ProductionPlanner:
     def _gain(self, before: dict[str, int], after: dict[str, int]) -> tuple[int, ...]:
         """Calcule le gain lexicographique d'un plan candidat."""
 
-        goal = self.goal
-        assert goal is not None
-        resources = (goal,) if self.terminal is not None else self.targets
+        resources = (
+            (next(iter(self.terminal.needs)),)
+            if self.terminal is not None
+            else self.targets
+        )
         return tuple(after.get(name, 0) - before.get(name, 0) for name in resources)
 
     def _ranked_producers(self, resource: str) -> list[Process]:

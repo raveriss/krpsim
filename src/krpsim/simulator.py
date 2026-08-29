@@ -190,14 +190,33 @@ class Simulator:
     def _start_objective_processes(self) -> tuple[bool, bool]:
         """Lance le lot objectif courant avec toutes ses multiplicités."""
 
-        if not self._plan_counts and not self._running:
-            if self.time >= self._max_time or self._planning_finished:
-                return self._launch_terminal()
-            plan = self._planner.build_batch(self.stocks)
-            if plan is None:
-                self._planning_finished = True
-                return self._launch_terminal()
-            self._plan_counts = plan.counts.copy()
+        terminal_result = self._prepare_objective_plan()
+        if terminal_result is not None:
+            return terminal_result
+
+        started, started_nonzero = self._launch_planned_processes()
+        if self._plan_is_stalled(started):
+            self._plan_counts.clear()
+            self._planning_finished = True
+            return self._launch_terminal()
+        return started, started_nonzero
+
+    def _prepare_objective_plan(self) -> tuple[bool, bool] | None:
+        """Prépare un nouveau lot ou retourne la conversion terminale."""
+
+        if self._plan_counts or self._running:
+            return None
+        if self.time >= self._max_time or self._planning_finished:
+            return self._launch_terminal()
+        plan = self._planner.build_batch(self.stocks)
+        if plan is None:
+            self._planning_finished = True
+            return self._launch_terminal()
+        self._plan_counts = plan.counts.copy()
+        return None
+
+    def _launch_planned_processes(self) -> tuple[bool, bool]:
+        """Lance autant d'instances que possible du lot préparé."""
 
         started = False
         started_nonzero = False
@@ -209,12 +228,12 @@ class Simulator:
                 started_nonzero = started_nonzero or process.delay > 0
             if self._plan_counts[name] == 0:
                 del self._plan_counts[name]
-
-        if not started and not self._running and self._plan_counts:
-            self._plan_counts.clear()
-            self._planning_finished = True
-            return self._launch_terminal()
         return started, started_nonzero
+
+    def _plan_is_stalled(self, started: bool) -> bool:
+        """Indique qu'un lot restant ne pourra plus progresser."""
+
+        return not started and not self._running and bool(self._plan_counts)
 
     def _start_exhaustive_processes(self) -> tuple[bool, bool]:
         """Epuise equitablement les processus sans objectif explicite."""
