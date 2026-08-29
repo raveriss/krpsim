@@ -133,8 +133,27 @@ make krpsim_verif resources/ikea trace_ikea.txt
 ## 📝 Formats d'entrée
 
 Les fichiers de configuration décrivent les stocks initiaux puis les processus sous forme `name:(need):(result):delay`.
-La durée `delay` d'un processus doit être strictement positive (`>= 1`).
-Une durée `:0` est rejetée avec un message explicite indiquant comment corriger la ligne.
+La durée `delay` d'un processus doit être positive ou nulle. Une durée `:0`
+décrit un processus instantané : ses besoins sont consommés et ses résultats
+sont crédités au même cycle.
+
+### Ordonnancement et optimisation
+
+L'ordonnanceur construit le graphe inverse des ressources à partir des cibles
+`optimize`. Il compare les producteurs selon le gain lexicographique attendu,
+la consommation de ressources et la durée, puis développe leurs dépendances en
+lots. Les stocks intermédiaires, sous-produits et ressources réutilisables sont
+pris en compte sans dépendre des noms présents dans la configuration.
+
+Un même processus peut être lancé plusieurs fois au même cycle. Les processus
+instantanés sont exécutés jusqu'à la multiplicité utile, avec une protection
+contre les boucles instantanées sans progression. Lorsqu'un convertisseur final
+instantané est détecté, sa ressource d'entrée reste disponible comme fonds de
+roulement pendant la production et n'est convertie qu'à la fin.
+
+Le vérificateur rejoue directement la trace fournie : il accepte donc tout
+ordonnancement valide, y compris les répétitions au même cycle et les solutions
+différentes de celle choisie par `krpsim`.
 
 Exemple (`resources/ikea`):
 

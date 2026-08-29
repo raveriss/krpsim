@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Iterator
 from pathlib import Path
 
 from krpsim import parser as parser_mod
@@ -33,51 +34,52 @@ def _serialize_config(config: Config) -> dict[str, object]:
     }
 
 
-def parse_trace(trace_path: Path) -> list[tuple[int, str]]:
-    """Parse trace lines in the form ``cycle:process``."""
+def iter_trace(trace_path: Path) -> Iterator[tuple[int, str]]:
+    """Yield trace entries without loading the complete file in memory."""
     analysis_logger = get_active_analysis_logger()
-    scope = "build_graph_config.parse_trace"
+    scope = "build_graph_config.iter_trace"
     analysis_logger.log_header("TRACE PARSING", scope=scope)
     analysis_logger.log_key_value("TRACE_PATH", str(trace_path), scope=scope)
-    raw_lines = trace_path.read_text(encoding="utf-8").splitlines()
-    analysis_logger.log_key_value("RAW_TRACE_LINES", raw_lines, scope=scope)
-    entries: list[tuple[int, str]] = []
-    for index, raw_line in enumerate(raw_lines, start=1):
-        line = raw_line.strip()
-        analysis_logger.log_key_value(
-            "TRACE_LINE_READ",
-            {"line_number": index, "raw": raw_line, "normalized": line},
-            scope=scope,
-        )
-        if not line or line.startswith("#"):
-            analysis_logger.log_step(
-                "TRACE_LINE_SKIPPED",
-                {
-                    "line_number": index,
-                    "reason": "empty_or_comment",
-                },
+    with trace_path.open("r", encoding="utf-8") as trace_file:
+        for index, raw_line in enumerate(trace_file, start=1):
+            line = raw_line.strip()
+            analysis_logger.log_key_value(
+                "TRACE_LINE_READ",
+                {"line_number": index, "raw": raw_line, "normalized": line},
                 scope=scope,
             )
-            continue
-        cycle_text, sep, process_name = line.partition(":")
-        process_name = process_name.strip()
-        if sep != ":" or not cycle_text.isdigit() or not process_name:
-            analysis_logger.log_step(
-                "TRACE_LINE_ERROR",
-                {
-                    "line_number": index,
-                    "cycle": cycle_text,
-                    "separator": sep,
-                    "process": process_name,
-                },
-                scope=scope,
-            )
-            raise ValueError(f"invalid trace line {index}: '{raw_line}'")
-        entry = (int(cycle_text), process_name)
-        analysis_logger.log_key_value("TRACE_ENTRY_PARSED", entry, scope=scope)
-        entries.append(entry)
-    analysis_logger.log_key_value("PARSED_TRACE_ENTRIES", entries, scope=scope)
-    return entries
+            if not line or line.startswith("#"):
+                analysis_logger.log_step(
+                    "TRACE_LINE_SKIPPED",
+                    {
+                        "line_number": index,
+                        "reason": "empty_or_comment",
+                    },
+                    scope=scope,
+                )
+                continue
+            cycle_text, sep, process_name = line.partition(":")
+            process_name = process_name.strip()
+            if sep != ":" or not cycle_text.isdigit() or not process_name:
+                analysis_logger.log_step(
+                    "TRACE_LINE_ERROR",
+                    {
+                        "line_number": index,
+                        "cycle": cycle_text,
+                        "separator": sep,
+                        "process": process_name,
+                    },
+                    scope=scope,
+                )
+                raise ValueError(f"invalid trace line {index}: '{raw_line.rstrip()}'")
+            entry = (int(cycle_text), process_name)
+            analysis_logger.log_key_value("TRACE_ENTRY_PARSED", entry, scope=scope)
+            yield entry
+
+
+def parse_trace(trace_path: Path) -> list[tuple[int, str]]:
+    """Parse a trace into a list for callers that need random access."""
+    return list(iter_trace(trace_path))
 
 
 def build_payload(config_path: Path, trace_path: Path) -> dict[str, object]:
@@ -93,11 +95,9 @@ def build_payload(config_path: Path, trace_path: Path) -> dict[str, object]:
         _serialize_config(config),
         scope=scope,
     )
-    trace_entries = parse_trace(trace_path)
-    analysis_logger.log_key_value("TRACE_ENTRIES", trace_entries, scope=scope)
-
-    tasks: list[dict[str, object]] = []
-    for start, process_name in trace_entries:
+    grouped_tasks: dict[tuple[int, str, int], int] = {}
+    event_count = 0
+    for start, process_name in iter_trace(trace_path):
         process = config.processes.get(process_name)
         analysis_logger.log_key_value(
             "PROCESS_LOOKUP",
@@ -116,13 +116,24 @@ def build_payload(config_path: Path, trace_path: Path) -> dict[str, object]:
                 scope=scope,
             )
             raise ValueError(f"unknown process in trace: '{process_name}'")
-        task = {
+        key = (start, process_name, process.delay)
+        grouped_tasks[key] = grouped_tasks.get(key, 0) + 1
+        event_count += 1
+
+    tasks = [
+        {
             "Task": process_name,
             "Start": start,
-            "Duration": process.delay,
+            "Duration": duration,
+            "Count": count,
         }
-        analysis_logger.log_key_value("TASK_CREATED", task, scope=scope)
-        tasks.append(task)
+        for (start, process_name, duration), count in grouped_tasks.items()
+    ]
+    analysis_logger.log_key_value(
+        "TRACE_SUMMARY",
+        {"events": event_count, "groups": len(tasks)},
+        scope=scope,
+    )
 
     config_stem = config_path.stem if config_path.stem else config_path.name
     payload: dict[str, object] = {
@@ -130,6 +141,8 @@ def build_payload(config_path: Path, trace_path: Path) -> dict[str, object]:
         "tasks": tasks,
         "config_file": str(config_path),
         "trace_file": str(trace_path),
+        "event_count": event_count,
+        "group_count": len(tasks),
     }
     analysis_logger.log_key_value("PAYLOAD", payload, scope=scope)
     return payload
@@ -179,14 +192,11 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     payload = build_payload(config_path, trace_path)
-    output_text = json.dumps(payload, indent=2, ensure_ascii=False) + "\n"
     analysis_logger.log_header("OUTPUT WRITE", scope=scope)
     analysis_logger.log_key_value("OUTPUT_PATH", str(output_path), scope=scope)
-    analysis_logger.log_key_value("OUTPUT_TEXT", output_text, scope=scope)
-    output_path.write_text(
-        output_text,
-        encoding="utf-8",
-    )
+    with output_path.open("w", encoding="utf-8") as output_file:
+        json.dump(payload, output_file, ensure_ascii=False, separators=(",", ":"))
+        output_file.write("\n")
     analysis_logger.log_step("WRITE_DONE", str(output_path), scope=scope)
     analysis_logger.log_key_value("EXIT_CODE", 0, scope=scope)
     print(f"[GRAPH_CONFIG] Fichier genere: {output_path}")

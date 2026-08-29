@@ -138,19 +138,16 @@ def save_trace(trace: Iterable[tuple[int, str]], path: Path) -> None:
     Contrat:
         Le fichier doit representer un etat durable avant retour de fonction.
     """
-    # Pour reutiliser un format unique entre affichage et persistance.
-    lines = format_trace(trace)
-    # Pour distinguer une execution vide d'une sortie absente.
-    if not lines:
-        # Pour differencier une trace vide valide d'un fichier corrompu.
-        lines.append(EMPTY_TRACE_MSG)
     # Pour garantir la fermeture de ressource meme en cas d'erreur.
     with path.open("w", encoding="utf-8") as fh:
-        # Pour valider chaque ligne avec le meme niveau d'exigence.
-        for line in lines:
+        wrote_event = False
+        for cycle, name in trace:
             # Pour garantir une trace lisible ligne par ligne par le
             # verificateur.
-            fh.write(line + "\n")
+            fh.write(f"{cycle}:{name}\n")
+            wrote_event = True
+        if not wrote_event:
+            fh.write(EMPTY_TRACE_MSG + "\n")
         # Pour vider le buffer Python avant synchronisation disque.
         fh.flush()
         # Pour reduire le risque de perte en cas d'arret brutal.

@@ -28,9 +28,30 @@ def test_verify_trace_error(tmp_path: Path) -> None:
 
 def test_verify_trace_mismatch(tmp_path: Path) -> None:
     cfg = parser.parse_file(Path("resources/simple"))
-    wrong = [TraceEntry(1, "achat_materiel")]
+    wrong = [
+        TraceEntry(0, "achat_materiel"),
+        TraceEntry(0, "achat_materiel"),
+    ]
     with pytest.raises(TraceError):
         verify_trace(cfg, wrong)
+
+
+def test_verify_trace_accepts_alternative_start_cycle() -> None:
+    cfg = parser.parse_file(Path("resources/simple"))
+    sim = verify_trace(cfg, [TraceEntry(1, "achat_materiel")])
+
+    assert sim.stocks["materiel"] == 1
+    assert sim.time == 11
+
+
+def test_verify_trace_accepts_repeated_process_in_same_cycle() -> None:
+    cfg = parser.Config(
+        stocks={"raw": 2},
+        processes={"make": parser.Process("make", {"raw": 1}, {"done": 1}, 0)},
+    )
+    sim = verify_trace(cfg, [TraceEntry(0, "make"), TraceEntry(0, "make")])
+
+    assert sim.stocks == {"raw": 0, "done": 2}
 
 
 def test_verify_trace_empty(cfg_path: Path = Path("resources/simple")) -> None:
@@ -52,6 +73,23 @@ def test_parse_trace_comment(tmp_path: Path) -> None:
     file = tmp_path / "trace.txt"
     file.write_text("# comment\n")
     assert parse_trace(file) == []
+
+
+def test_parse_trace_accepts_crlf(tmp_path: Path) -> None:
+    file = tmp_path / "trace.txt"
+    file.write_bytes(b"0:proc\r\n")
+
+    assert parse_trace(file) == [TraceEntry(0, "proc")]
+
+
+def test_verify_trace_rejects_decreasing_cycles() -> None:
+    cfg = parser.Config(
+        stocks={"raw": 2},
+        processes={"make": parser.Process("make", {"raw": 1}, {"done": 1}, 0)},
+    )
+
+    with pytest.raises(TraceError, match="is before"):
+        verify_trace(cfg, [TraceEntry(1, "make"), TraceEntry(0, "make")])
 
 
 def test_verify_empty_trace_with_optimize(tmp_path: Path) -> None:

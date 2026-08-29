@@ -14,7 +14,7 @@ import logging
 from dataclasses import dataclass
 
 # Pour limiter le couplage aux composants internes necessaires.
-from .optimizer import order_processes
+from .optimizer import ProductionPlanner, order_processes
 
 # Pour limiter le couplage aux composants internes necessaires.
 from .parser import Config, Process
@@ -84,6 +84,12 @@ class Simulator:
         self.deadlock = False
         # Pour imposer une borne explicite avant tout lancement de processus.
         self._max_time = 0
+        # Pour construire les lots a partir du graphe de dependances.
+        self._planner = ProductionPlanner(config)
+        # Pour conserver les multiplicités restant a lancer dans le lot actif.
+        self._plan_counts: dict[str, int] = {}
+        # Pour ne pas reconstruire indefiniment un plan devenu impossible.
+        self._planning_finished = False
 
     # Pour isoler _complete_running et faciliter son evolution sous tests.
     def _complete_running(self) -> None:
@@ -124,34 +130,6 @@ class Simulator:
             # Pour retirer seulement les processus reellement termines.
             self._running.remove(rp)
 
-    def _projected_stock(self, resource: str) -> int:
-        """Retourne le stock disponible en incluant les productions en cours."""
-        projected = self.stocks.get(resource, 0)
-        for running in self._running:
-            projected += running.process.results.get(resource, 0)
-        return projected
-
-    def _target_need_cap_reached(self, process: Process) -> bool:
-        """Indique si un processus surproduirait un composant de la cible."""
-        target = self._single_target()
-        if not target:
-            return False
-
-        target_process = self._target_process(target)
-        if target_process is None or process is target_process:
-            return False
-
-        produced_components = [
-            resource for resource in process.results if resource in target_process.needs
-        ]
-        if not produced_components:
-            return False
-
-        return all(
-            self._projected_stock(resource) >= target_process.needs[resource]
-            for resource in produced_components
-        )
-
     # Pour isoler _start_processes et faciliter son evolution sous tests.
     def _start_processes(self) -> tuple[bool, bool]:
         """Demarre tous les processus executables au cycle courant.
@@ -167,57 +145,97 @@ class Simulator:
             Aucune exception n'est levee explicitement.
 
         Contrat:
-            Chaque processus demarre au plus une fois par cycle courant.
+            Un processus peut demarrer plusieurs fois pendant le meme cycle,
+            tant que les stocks et la borne temporelle le permettent.
         """
-        # Pour expliciter l'etat de progression de la simulation.
+        if self._planner.enabled:
+            return self._start_objective_processes()
+        return self._start_exhaustive_processes()
+
+    def _can_start(self, process: Process) -> bool:
+        """Verifie stocks et date de fin avant un lancement."""
+
+        return self.time + process.delay <= self._max_time and all(
+            self.stocks.get(resource, 0) >= quantity
+            for resource, quantity in process.needs.items()
+        )
+
+    def _launch(self, process: Process) -> bool:
+        """Consomme, programme la production et ajoute une entree de trace."""
+
+        if not self._can_start(process):
+            return False
+        for resource, quantity in process.needs.items():
+            self.stocks[resource] -= quantity
+        if process.delay == 0:
+            for resource, quantity in process.results.items():
+                self.stocks[resource] = self.stocks.get(resource, 0) + quantity
+        else:
+            self._running.append(_RunningProcess(process, process.delay))
+        self.trace.append((self.time, process.name))
+        logging.getLogger(__name__).info("%d:%s", self.time, process.name)
+        return True
+
+    def _launch_terminal(self) -> tuple[bool, bool]:
+        """Sature le convertisseur final instantane au cycle courant."""
+
+        terminal = self._planner.terminal
+        count = self._planner.terminal_count(self.stocks)
+        if terminal is None or count == 0:
+            return False, False
+        for _ in range(count):
+            self._launch(terminal)
+        return True, False
+
+    def _start_objective_processes(self) -> tuple[bool, bool]:
+        """Lance le lot objectif courant avec toutes ses multiplicités."""
+
+        if not self._plan_counts and not self._running:
+            if self.time >= self._max_time or self._planning_finished:
+                return self._launch_terminal()
+            plan = self._planner.build_batch(self.stocks)
+            if plan is None:
+                self._planning_finished = True
+                return self._launch_terminal()
+            self._plan_counts = plan.counts.copy()
+
         started = False
-        # Pour expliciter l'etat de progression de la simulation.
         started_nonzero = False
-        # Pour garder un canal de diagnostic coherent dans tout le module.
-        logger = logging.getLogger(__name__)
-        # Pour appliquer uniformement la regle a chaque element concerne.
-        for process in order_processes(self.config):
-            if self._target_need_cap_reached(process):
-                continue
-            # Pour expliciter une decision qui impacte le flux metier.
-            if self.time + process.delay > self._max_time:
-                # Pour ignorer ce cas et laisser la boucle traiter les suivants.
-                continue
-            # Pour expliciter une decision qui impacte le flux metier.
-            if all(
-                # Pour verifier tous les prerequis avant de consommer des
-                # ressources.
-                self.stocks.get(name, 0) >= qty
-                for name, qty in process.needs.items()
-                # Pour ouvrir un bloc qui porte une contrainte locale explicite.
-            ):
-                # Pour appliquer uniformement la regle a chaque element
-                # concerne.
-                for name, qty in process.needs.items():
-                    # Pour consommer les besoins avant tout effet de production.
-                    self.stocks[name] -= qty
-                # Pour proteger un invariant de comparaison critique ici.
-                if process.delay == 0:
-                    # Pour appliquer uniformement la regle a chaque element
-                    # concerne.
-                    for name, qty in process.results.items():
-                        # Pour crediter immediatement les processus sans delai.
-                        self.stocks[name] = self.stocks.get(name, 0) + qty
-                # Pour couvrir explicitement le cas complementaire du contrat.
-                else:
-                    # Pour conserver les processus differes dans un etat
-                    # separe du flux instantane.
-                    self._running.append(_RunningProcess(process, process.delay))
-                    # Pour expliciter l'etat de progression de la simulation.
-                    started_nonzero = True
-                # Pour enregistrer chaque demarrage dans l'ordre canonique.
-                self.trace.append((self.time, process.name))
-                # Pour offrir un journal cycle/process exploitable en mode
-                # verbeux.
-                logger.info("%d:%s", self.time, process.name)
-                # Pour expliciter l'etat de progression de la simulation.
+        for name in list(self._plan_counts):
+            process = self.config.processes[name]
+            while self._plan_counts[name] > 0 and self._launch(process):
+                self._plan_counts[name] -= 1
                 started = True
-        # Pour rendre a l'appelant le resultat promis par le contrat.
+                started_nonzero = started_nonzero or process.delay > 0
+            if self._plan_counts[name] == 0:
+                del self._plan_counts[name]
+
+        if not started and not self._running and self._plan_counts:
+            self._plan_counts.clear()
+            self._planning_finished = True
+            return self._launch_terminal()
+        return started, started_nonzero
+
+    def _start_exhaustive_processes(self) -> tuple[bool, bool]:
+        """Epuise equitablement les processus sans objectif explicite."""
+
+        started = False
+        started_nonzero = False
+        seen_states: set[tuple[tuple[str, int], ...]] = set()
+        while True:
+            signature = tuple(sorted(self.stocks.items()))
+            if signature in seen_states:
+                break
+            seen_states.add(signature)
+            pass_started = False
+            for process in order_processes(self.config):
+                if not self._launch(process):
+                    continue
+                pass_started = True
+                started = True
+                started_nonzero = started_nonzero or process.delay > 0
+            if not pass_started:
+                break
         return started, started_nonzero
 
     # Pour isoler step et faciliter son evolution sous tests.
@@ -237,14 +255,12 @@ class Simulator:
             Le temps n'avance que si un travail est en cours ou demarre,
             afin d'eviter des cycles vides artificiels.
         """
-        # Pour garder un etat transitoire explicite et eviter les effets caches.
-        running_before = bool(self._running)
         # Pour appliquer les productions arrivees a echeance avant demarrage.
         self._complete_running()
         # Pour separer clairement demarrages instantanes et differes.
         started, started_nonzero = self._start_processes()
         # Pour expliciter l'etat de progression de la simulation.
-        advance = running_before or bool(self._running) or started_nonzero
+        advance = bool(self._running) or started_nonzero
         # Pour expliciter une decision qui impacte le flux metier.
         if advance:
             # Pour avancer l'horloge uniquement quand un travail existe.

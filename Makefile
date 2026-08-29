@@ -62,6 +62,21 @@ install: ensure-uv
 		echo "# Installation de Python $(PINNED_PYTHON_VERSION) avec uv"; \
 		$(UV_BIN) python install "$(PINNED_PYTHON_VERSION)"; \
 	fi
+	@set -eu; \
+	if [ -e "$(VENV_DIR)" ] && [ ! -d "$(VENV_DIR)" ]; then \
+		echo "❌ $(VENV_DIR) existe mais n'est pas un répertoire."; \
+		echo "   Action: déplace ou supprime ce fichier, puis relance make."; \
+		exit 1; \
+	fi; \
+	if [ -L "$(VENV_DIR)" ] && [ ! -x "$(VENV_PYTHON)" ]; then \
+		echo "❌ $(VENV_DIR) est un lien symbolique vers un environnement invalide."; \
+		echo "   Action: corrige ou supprime ce lien, puis relance make."; \
+		exit 1; \
+	fi; \
+	if [ -d "$(VENV_DIR)" ] && [ ! -x "$(VENV_PYTHON)" ]; then \
+		echo "# Réparation de l'environnement Python incomplet: $(VENV_DIR)"; \
+		$(UV_BIN) venv --clear --force --python "$(PINNED_PYTHON_VERSION)" "$(VENV_DIR)"; \
+	fi
 	@UV_PROJECT_ENVIRONMENT="$(PROJECT_VENV)" $(UV_BIN) sync --locked --python "$(PINNED_PYTHON_VERSION)" --link-mode "$(UV_LINK_MODE)"
 	@set -eu; \
 	if [ ! -x "$(VENV_PYTHON)" ]; then \

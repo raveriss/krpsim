@@ -10,6 +10,7 @@ matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.axes import Axes  # noqa: E402
+from PIL import Image  # noqa: E402
 
 import gantt_project.build_graph_config as graph_builder  # noqa: E402
 import gantt_project.gantt as gantt  # noqa: E402
@@ -41,6 +42,32 @@ def test_build_graph_config_accepts_comment_trace(tmp_path: Path) -> None:
 
     payload = graph_builder.build_payload(config_path, trace_path)
     assert payload["tasks"] == []
+    assert payload["event_count"] == 0
+
+
+def test_build_graph_config_aggregates_identical_events(tmp_path: Path) -> None:
+    config_path = tmp_path / "cfg.txt"
+    trace_path = tmp_path / "trace.txt"
+    _write_config(
+        config_path,
+        "\n".join(
+            [
+                "start:3",
+                "finish:(start:1):(done:1):0",
+                "optimize:(done)",
+            ]
+        )
+        + "\n",
+    )
+    trace_path.write_text("0:finish\n0:finish\n0:finish\n", encoding="utf-8")
+
+    payload = graph_builder.build_payload(config_path, trace_path)
+
+    assert payload["event_count"] == 3
+    assert payload["group_count"] == 1
+    assert payload["tasks"] == [
+        {"Task": "finish", "Start": 0, "Duration": 0, "Count": 3}
+    ]
 
 
 def test_gantt_load_config_accepts_zero_duration(tmp_path: Path) -> None:
@@ -57,7 +84,31 @@ def test_gantt_load_config_accepts_zero_duration(tmp_path: Path) -> None:
 
     title, tasks = gantt.load_config(graph_path)
     assert title == "zero-delay"
-    assert tasks == [{"Task": "instant", "Start": 0, "Duration": 0, "Progress": 100.0}]
+    assert tasks == [
+        {
+            "Task": "instant",
+            "Start": 0,
+            "Duration": 0,
+            "Progress": 100.0,
+            "Count": 1,
+        }
+    ]
+
+
+def test_gantt_load_config_rejects_invalid_count(tmp_path: Path) -> None:
+    graph_path = tmp_path / "graph.json"
+    graph_path.write_text(
+        json.dumps(
+            {
+                "title": "bad-count",
+                "tasks": [{"Task": "instant", "Start": 0, "Duration": 0, "Count": 0}],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="invalid 'Count'"):
+        gantt.load_config(graph_path)
 
 
 def test_gantt_render_chart_handles_zero_and_empty_tasks(
@@ -81,6 +132,8 @@ def test_gantt_render_chart_writes_output_file(tmp_path: Path) -> None:
     assert saved_path == output_path
     assert output_path.is_file()
     assert output_path.stat().st_size > 0
+    with Image.open(output_path) as image:
+        assert image.size == (gantt.DESKTOP_WIDTH_PX, gantt.DESKTOP_HEIGHT_PX)
 
 
 def test_gantt_default_output_path_from_graph_config() -> None:
@@ -90,7 +143,13 @@ def test_gantt_default_output_path_from_graph_config() -> None:
 
 
 def test_gantt_figure_height_is_capped() -> None:
-    assert gantt._figure_height(1) == 3.0
+    assert gantt._figure_height(1) == gantt.DESKTOP_FIGURE_HEIGHT
+    assert gantt._figure_height(gantt.DESKTOP_LANE_CAPACITY) == (
+        gantt.DESKTOP_FIGURE_HEIGHT
+    )
+    assert gantt._figure_height(gantt.DESKTOP_LANE_CAPACITY + 1) > (
+        gantt.DESKTOP_FIGURE_HEIGHT
+    )
     assert gantt._figure_height(10_000) == gantt.MAX_FIGURE_HEIGHT
 
 
@@ -125,6 +184,42 @@ def test_gantt_assign_tracks_separates_overlapping_repetitions() -> None:
 
     assert [bar.track_index for bar in bars] == [0, 1, 2]
     assert [bar.track_count for bar in bars] == [3, 3, 3]
+
+
+def test_gantt_assign_tracks_reuses_track_for_instant_events() -> None:
+    bars = gantt._build_bars(
+        [{"Task": "instant", "Start": index, "Duration": 0} for index in range(20_000)]
+    )
+
+    gantt._assign_tracks(bars)
+
+    assert {bar.track_index for bar in bars} == {0}
+    assert {bar.track_count for bar in bars} == {1}
+
+
+def test_gantt_compacts_dense_timeline_and_preserves_event_count() -> None:
+    tasks: list[gantt.TaskPayload] = [
+        {
+            "Task": f"process_{index % 2}",
+            "Start": index,
+            "Duration": 1,
+            "Count": 3,
+        }
+        for index in range(100)
+    ]
+
+    compacted, was_compacted = gantt._compact_tasks(tasks, max_bars=10)
+
+    assert was_compacted is True
+    assert len(compacted) <= 10
+    assert sum(int(task["Count"]) for task in compacted) == 300
+
+
+def test_gantt_adapts_ticks_to_long_timeline() -> None:
+    major, minor = gantt._tick_steps(50_000)
+
+    assert major >= 2_500
+    assert minor >= 500
 
 
 def test_gantt_render_repeated_task_uses_same_color(
@@ -258,3 +353,36 @@ def test_gantt_render_single_instant_task_keeps_timeline_span(
     x_min, x_max = _current_axes().get_xlim()
     assert x_min == 0
     assert x_max >= gantt.MIN_TIMELINE_SPAN
+
+
+def test_gantt_render_instant_multiplicity_as_one_marker(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(plt, "show", lambda: None)
+    gantt.render_chart(
+        "instant-count",
+        [{"Task": "instant", "Start": 5, "Duration": 0, "Count": 1_000_000}],
+    )
+
+    ax = _current_axes()
+    assert len(ax.patches) == 0
+    assert len(ax.collections) == 1
+    assert "×1 000 000" in {text.get_text() for text in ax.texts}
+
+
+def test_gantt_render_shows_one_count_per_process_without_progress_overlap(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(plt, "show", lambda: None)
+    gantt.render_chart(
+        "deduplicated-labels",
+        [
+            {"Task": "repeat", "Start": 0, "Duration": 20, "Count": 10},
+            {"Task": "repeat", "Start": 30, "Duration": 20, "Count": 10},
+            {"Task": "repeat", "Start": 60, "Duration": 20, "Count": 10},
+        ],
+    )
+
+    labels = [text.get_text() for text in _current_axes().texts]
+    assert labels.count("×10") == 1
+    assert "100%" not in labels

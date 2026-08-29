@@ -92,8 +92,8 @@ def test_internal_parser_functions(tmp_path):
         parser._parse_stock("a:-1")
     with pytest.raises(parser.ParseError):
         parser._parse_process("bad")
-    with pytest.raises(parser.ParseError, match="Delay must be >= 1 cycle"):
-        parser._parse_process("instant:(a:1):(b:1):0")
+    instant = parser._parse_process("instant:(a:1):(b:1):0")
+    assert instant.delay == 0
     with pytest.raises(parser.ParseError):
         parser._parse_optimize("bad")
 
@@ -204,9 +204,6 @@ def test_parse_unknown_resource(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize("resource_file", ["delay0", "pomme"])
-def test_parse_rejects_zero_delay_processes(resource_file: str) -> None:
-    with pytest.raises(
-        parser.ParseError,
-        match="Delay must be >= 1 cycle",
-    ):
-        parser.parse_file(Path("resources") / resource_file)
+def test_parse_accepts_zero_delay_processes(resource_file: str) -> None:
+    config = parser.parse_file(Path("resources") / resource_file)
+    assert any(process.delay == 0 for process in config.processes.values())

@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import argparse
+import heapq
 import json
+import math
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -25,6 +27,14 @@ from logger.analysis_log_gantt_project import (
 )
 
 ZERO_DURATION_WIDTH = 0.4
+MAX_RENDERED_BARS = 5_000
+OUTPUT_DPI = 160
+DESKTOP_WIDTH_PX = 1_920
+DESKTOP_HEIGHT_PX = 1_080
+FIGURE_WIDTH = DESKTOP_WIDTH_PX / OUTPUT_DPI
+DESKTOP_FIGURE_HEIGHT = DESKTOP_HEIGHT_PX / OUTPUT_DPI
+DESKTOP_LANE_CAPACITY = 15
+EXTRA_LANE_HEIGHT = 0.42
 MAX_FIGURE_HEIGHT = 24.0
 MAJOR_TICK_STEP = 10
 MINOR_TICK_STEP = 1
@@ -56,6 +66,7 @@ class _TaskBar:
     display_duration: float
     end: float
     progress: float
+    count: int = 1
     track_index: int = 0
     track_count: int = 1
 
@@ -137,6 +148,7 @@ def load_config(path: Path) -> tuple[str, list[TaskPayload]]:
         start = item.get("Start")
         duration = item.get("Duration")
         progress = item.get("Progress", 100)
+        count = item.get("Count", 1)
         if not isinstance(name, str) or not name:
             analysis_logger.log_step(
                 "TASK_SCHEMA_ERROR",
@@ -165,11 +177,19 @@ def load_config(path: Path) -> tuple[str, list[TaskPayload]]:
                 scope=scope,
             )
             raise ValueError(f"task #{index} has invalid 'Progress' value")
+        if not isinstance(count, int) or isinstance(count, bool) or count <= 0:
+            analysis_logger.log_step(
+                "TASK_SCHEMA_ERROR",
+                {"index": index, "field": "Count", "value": count},
+                scope=scope,
+            )
+            raise ValueError(f"task #{index} has invalid 'Count' value")
         normalized_task: TaskPayload = {
             "Task": name,
             "Start": start,
             "Duration": duration,
             "Progress": float(progress),
+            "Count": count,
         }
         analysis_logger.log_key_value(
             "TASK_NORMALIZED",
@@ -191,14 +211,16 @@ def _display_duration(duration: int) -> float:
 
 
 def _figure_height(task_count: int) -> float:
-    """Compute a bounded figure height."""
-    raw_height = max(3.0, task_count * 0.6 + 1.5)
+    """Compute a 1080p-first height that grows for additional process lanes."""
+    extra_lanes = max(0, task_count - DESKTOP_LANE_CAPACITY)
+    raw_height = DESKTOP_FIGURE_HEIGHT + extra_lanes * EXTRA_LANE_HEIGHT
     result = min(MAX_FIGURE_HEIGHT, raw_height)
     get_active_analysis_logger().log_calculation(
         "FIGURE_HEIGHT",
         [
-            "raw_height = max(3.0, task_count * 0.6 + 1.5)",
+            "raw_height = desktop_height + extra_lanes * extra_lane_height",
             f"task_count = {task_count}",
+            f"desktop_lane_capacity = {DESKTOP_LANE_CAPACITY}",
             f"max_height = {MAX_FIGURE_HEIGHT}",
         ],
         result,
@@ -218,6 +240,107 @@ def _collect_task_order(tasks_data: list[TaskPayload]) -> list[str]:
     return result
 
 
+def _compact_tasks(
+    tasks_data: list[TaskPayload],
+    *,
+    max_bars: int = MAX_RENDERED_BARS,
+) -> tuple[list[TaskPayload], bool]:
+    """Aggregate dense timelines into bounded per-process time buckets."""
+    if len(tasks_data) <= max_bars:
+        return tasks_data, False
+
+    task_order = _collect_task_order(tasks_data)
+    bucket_count = max(1, max_bars // max(1, len(task_order)))
+    max_start = max(int(task["Start"]) for task in tasks_data)
+    bucket_width = max(1, math.ceil((max_start + 1) / bucket_count))
+    groups: dict[tuple[str, int], dict[str, int | float | str | bool]] = {}
+
+    for task in tasks_data:
+        name = str(task["Task"])
+        start = int(task["Start"])
+        duration = int(task["Duration"])
+        count = int(task.get("Count", 1))
+        progress = float(task.get("Progress", 100))
+        bucket = start // bucket_width
+        key = (name, bucket)
+        group = groups.get(key)
+        if group is None:
+            groups[key] = {
+                "Task": name,
+                "Start": start,
+                "LastStart": start,
+                "End": start + duration,
+                "Count": count,
+                "ProgressTotal": progress * count,
+                "AllInstant": duration == 0,
+            }
+            continue
+
+        group["Start"] = min(int(group["Start"]), start)
+        group["LastStart"] = max(int(group["LastStart"]), start)
+        group["End"] = max(int(group["End"]), start + duration)
+        group["Count"] = int(group["Count"]) + count
+        group["ProgressTotal"] = float(group["ProgressTotal"]) + progress * count
+        group["AllInstant"] = bool(group["AllInstant"]) and duration == 0
+
+    compacted: list[TaskPayload] = []
+    for group in groups.values():
+        start = int(group["Start"])
+        last_start = int(group["LastStart"])
+        end = int(group["End"])
+        count = int(group["Count"])
+        all_instant = bool(group["AllInstant"])
+        duration = 0 if all_instant and start == last_start else max(1, end - start)
+        compacted.append(
+            {
+                "Task": str(group["Task"]),
+                "Start": start,
+                "Duration": duration,
+                "Progress": float(group["ProgressTotal"]) / count,
+                "Count": count,
+            }
+        )
+
+    get_active_analysis_logger().log_key_value(
+        "TIMELINE_COMPACTION",
+        {
+            "input_groups": len(tasks_data),
+            "output_groups": len(compacted),
+            "max_bars": max_bars,
+            "bucket_width": bucket_width,
+        },
+        scope="gantt._compact_tasks",
+    )
+    return compacted, True
+
+
+def _tick_steps(visible_span: float) -> tuple[float, float]:
+    """Return readable major/minor tick steps without creating huge tick lists."""
+    rough_step = max(float(MAJOR_TICK_STEP), visible_span / 20.0)
+    magnitude = 10.0 ** math.floor(math.log10(rough_step))
+    normalized = rough_step / magnitude
+    if normalized <= 1.0:
+        multiplier = 1.0
+    elif normalized <= 2.0:
+        multiplier = 2.0
+    elif normalized <= 5.0:
+        multiplier = 5.0
+    else:
+        multiplier = 10.0
+    major_step = multiplier * magnitude
+    minor_step = max(float(MINOR_TICK_STEP), major_step / 5.0)
+    return major_step, minor_step
+
+
+def _configure_time_axis(ax: Axes, visible_span: float) -> None:
+    """Configure an adaptive X axis whose cost is independent of cycle count."""
+    major_step, minor_step = _tick_steps(visible_span)
+    ax.xaxis.set_major_locator(MultipleLocator(major_step))
+    ax.xaxis.set_minor_locator(MultipleLocator(minor_step))
+    ax.grid(True, axis="x", which="major", linestyle="-", linewidth=0.9, alpha=0.45)
+    ax.grid(True, axis="x", which="minor", linestyle="-", linewidth=0.5, alpha=0.22)
+
+
 def _build_bars(tasks_data: list[TaskPayload]) -> list[_TaskBar]:
     """Convert payload tasks into normalized bars."""
     analysis_logger = get_active_analysis_logger()
@@ -230,6 +353,7 @@ def _build_bars(tasks_data: list[TaskPayload]) -> list[_TaskBar]:
         start = int(task_data["Start"])
         duration = int(task_data["Duration"])
         progress = float(task_data.get("Progress", 100))
+        count = int(task_data.get("Count", 1))
         display_duration = _display_duration(duration)
         bars.append(
             _TaskBar(
@@ -237,8 +361,9 @@ def _build_bars(tasks_data: list[TaskPayload]) -> list[_TaskBar]:
                 start=start,
                 duration=duration,
                 display_duration=display_duration,
-                end=start + display_duration,
+                end=float(start + duration),
                 progress=progress,
+                count=count,
             )
         )
         analysis_logger.log_key_value(
@@ -251,7 +376,7 @@ def _build_bars(tasks_data: list[TaskPayload]) -> list[_TaskBar]:
 
 
 def _assign_tracks(bars: list[_TaskBar]) -> None:
-    """Assign sub-tracks per task to separate overlapping repetitions."""
+    """Assign overlap tracks in O(N log N) time using priority queues."""
     analysis_logger = get_active_analysis_logger()
     scope = "gantt._assign_tracks"
     analysis_logger.log_header("TRACK ASSIGNMENT", scope=scope)
@@ -262,39 +387,35 @@ def _assign_tracks(bars: list[_TaskBar]) -> None:
     analysis_logger.log_key_value("GROUPED_INDICES", dict(grouped_indices), scope=scope)
 
     for indices in grouped_indices.values():
-        lane_ends: list[float] = []
+        active_tracks: list[tuple[float, int]] = []
+        free_tracks: list[int] = []
+        track_count = 0
         for bar_index in sorted(indices, key=lambda idx: (bars[idx].start, idx)):
             bar = bars[bar_index]
-            for track_index, lane_end in enumerate(lane_ends):
-                if bar.start >= lane_end:
-                    bar.track_index = track_index
-                    lane_ends[track_index] = bar.end
-                    analysis_logger.log_key_value(
-                        "TRACK_REUSED",
-                        {
-                            "bar_index": bar_index,
-                            "bar": bar,
-                            "track_index": track_index,
-                            "lane_ends": lane_ends,
-                        },
-                        scope=scope,
-                    )
-                    break
-            else:
-                bar.track_index = len(lane_ends)
-                lane_ends.append(bar.end)
-                analysis_logger.log_key_value(
-                    "TRACK_CREATED",
-                    {
-                        "bar_index": bar_index,
-                        "bar": bar,
-                        "track_index": bar.track_index,
-                        "lane_ends": lane_ends,
-                    },
-                    scope=scope,
-                )
+            while active_tracks and active_tracks[0][0] <= bar.start:
+                _, released_track = heapq.heappop(active_tracks)
+                heapq.heappush(free_tracks, released_track)
 
-        track_count = max(1, len(lane_ends))
+            if free_tracks:
+                bar.track_index = heapq.heappop(free_tracks)
+                event = "TRACK_REUSED"
+            else:
+                bar.track_index = track_count
+                track_count += 1
+                event = "TRACK_CREATED"
+            heapq.heappush(active_tracks, (bar.end, bar.track_index))
+            analysis_logger.log_key_value(
+                event,
+                {
+                    "bar_index": bar_index,
+                    "bar": bar,
+                    "track_index": bar.track_index,
+                    "active_tracks": active_tracks,
+                },
+                scope=scope,
+            )
+
+        track_count = max(1, track_count)
         for bar_index in indices:
             bars[bar_index].track_count = track_count
     analysis_logger.log_key_value("ASSIGNED_BARS", bars, scope=scope)
@@ -367,6 +488,43 @@ def _progress_label(progress: float) -> str:
     return f"{progress:.1f}%"
 
 
+def _count_label(count: int) -> str:
+    """Format an execution multiplicity for chart annotations."""
+    return f"×{count:,}".replace(",", " ")
+
+
+def _select_multiplicity_indices(
+    bars: list[_TaskBar],
+    visible_span: float,
+) -> set[int]:
+    """Select one representative maximum-count label per process."""
+    candidates_by_task: dict[str, list[int]] = defaultdict(list)
+    for index, bar in enumerate(bars):
+        if bar.count > 1:
+            candidates_by_task[bar.task].append(index)
+
+    timeline_center = visible_span / 2.0
+    selected: set[int] = set()
+    for indices in candidates_by_task.values():
+        maximum_count = max(bars[index].count for index in indices)
+        maximum_indices = [
+            index for index in indices if bars[index].count == maximum_count
+        ]
+        representative = min(
+            maximum_indices,
+            key=lambda index: (
+                abs(
+                    bars[index].start
+                    + bars[index].display_duration / 2.0
+                    - timeline_center
+                ),
+                index,
+            ),
+        )
+        selected.add(representative)
+    return selected
+
+
 def _label_color(fill_color: RgbaColor) -> str:
     """Choose a readable text color on top of a bar fill color."""
     red, green, blue, _ = fill_color
@@ -428,7 +586,7 @@ def _finish_figure(
 
     if output_path is not None:
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        fig.savefig(output_path, dpi=160, bbox_inches="tight")
+        fig.savefig(output_path, dpi=OUTPUT_DPI)
         saved_path = output_path
         analysis_logger.log_step("PLOT_SAVE", str(output_path), scope=scope)
         print(f"[GRAPH] Fichier genere: {output_path}")
@@ -555,6 +713,9 @@ def render_chart(
     analysis_logger.log_header("GANTT RENDER", scope=scope)
     analysis_logger.log_key_value("TITLE", title, scope=scope)
     analysis_logger.log_key_value("TASKS_DATA", tasks_data, scope=scope)
+    event_count = sum(int(task.get("Count", 1)) for task in tasks_data)
+    source_group_count = len(tasks_data)
+    tasks_data, timeline_compacted = _compact_tasks(tasks_data)
     task_order = _collect_task_order(tasks_data)
     lanes = len(task_order)
     height = _figure_height(lanes)
@@ -563,7 +724,7 @@ def render_chart(
         {"task_order": task_order, "lanes": lanes, "height": height},
         scope=scope,
     )
-    fig, ax = plt.subplots(figsize=(10, height))
+    fig, ax = plt.subplots(figsize=(FIGURE_WIDTH, height))
     _set_window_title(fig, title)
 
     if not tasks_data:
@@ -579,10 +740,7 @@ def render_chart(
             va="center",
             transform=ax.transAxes,
         )
-        ax.xaxis.set_major_locator(MultipleLocator(MAJOR_TICK_STEP))
-        ax.xaxis.set_minor_locator(MultipleLocator(MINOR_TICK_STEP))
-        ax.grid(True, axis="x", which="major", linestyle="-", linewidth=0.9, alpha=0.45)
-        ax.grid(True, axis="x", which="minor", linestyle="-", linewidth=0.5, alpha=0.22)
+        _configure_time_axis(ax, MIN_TIMELINE_SPAN)
         fig.tight_layout()
         _balance_horizontal_whitespace(fig, ax)
         return _finish_figure(fig, output_path=output_path, show=show)
@@ -653,7 +811,7 @@ def render_chart(
         for task in task_order
     )
 
-    max_end = max(bar.end for bar in bars)
+    max_end = max(bar.end if bar.duration > 0 else float(bar.start) for bar in bars)
     visible_span = max(max_end, MIN_TIMELINE_SPAN)
     x_margin = max(1.0, visible_span * 0.02)
     ax.set_xlim(0, visible_span + x_margin)
@@ -689,7 +847,13 @@ def render_chart(
         scope=scope,
     )
 
-    for bar in bars:
+    multiplicity_indices = _select_multiplicity_indices(bars, visible_span)
+    instant_x: list[float] = []
+    instant_y: list[float] = []
+    instant_colors: list[RgbaColor] = []
+    instant_edges: list[RgbaColor] = []
+
+    for bar_index, bar in enumerate(bars):
         center_y = task_first_center[bar.task] + track_band * bar.track_index
         analysis_logger.log_key_value(
             "BAR_RENDER_START",
@@ -697,14 +861,33 @@ def render_chart(
             scope=scope,
         )
 
-        _draw_rounded_bar(
-            ax=ax,
-            start=float(bar.start),
-            width=bar.display_duration,
-            center_y=center_y,
-            height=bar_height,
-            color=colors[bar.task],
-        )
+        if bar.duration == 0:
+            instant_x.append(float(bar.start))
+            instant_y.append(center_y)
+            instant_colors.append(colors[bar.task])
+            instant_edges.append(_edge_color(colors[bar.task]))
+        else:
+            _draw_rounded_bar(
+                ax=ax,
+                start=float(bar.start),
+                width=bar.display_duration,
+                center_y=center_y,
+                height=bar_height,
+                color=colors[bar.task],
+            )
+
+        if bar_index in multiplicity_indices:
+            place_on_left = bar.start + bar.display_duration / 2.0 > visible_span * 0.85
+            ax.annotate(
+                _count_label(bar.count),
+                (bar.start + (bar.display_duration / 2.0), center_y),
+                xytext=(-3 if place_on_left else 3, 4),
+                textcoords="offset points",
+                ha="right" if place_on_left else "left",
+                va="bottom",
+                fontsize=7.5,
+                color="#222222",
+            )
 
         label = _progress_label(bar.progress)
         if label not in progress_width_cache:
@@ -714,7 +897,9 @@ def render_chart(
                 PROGRESS_FONT_SIZE,
             )
         required = progress_width_cache[label] + right_padding * 2.0
-        label_fits = bar.display_duration >= required
+        label_fits = (
+            bar.count == 1 and bar.duration > 0 and bar.display_duration >= required
+        )
         analysis_logger.log_key_value(
             "PROGRESS_LABEL_DECISION",
             {
@@ -737,13 +922,32 @@ def render_chart(
                 color=_label_color(colors[bar.task]),
             )
 
+    if instant_x:
+        cast(Any, ax).scatter(
+            instant_x,
+            instant_y,
+            marker="D",
+            s=28,
+            c=instant_colors,
+            edgecolors=instant_edges,
+            linewidths=0.8,
+            zorder=3,
+        )
+
     ax.set_xlabel("Temps")
     ax.set_ylabel("Taches")
-    ax.set_title(title)
-    ax.xaxis.set_major_locator(MultipleLocator(MAJOR_TICK_STEP))
-    ax.xaxis.set_minor_locator(MultipleLocator(MINOR_TICK_STEP))
-    ax.grid(True, axis="x", which="major", linestyle="-", linewidth=0.9, alpha=0.45)
-    ax.grid(True, axis="x", which="minor", linestyle="-", linewidth=0.5, alpha=0.22)
+    title_details: list[str] = []
+    if event_count != source_group_count:
+        title_details.append(
+            f"{event_count:,} exécutions regroupées en {source_group_count:,} groupes"
+        )
+    if timeline_compacted:
+        title_details.append(f"vue agrégée : {len(bars):,} éléments affichés")
+    rendered_title = title
+    if title_details:
+        rendered_title += "\n" + " — ".join(title_details).replace(",", " ")
+    ax.set_title(rendered_title)
+    _configure_time_axis(ax, visible_span)
 
     fig.tight_layout()
     _balance_horizontal_whitespace(fig, ax)

@@ -28,7 +28,7 @@ from logger.analysis_log_krpsim import AnalysisLogger, set_active_analysis_logge
 from . import parser as parser_mod
 
 # Pour limiter le couplage aux composants internes necessaires.
-from .display import format_trace, print_header, save_trace
+from .display import print_header, save_trace
 
 # Pour limiter le couplage aux composants internes necessaires.
 from .parser import ParseError
@@ -329,12 +329,7 @@ def _run_simulation(
         _serialize_simulator_state(sim),
         scope=scope,
     )
-    # Pour convertir la trace une seule fois pour affichage et analyse.
-    trace_lines = format_trace(trace)
-    # Pour exposer la trace metier brute pour diagnostic.
-    analysis_logger.log_key_value("TRACE_EVENTS", trace, scope=scope)
-    # Pour exposer la forme textuelle ecrite en sortie utilisateur.
-    analysis_logger.log_key_value("TRACE_LINES", trace_lines, scope=scope)
+    analysis_logger.log_key_value("TRACE_EVENT_COUNT", len(trace), scope=scope)
     # Pour exposer l'etat final du moteur apres execution.
     analysis_logger.log_key_value("SIM_TIME_AFTER_RUN", sim.time, scope=scope)
     # Pour exposer le drapeau de deadlock calcule par le moteur.
@@ -342,9 +337,9 @@ def _run_simulation(
     # Pour exposer l'etat de stock final avant affichage.
     analysis_logger.log_key_value("STOCKS_AFTER_RUN", sim.stocks, scope=scope)
     # Pour conserver l'ordre temporel lors de la sortie de trace.
-    for line in trace_lines:
+    for cycle, name in trace:
         # Pour fournir un retour utilisateur directement lisible en CLI.
-        print(line)
+        print(f"{cycle}:{name}")
     # Pour persister une trace verifiable avant la fin du processus.
     analysis_logger.log_step("SAVING_TRACE_FILE", args.trace, scope=scope)
     save_trace(trace, Path(args.trace))

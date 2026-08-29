@@ -250,6 +250,7 @@ def test_verifier_cli_log(tmp_path: Path) -> None:
     [
         ("ikea", 100),
         ("steak", 100),
+        ("pomme", 100),
         ("recre", 100),
         ("time", 100),
         ("finite", 100),
@@ -268,18 +269,24 @@ def test_cli_run_resources(
         assert "Max time reached" in captured.out
 
 
-@pytest.mark.parametrize("resource", ["delay0", "pomme"])
-def test_cli_rejects_zero_delay_process_resources(
-    resource: str,
+def test_cli_accepts_zero_delay_process_resource(
+    tmp_path: Path,
     capsys: CaptureFixture[str],
 ) -> None:
-    with pytest.raises(SystemExit) as exc:
-        cli.main([str(Path("resources") / resource), "10"])
-    assert exc.value.code == 1
+    trace_path = tmp_path / "trace.txt"
+    exit_code = cli.main(
+        [
+            str(Path("resources/delay0")),
+            "10",
+            "--trace",
+            str(trace_path),
+        ]
+    )
+    assert exit_code == 0
     captured = capsys.readouterr()
-    assert "invalid config:" in captured.out
-    assert "Delay must be >= 1 cycle" in captured.out
-    assert "replace ':0' by a positive delay such as ':1'" in captured.out
+    assert "0:instant" in captured.out
+    assert "stockB  => 1" in captured.out
+    assert verifier_cli.main([str(Path("resources/delay0")), str(trace_path)]) == 0
 
 
 def test_cli_partial_execution_small_delay(

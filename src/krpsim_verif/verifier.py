@@ -8,7 +8,9 @@ simulateur et retourne l'etat final si la verification reussit.
 from __future__ import annotations
 
 # Pour rendre le diagnostic activable sans polluer la sortie.
+import heapq
 import logging
+import sys
 
 # Pour formaliser des contrats de donnees clairs et compacts.
 from dataclasses import dataclass
@@ -17,7 +19,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 # Pour reutiliser la logique canonique du simulateur sans duplication.
-from krpsim.parser import Config, parse_file
+from krpsim.parser import Config, Process, parse_file
 
 # Pour reutiliser la logique canonique du simulateur sans duplication.
 from krpsim.simulator import Simulator
@@ -32,7 +34,7 @@ class TraceError(Exception):
 
 
 # Pour fiabiliser les objets metier via un schema declaratif.
-@dataclass
+@dataclass(slots=True)
 # Pour encapsuler TraceEntry autour d'un contrat clairement borne.
 class TraceEntry:
     """Represente un evenement elementaire d'une trace machine.
@@ -73,30 +75,6 @@ def _serialize_trace_entry(entry: TraceEntry) -> dict[str, object]:
     return {"cycle": entry.cycle, "process": entry.process}
 
 
-def _serialize_simulator_state(sim: Simulator) -> dict[str, object]:
-    """Retourne un snapshot complet et lisible de l'etat du simulateur."""
-    return {
-        "config": _serialize_config(sim.config),
-        "stocks": sim.stocks,
-        "time": sim.time,
-        "_running": [
-            {
-                "process": {
-                    "name": rp.process.name,
-                    "needs": rp.process.needs,
-                    "results": rp.process.results,
-                    "delay": rp.process.delay,
-                },
-                "remaining": rp.remaining,
-            }
-            for rp in sim._running
-        ],
-        "trace": sim.trace,
-        "deadlock": sim.deadlock,
-        "_max_time": sim._max_time,
-    }
-
-
 # Pour isoler parse_trace et faciliter son evolution sous tests.
 def parse_trace(path: Path) -> list[TraceEntry]:
     """Parse un fichier de trace au format ``cycle:process``.
@@ -127,149 +105,70 @@ def parse_trace(path: Path) -> list[TraceEntry]:
     analysis_logger.log_header("TRACE PARSING", scope=scope)
     # Pour tracer la cible exacte lue par le parser.
     analysis_logger.log_key_value("TRACE_PATH", str(path), scope=scope)
-    # Pour charger la trace complete avant validation ligne par ligne.
-    lines = path.read_text().splitlines()
-    # Pour exposer les lignes brutes avant filtrage et validation.
-    analysis_logger.log_key_value("RAW_TRACE_LINES", lines, scope=scope)
     # Pour typer explicitement le champ et fiabiliser le contrat de donnees.
     entries: list[TraceEntry] = []
     # Pour appliquer uniformement la regle a chaque element concerne.
-    for idx, line in enumerate(lines, start=1):
-        # Pour tracer chaque ligne avant decision de parsing.
-        analysis_logger.log_key_value(
-            "TRACE_LINE_READ",
-            {"line_number": idx, "content": line},
-            scope=scope,
-        )
-        # Pour traiter explicitement un cas d'entree invalide ou absent.
-        if not line:
-            # Pour localiser l'erreur avant propagation au niveau CLI.
-            analysis_logger.log_step(
-                "TRACE_LINE_ERROR",
-                {"line_number": idx, "reason": "empty"},
-                scope=scope,
-            )
-            # Pour signaler sans delai une violation explicite du contrat.
-            raise TraceError(f"empty trace line {idx}")
-        # Pour expliciter une decision qui impacte le flux metier.
-        if line.startswith("#"):
-            # Pour rendre visible le filtrage des commentaires.
-            analysis_logger.log_step(
-                "TRACE_LINE_SKIPPED",
-                {"line_number": idx, "reason": "comment"},
-                scope=scope,
-            )
-            # Pour ignorer ce cas et laisser la boucle traiter les suivants.
-            continue
-        # Pour traiter explicitement un cas d'entree invalide ou absent.
-        if ":" not in line:
-            # Pour localiser l'erreur avant propagation au niveau CLI.
-            analysis_logger.log_step(
-                "TRACE_LINE_ERROR",
-                {"line_number": idx, "reason": "missing_separator"},
-                scope=scope,
-            )
-            # Pour signaler sans delai une violation explicite du contrat.
-            raise TraceError(f"invalid trace line {idx}: '{line}'")
-        # Pour eviter de casser un nom de process contenant des deux-points.
-        cycle_str, name = line.split(":", 1)
-        # Pour traiter explicitement un cas d'entree invalide ou absent.
-        if not cycle_str.isdigit():
-            # Pour localiser l'erreur avant propagation au niveau CLI.
-            analysis_logger.log_step(
-                "TRACE_LINE_ERROR",
-                {
-                    "line_number": idx,
-                    "reason": "invalid_cycle",
-                    "cycle": cycle_str,
-                },
-                scope=scope,
-            )
-            # Pour signaler sans delai une violation explicite du contrat.
-            raise TraceError(f"invalid trace line {idx}: '{line}'")
-        # Pour normaliser chaque evenement avant comparaison stricte.
-        entry = TraceEntry(int(cycle_str), name)
-        # Pour exposer la forme structuree issue de la ligne courante.
-        analysis_logger.log_key_value(
-            "TRACE_ENTRY_PARSED",
-            _serialize_trace_entry(entry),
-            scope=scope,
-        )
-        # Pour journaliser les entrees lues en mode diagnostic.
-        logger.info("%d:%s", entry.cycle, entry.process)
-        # Pour conserver l'ordre original de la trace verifiee.
-        entries.append(entry)
-    # Pour exposer le resultat complet de la phase de parsing.
-    analysis_logger.log_key_value(
-        "PARSED_TRACE_ENTRIES",
-        [_serialize_trace_entry(entry) for entry in entries],
-        scope=scope,
-    )
-    # Pour rendre a l'appelant le resultat promis par le contrat.
+    with path.open(encoding="utf-8") as stream:
+        lines = enumerate(stream, start=1)
+        for idx, raw_line in lines:
+            line = raw_line.rstrip("\n")
+            _parse_trace_line(line, idx, entries, logger, analysis_logger, scope)
+    analysis_logger.log_key_value("PARSED_TRACE_COUNT", len(entries), scope=scope)
     return entries
 
 
-# Pour isoler _expected_trace et faciliter son evolution sous tests.
-def _expected_trace(
-    # Pour typer explicitement le champ et fiabiliser le contrat de donnees.
-    config: Config,
-    max_time: int,
-    # Pour ouvrir un bloc qui porte une contrainte locale explicite.
-) -> tuple[list[TraceEntry], Simulator]:
-    """Produit la trace canonique attendue pour ``config``.
+def _parse_trace_line(
+    line: str,
+    idx: int,
+    entries: list[TraceEntry],
+    logger: logging.Logger,
+    analysis_logger: AnalysisLogger,
+    scope: str,
+) -> None:
+    """Valide une ligne et l'ajoute a la trace structuree."""
 
-    Parameters:
-        config: Configuration metier deja validee.
-        max_time: Cycle limite a reproduire pour comparaison.
-
-    Returns:
-        Un tuple ``(trace_attendue, simulateur_final)``.
-
-    Raises:
-        Aucune exception n'est levee explicitement.
-
-    Contrat:
-        Le verificateur doit reexecuter la meme logique que le simulateur
-        pour comparer sur une base strictement equivalente.
-    """
-    # Pour obtenir le logger d'analyse partage avec la couche CLI.
-    analysis_logger = get_active_analysis_logger()
-    # Pour etiqueter clairement les logs emis par cette fonction.
-    scope = "_expected_trace"
-    # Pour isoler la reconstruction de trace attendue dans les logs.
-    analysis_logger.log_header("EXPECTED TRACE", scope=scope)
-    # Pour exposer la borne temporelle utilisee pour rejouer la simulation.
-    analysis_logger.log_key_value("MAX_TIME", max_time, scope=scope)
-    # Pour exposer les donnees source de la simulation de reference.
-    analysis_logger.log_key_value("CONFIG", _serialize_config(config), scope=scope)
-    # Pour executer la logique metier via l'implementation de reference.
-    sim = Simulator(config)
-    # Pour exposer l'etat initial du moteur de reference.
     analysis_logger.log_key_value(
-        "SIMULATOR_STATE_AFTER_INIT",
-        _serialize_simulator_state(sim),
-        scope=scope,
+        "TRACE_LINE_READ", {"line_number": idx, "content": line}, scope=scope
     )
-    # Pour produire l'etat de reference a partir du moteur unique.
-    raw = sim.run(max_time)
-    # Pour exposer la trace brute produite par le moteur.
-    analysis_logger.log_key_value("EXPECTED_TRACE_RAW", raw, scope=scope)
-    # Pour separer explicitement les etats intermediaires du traitement.
-    entries = [TraceEntry(cycle, name) for cycle, name in raw]
-    # Pour exposer la trace attendue dans le meme schema que la trace lue.
+    if not line:
+        analysis_logger.log_step(
+            "TRACE_LINE_ERROR",
+            {"line_number": idx, "reason": "empty"},
+            scope=scope,
+        )
+        raise TraceError(f"empty trace line {idx}")
+    if line.startswith("#"):
+        analysis_logger.log_step(
+            "TRACE_LINE_SKIPPED",
+            {"line_number": idx, "reason": "comment"},
+            scope=scope,
+        )
+        return
+    if ":" not in line:
+        analysis_logger.log_step(
+            "TRACE_LINE_ERROR",
+            {"line_number": idx, "reason": "missing_separator"},
+            scope=scope,
+        )
+        raise TraceError(f"invalid trace line {idx}: '{line}'")
+    cycle_str, name = line.split(":", 1)
+    if not cycle_str.isdigit() or not name:
+        analysis_logger.log_step(
+            "TRACE_LINE_ERROR",
+            {
+                "line_number": idx,
+                "reason": "invalid_cycle",
+                "cycle": cycle_str,
+            },
+            scope=scope,
+        )
+        raise TraceError(f"invalid trace line {idx}: '{line}'")
+    entry = TraceEntry(int(cycle_str), sys.intern(name))
     analysis_logger.log_key_value(
-        "EXPECTED_TRACE_ENTRIES",
-        [_serialize_trace_entry(entry) for entry in entries],
-        scope=scope,
+        "TRACE_ENTRY_PARSED", _serialize_trace_entry(entry), scope=scope
     )
-    # Pour exposer l'etat final de reference associe a cette trace.
-    analysis_logger.log_key_value(
-        "SIMULATOR_STATE_AFTER_RUN",
-        _serialize_simulator_state(sim),
-        scope=scope,
-    )
-    # Pour rendre a l'appelant le resultat promis par le contrat.
-    return entries, sim
+    logger.info("%d:%s", entry.cycle, entry.process)
+    entries.append(entry)
 
 
 def _verify_empty_trace(
@@ -294,73 +193,23 @@ def _verify_empty_trace(
                     "EMPTY_TRACE_ERROR", f"process '{proc.name}' can start", scope=scope
                 )
                 raise TraceError("empty trace")
-    sim = Simulator(config)
-    analysis_logger.log_step("EMPTY_TRACE_SIM_RUN_START", {"max_time": 0}, scope)
-    sim.run(0)
-    analysis_logger.log_key_value(
-        "SIMULATOR_STATE_AFTER_EMPTY_TRACE_RUN",
-        _serialize_simulator_state(sim),
-        scope=scope,
-    )
-    return sim
+    return Simulator(config)
 
 
-def _trace_run_until(
-    config: Config, trace: list[TraceEntry], analysis_logger: AnalysisLogger, scope: str
+def _complete_until(
+    cycle: int,
+    running: list[tuple[int, int, Process]],
+    stocks: dict[str, int],
 ) -> int:
-    """Resolve the simulation horizon required to reproduce a trace."""
-    run_until = 0
-    for entry in trace:
-        process = config.processes.get(entry.process)
-        analysis_logger.log_key_value(
-            "TRACE_ENTRY_PROCESS_LOOKUP",
-            {
-                "entry": _serialize_trace_entry(entry),
-                "process_found": process is not None,
-                "process_delay": process.delay if process else None,
-            },
-            scope=scope,
-        )
-        if process is None:
-            analysis_logger.log_step(
-                "UNKNOWN_PROCESS_ERROR", entry.process, scope=scope
-            )
-            raise TraceError(f"unknown process '{entry.process}' in trace")
-        candidate = entry.cycle + process.delay
-        run_until = max(run_until, candidate)
-    return run_until
+    """Credite toutes les productions terminees avant un cycle donne."""
 
-
-def _compare_traces(
-    expected: list[TraceEntry],
-    trace: list[TraceEntry],
-    analysis_logger: AnalysisLogger,
-    scope: str,
-) -> None:
-    """Raise a precise error when input and expected traces diverge."""
-    for idx, (got, exp) in enumerate(zip(trace, expected), start=1):
-        analysis_logger.log_key_value(
-            "TRACE_COMPARE",
-            {
-                "line": idx,
-                "got": _serialize_trace_entry(got),
-                "expected": _serialize_trace_entry(exp),
-            },
-            scope=scope,
-        )
-        if got != exp:
-            analysis_logger.log_step("TRACE_MISMATCH_ERROR", {"line": idx}, scope=scope)
-            raise TraceError(
-                f"line {idx}: expected {exp.cycle}:{exp.process} "
-                f"but got {got.cycle}:{got.process}"
-            )
-    if len(trace) > len(expected):
-        analysis_logger.log_step(
-            "TRACE_EXTRA_EVENTS_ERROR",
-            {"first_extra_line": len(expected) + 1},
-            scope=scope,
-        )
-        raise TraceError(f"trace has extra events starting at line {len(expected)+1}")
+    last_completion = 0
+    while running and running[0][0] <= cycle:
+        completion, _, process = heapq.heappop(running)
+        last_completion = max(last_completion, completion)
+        for resource, quantity in process.results.items():
+            stocks[resource] = stocks.get(resource, 0) + quantity
+    return last_completion
 
 
 # Pour isoler verify_trace et faciliter son evolution sous tests.
@@ -392,12 +241,7 @@ def verify_trace(config: Config, trace: list[TraceEntry]) -> Simulator:
     analysis_logger.log_header("TRACE VERIFICATION", scope=scope)
     # Pour tracer la configuration qui sert de reference.
     analysis_logger.log_key_value("CONFIG", _serialize_config(config), scope=scope)
-    # Pour tracer la trace fournie apres parsing.
-    analysis_logger.log_key_value(
-        "INPUT_TRACE",
-        [_serialize_trace_entry(entry) for entry in trace],
-        scope=scope,
-    )
+    analysis_logger.log_key_value("INPUT_TRACE_COUNT", len(trace), scope=scope)
 
     if not trace:
         analysis_logger.log_step("EMPTY_TRACE_BRANCH", scope=scope)
@@ -409,25 +253,52 @@ def verify_trace(config: Config, trace: list[TraceEntry]) -> Simulator:
         # Pour rendre a l'appelant le resultat promis par le contrat.
         return sim
 
-    run_until = _trace_run_until(config, trace, analysis_logger, scope)
-    # Pour comparer la trace utilisateur a une reference reproduite.
-    expected, sim = _expected_trace(config, run_until)
-    # Pour exposer les deux tailles avant comparaison element par element.
-    analysis_logger.log_key_value(
-        "TRACE_LENGTHS",
-        {"input": len(trace), "expected": len(expected), "run_until": run_until},
-        scope=scope,
-    )
-    _compare_traces(expected, trace, analysis_logger, scope)
+    stocks = config.stocks.copy()
+    running: list[tuple[int, int, Process]] = []
+    previous_cycle = 0
+    last_cycle = 0
+    sequence = 0
+    for line_number, entry in enumerate(trace, start=1):
+        if entry.cycle < previous_cycle:
+            raise TraceError(
+                f"line {line_number}: cycle {entry.cycle} is before "
+                f"cycle {previous_cycle}"
+            )
+        last_cycle = max(last_cycle, _complete_until(entry.cycle, running, stocks))
+        process = config.processes.get(entry.process)
+        if process is None:
+            raise TraceError(f"unknown process '{entry.process}' in trace")
+        missing = {
+            resource: quantity - stocks.get(resource, 0)
+            for resource, quantity in process.needs.items()
+            if stocks.get(resource, 0) < quantity
+        }
+        if missing:
+            raise TraceError(
+                f"line {line_number} at cycle {entry.cycle}: process "
+                f"'{process.name}' lacks resources {missing}"
+            )
+        for resource, quantity in process.needs.items():
+            stocks[resource] -= quantity
+        if process.delay == 0:
+            for resource, quantity in process.results.items():
+                stocks[resource] = stocks.get(resource, 0) + quantity
+        else:
+            sequence += 1
+            heapq.heappush(running, (entry.cycle + process.delay, sequence, process))
+        previous_cycle = entry.cycle
+        last_cycle = max(last_cycle, entry.cycle)
+
+    last_cycle = max(last_cycle, _complete_until(2**63 - 1, running, stocks))
+    sim = Simulator(config)
+    sim.stocks = stocks
+    sim.time = last_cycle
+    sim._max_time = last_cycle
 
     # Pour laisser une preuve exploitable du succes de verification.
     logger.info("trace validated successfully")
     # Pour exposer l'etat final valide apres comparaison.
-    analysis_logger.log_key_value(
-        "FINAL_SIMULATOR_STATE",
-        _serialize_simulator_state(sim),
-        scope=scope,
-    )
+    analysis_logger.log_key_value("FINAL_STOCKS", sim.stocks, scope=scope)
     # Pour marquer la fin positive du controle.
     analysis_logger.log_step("VERIFICATION_SUCCESS", scope=scope)
     # Pour rendre a l'appelant le resultat promis par le contrat.
@@ -479,12 +350,7 @@ def verify_files(config_path: Path, trace_path: Path) -> Simulator:
     )
     # Pour verifier la syntaxe de trace avant toute comparaison metier.
     trace = parse_trace(trace_path)
-    # Pour exposer le resultat de parsing transmis a la verification.
-    analysis_logger.log_key_value(
-        "PARSED_TRACE",
-        [_serialize_trace_entry(entry) for entry in trace],
-        scope=scope,
-    )
+    analysis_logger.log_key_value("PARSED_TRACE_COUNT", len(trace), scope=scope)
     # Pour tracer clairement la paire de fichiers en cours de controle.
     logger.info("verifying trace against %s", config_path)
     # Pour indiquer le passage a la verification metier.
