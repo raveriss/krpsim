@@ -9,8 +9,6 @@
 [![uv](https://img.shields.io/badge/uv-project%20manager-DE5FE9?logo=uv&logoColor=white)](https://docs.astral.sh/uv/)
 ![Ruff](https://img.shields.io/badge/Ruff-lint-46A35E?logo=ruff&logoColor=white)
 ![MyPy](https://img.shields.io/badge/MyPy-types-2A6DB2?logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0iI2ZmZmZmZiIgZD0iTTMgMTlWNWgzLjJMMTIgMTIuNCAxNy44IDVIMjF2MTRoLTNWMTAuMWwtNC44IDYuMUgxMC44TDYgMTAuMVYxOXoiLz48L3N2Zz4%3D)
-![pandas](https://img.shields.io/badge/pandas-%3E%3D2.2-150458?logo=pandas&logoColor=white)
-![matplotlib](https://img.shields.io/badge/matplotlib-%3E%3D3.8-orange?logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI%2BPHBhdGggZD0iTTQgMTdWNyIvPjxwYXRoIGQ9Ik00IDE3aDE2Ii8%2BPHBhdGggZD0iTTYgMTVsMy00IDMgMiA0LTYgMiAzIi8%2BPC9nPjxnIGZpbGw9IiNmZmZmZmYiPjxjaXJjbGUgY3g9IjYiIGN5PSIxNSIgcj0iMS4yIi8%2BPGNpcmNsZSBjeD0iOSIgY3k9IjExIiByPSIxLjIiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEzIiByPSIxLjIiLz48Y2lyY2xlIGN4PSIxNiIgY3k9IjciIHI9IjEuMiIvPjxjaXJjbGUgY3g9IjE4IiBjeT0iMTAiIHI9IjEuMiIvPjwvZz48L3N2Zz4%3D)
 ![License](https://img.shields.io/github/license/raveriss/krpsim?logo=github&logoColor=white)
 
 </div>
@@ -29,8 +27,7 @@ KRPSIM est un simulateur d'ordonnancement de processus avec vérification de tra
 - [📋 Tableau des commandes make](#tableau-des-commandes-make)
 - [📝 Formats d'entrée](#formats-entree)
 - [🖥️ Exemple de sortie: simulation](#exemple-de-sortie-simulation)
-- [✅ Exemple de sortie: vérification + graphe](#exemple-de-sortie-vérification--graphe)
-- [📊 Visualisation Gantt](#visualisation-gantt)
+- [✅ Exemple de sortie: vérification](#exemple-de-sortie-vérification)
 - [🗂️ Structure du projet](#structure-du-projet)
 - [🧪 Tests](#tests)
 - [🔍 Qualité du code](#qualite-du-code)
@@ -47,12 +44,11 @@ Projet réalisé dans le cadre du cursus **École 42** (projet KRPSIM), avec un 
 - Simulation d'un flux de production à ressources contraintes.
 - Optimisation multi-critères (temps, stock cible).
 - Vérification automatique d'une trace (auditabilité d'exécution).
-- Génération d'une configuration exploitable pour visualisation Gantt.
 
 ## 🧰 Stack
 
 - **Langage & packaging** : Python `>=3.10,<3.14`, uv, Hatchling
-- **Runtime** : pandas, matplotlib
+- **Runtime** : bibliothèque standard Python uniquement
 - **Tests** : pytest, pytest-cov, Hypothesis
 - **Qualité** : Ruff, MyPy, Black, isort, pre-commit
 
@@ -108,6 +104,31 @@ make krpsim resources/ikea 10
 make krpsim_verif resources/ikea trace_ikea.txt
 ```
 
+### Steak et bonus de rendement
+
+```bash
+make krpsim resources/steak 100
+make krpsim_verif resources/steak trace_steak.txt
+make krpsim resources/pomme 10000 > pomme_10000.log
+make krpsim_verif resources/pomme trace_pomme.txt
+make krpsim resources/pomme 50000 > pomme_50000.log
+make krpsim_verif resources/pomme trace_pomme.txt
+```
+
+Résultats vérifiés avec les ressources fournies : trois steaks cuits en 30 cycles,
+296 100 de `benefice` pour `pomme` à 10 000 cycles et 1 456 550 à 50 000 cycles.
+Ce dernier résultat dépasse le seuil indicatif de 1 M€ du bonus 5/5.
+La trace `trace_pomme.txt` est remplacée à chaque exécution : vérifiez-la avant
+de lancer le cas suivant. Les journaux évitent d'afficher les nombreuses actions
+de conversion finale dans le terminal.
+
+Le dernier argument est une **borne en cycles**, pas une durée CPU en secondes.
+Avec `pomme 10`, les achats de 200 cycles ne peuvent pas démarrer : seul
+`do_benef` convertit le capital initial, d'où `benefice => 10000` au cycle 0.
+Ce résultat ne mesure pas le bonus, qui s'évalue à **50 000 cycles**.
+Dans l'implémentation actuelle, `time` en premier critère (comme pour `steak`
+et `ikea`) impose un horizon interne de 500 cycles, indépendamment de l'argument.
+
 ## 📋 Tableau des commandes make
 
 | Commande | Description |
@@ -118,7 +139,6 @@ make krpsim_verif resources/ikea trace_ikea.txt
 | `make shell` | Ouvre un shell interactif dans le virtualenv |
 | `make krpsim <resource_file> <max_cycles>` | Lance la simulation |
 | `make krpsim_verif <resource_file> <trace_file>` | Vérifie une trace |
-| `make graph` | Génère le graphe Gantt |
 | `make test` | Exécute les tests |
 | `make lint` | Exécute le lint et le typage |
 | `make format` | Formate le code (`black`, `isort`) |
@@ -144,6 +164,13 @@ L'ordonnanceur construit le graphe inverse des ressources à partir des cibles
 la consommation de ressources et la durée, puis développe leurs dépendances en
 lots. Les stocks intermédiaires, sous-produits et ressources réutilisables sont
 pris en compte sans dépendre des noms présents dans la configuration.
+
+Avec `time` en premier critère, une anticipation bornée compare aussi les lots
+suivants : elle privilégie la production atteignable, puis sa durée cumulée.
+Les besoins sont revérifiés ensemble après la préparation des dépendances pour
+éviter de compter deux fois une même ressource. Cette heuristique ne garantit
+pas l'optimum global sur tous les graphes. Sur `steak`, elle cuit les trois
+steaks en 30 cycles (`cuisson_1`, `cuisson_3`, `cuisson_2`).
 
 Un même processus peut être lancé plusieurs fois au même cycle. Les processus
 instantanés sont exécutés jusqu'à la multiplicité utile, avec une protection
@@ -185,7 +212,6 @@ optimize:(time;armoire)
 make krpsim resources/ikea 10
 [KRPSIM] Exécution: file=resources/ikea, max_cycles=10
 [KRPSIM] Trace de sortie: trace_ikea.txt
-[KRPSIM] Config graphe: graph_config_ikea.json
 Nice file! 4 processes, 5 stocks, 1 to optimize
 Evaluating ... done.
 Main walk:
@@ -204,10 +230,9 @@ Final Stocks:
   fond     => 0
   montant  => 0
   planche  => 0
-[GRAPH_CONFIG] Fichier genere: graph_config_ikea.json
 ```
 
-## ✅ Exemple de sortie: vérification + graphe
+## ✅ Exemple de sortie: vérification
 
 ```bash
 make krpsim_verif resources/ikea trace_ikea.txt
@@ -220,28 +245,7 @@ Final Stocks:
   montant  => 0
   planche  => 0
 Last cycle: 51
-[GRAPH_CONFIG] Fichier genere: graph_config_ikea.json
-[GRAPH] Génération du graphe Gantt
 ```
-
-## 📊 Visualisation Gantt
-
-Exemple de diagramme généré à partir du cas `resources/ikea`:
-
-Sur un environnement sans affichage graphique interactif (par exemple Fedora avec
-le backend Matplotlib `Agg`), le graphe est sauvegardé dans
-`docs/graphs/diagramme_gantt_<nom>.png`.
-Les commandes `make krpsim_verif`, `make graph` et `make analysis_log_gantt_project`
-ouvrent automatiquement ce fichier quand un ouvreur système est disponible.
-Pour générer sans ouvrir l'image:
-
-```bash
-KRPSIM_OPEN_GRAPH=0 make krpsim_verif resources/ikea trace_ikea.txt
-```
-
-<div align="center">
-  <img src="docs/diagramme_gantt_ikea.png" alt="Diagramme de Gantt IKEA">
-</div>
 
 ## 🗂️ Structure du projet
 
@@ -260,8 +264,6 @@ Sortie:
 ├── codecov.yml
 ├── docs
 │   ├── AGENTS.md
-│   ├── diagramme_gantt_ikea.png
-│   ├── diagramme_gantt_simple.png
 │   ├── krpsim.en.subject.pdf
 │   ├── Lois de Murphy.KRPSIM.txt
 │   ├── optimize_marelle-bonbon.png
@@ -272,11 +274,6 @@ Sortie:
 │   ├── optimize_time-marelle.png
 │   ├── pipeline.md
 │   └── WBS_krpsim.txt
-├── gantt_project
-│   ├── build_graph_config.py
-│   └── gantt.py
-├── graph_config_ikea.json
-├── graph_config_simple.json
 ├── LICENSE
 ├── Makefile
 ├── pyproject.toml
@@ -291,8 +288,6 @@ Sortie:
 │   ├── dup
 │   ├── expo
 │   ├── finite
-│   ├── gantt_x
-│   ├── gantt_y
 │   ├── greedy
 │   ├── ikea
 │   ├── init0
@@ -314,7 +309,6 @@ Sortie:
 │   ├── __init__.py
 │   ├── test_cli.py
 │   ├── test_display.py
-│   ├── test_graph_pipeline.py
 │   ├── test_parser_hypothesis.py
 │   ├── test_parser.py
 │   ├── test_simulator.py
@@ -324,7 +318,6 @@ Sortie:
 ├── trace_simple.txt
 └── uv.lock
 
-7 directories, 57 files
 ```
 
 <a id="tests"></a>
@@ -334,6 +327,10 @@ Sortie:
 ```bash
 make test
 ```
+
+Les scénarios de la grille sont automatisés dans `tests/test_evaluation.py`.
+Le [compte rendu de validation](docs/evaluation.md) détaille les résultats,
+les commandes reproductibles et les limites de cette vérification.
 
 <a id="qualite-du-code"></a>
 
@@ -347,6 +344,7 @@ make test
 ## 📚 Documentation
 
 - [Pipeline global](docs/pipeline.md)
+- [Répartition de l'apprentissage — Sylvanna et Rafael](docs/repartition-apprentissage.md)
 - [Sujet du projet 42 (PDF)](docs/krpsim.en.subject.pdf)
 
 ## 👥 Auteurs

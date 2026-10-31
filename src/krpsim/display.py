@@ -7,9 +7,6 @@ par la CLI et verifiable par les tests.
 # Pour retarder l'evaluation des types et limiter les cycles.
 from __future__ import annotations
 
-# Pour rendre le diagnostic activable sans polluer la sortie.
-import logging
-
 # Pour appliquer des verifications d'acces dependantes du systeme.
 import os
 
@@ -42,7 +39,7 @@ def _pluralize(word: str, count: int) -> str:
 
     Contrat:
         Les termes de sortie doivent rester cohérents d'une execution a
-        l'autre pour conserver la lisibilite des logs.
+        l'autre pour conserver la lisibilite de la sortie.
     """
     # Pour proteger un invariant de comparaison critique ici.
     if count == 1:
@@ -152,5 +149,3 @@ def save_trace(trace: Iterable[tuple[int, str]], path: Path) -> None:
         fh.flush()
         # Pour reduire le risque de perte en cas d'arret brutal.
         os.fsync(fh.fileno())
-    # Pour conserver un point d'audit sur le chemin de sortie reel.
-    logging.getLogger(__name__).info("trace saved to %s", path)

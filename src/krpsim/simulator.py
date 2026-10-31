@@ -7,9 +7,6 @@ deterministe exploitable par la CLI et le verificateur.
 # Pour retarder l'evaluation des types et limiter les cycles.
 from __future__ import annotations
 
-# Pour rendre le diagnostic activable sans polluer la sortie.
-import logging
-
 # Pour formaliser des contrats de donnees clairs et compacts.
 from dataclasses import dataclass
 
@@ -173,7 +170,6 @@ class Simulator:
         else:
             self._running.append(_RunningProcess(process, process.delay))
         self.trace.append((self.time, process.name))
-        logging.getLogger(__name__).info("%d:%s", self.time, process.name)
         return True
 
     def _launch_terminal(self) -> tuple[bool, bool]:
@@ -208,7 +204,7 @@ class Simulator:
             return None
         if self.time >= self._max_time or self._planning_finished:
             return self._launch_terminal()
-        plan = self._planner.build_batch(self.stocks)
+        plan = self._planner.build_batch(self.stocks, self._max_time - self.time)
         if plan is None:
             self._planning_finished = True
             return self._launch_terminal()

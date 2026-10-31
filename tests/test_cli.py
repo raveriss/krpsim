@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from types import ModuleType
 
 import pytest
 from pytest import CaptureFixture, MonkeyPatch
@@ -161,37 +162,6 @@ def test_cli_deadlock(tmp_path: Path, capsys: CaptureFixture[str]) -> None:
     assert "Deadlock detected" in captured.out
 
 
-def test_cli_verbose_and_log(tmp_path: Path) -> None:
-    config = tmp_path / "conf.txt"
-    config.write_text("a:1\nproc:(a:1):(b:1):1\n")
-    trace_path = tmp_path / "trace.txt"
-    log_path = tmp_path / "app.log"
-    assert (
-        cli.main(
-            [
-                str(config),
-                "5",
-                "--trace",
-                str(trace_path),
-                "--verbose",
-                "--log",
-                str(log_path),
-            ]
-        )
-        == 0
-    )
-    assert "0:proc" in log_path.read_text()
-
-
-def test_cli_log_default_level(tmp_path: Path) -> None:
-    config = tmp_path / "conf.txt"
-    config.write_text("a:0\nproc:(a:1):(b:1):1\n")
-    log_path = tmp_path / "app.log"
-    exit_code = cli.main([str(config), "5", "--log", str(log_path)])
-    assert exit_code == 1
-    assert "Deadlock detected" in log_path.read_text()
-
-
 def test_cli_path_traversal(tmp_path: Path) -> None:
     config = tmp_path / "conf.txt"
     config.write_text("a:1\nproc:(a:1):(b:1):1\n")
@@ -230,19 +200,6 @@ def test_cli_invalid_config(file: Path, capsys: CaptureFixture[str]) -> None:
     assert exc.value.code == 1
     captured = capsys.readouterr()
     assert "invalid config" in captured.out.lower()
-
-
-def test_verifier_cli_log(tmp_path: Path) -> None:
-    cfg = tmp_path / "conf.txt"
-    cfg.write_text("a:1\nproc:(a:1):(b:1):1\n")
-    trace = tmp_path / "trace.txt"
-    trace.write_text("0:proc\n")
-    log_file = tmp_path / "verif.log"
-    assert (
-        verifier_cli.main([str(cfg), str(trace), "--verbose", "--log", str(log_file)])
-        == 0
-    )
-    assert "trace is valid" in log_file.read_text()
 
 
 @pytest.mark.parametrize(
@@ -312,3 +269,11 @@ def test_cli_ignore_delay_when_optimize_time_first(
     assert "Max time reached" not in captured.out
     assert "40:livraison" in captured.out
     assert "client_content  => 1" in captured.out
+
+
+@pytest.mark.parametrize("option", ["--analysis-log", "--log", "--verbose", "-v"])
+@pytest.mark.parametrize("command", [cli, verifier_cli])
+def test_cli_rejects_removed_logging_options(command: ModuleType, option: str) -> None:
+    with pytest.raises(SystemExit) as exc:
+        command.build_parser().parse_args(["resources/simple", "10", option])
+    assert exc.value.code == 2

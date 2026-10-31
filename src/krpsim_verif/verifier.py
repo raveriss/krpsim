@@ -7,9 +7,7 @@ simulateur et retourne l'etat final si la verification reussit.
 # Pour retarder l'evaluation des types et limiter les cycles.
 from __future__ import annotations
 
-# Pour rendre le diagnostic activable sans polluer la sortie.
 import heapq
-import logging
 import sys
 
 # Pour formaliser des contrats de donnees clairs et compacts.
@@ -23,9 +21,6 @@ from krpsim.parser import Config, Process, parse_file
 
 # Pour reutiliser la logique canonique du simulateur sans duplication.
 from krpsim.simulator import Simulator
-
-# Pour partager les logs d'analyse entre la CLI et le verificateur.
-from logger.analysis_log_krpsim_verif import AnalysisLogger, get_active_analysis_logger
 
 
 # Pour encapsuler TraceError autour d'un contrat clairement borne.
@@ -64,28 +59,6 @@ class _VerificationState:
     sequence: int = 0
 
 
-def _serialize_config(config: Config) -> dict[str, object]:
-    """Retourne une representation lisible de la configuration verifiee."""
-    return {
-        "stocks": config.stocks,
-        "processes": {
-            name: {
-                "name": process.name,
-                "needs": process.needs,
-                "results": process.results,
-                "delay": process.delay,
-            }
-            for name, process in config.processes.items()
-        },
-        "optimize": config.optimize,
-    }
-
-
-def _serialize_trace_entry(entry: TraceEntry) -> dict[str, object]:
-    """Retourne une entree de trace dans un format stable pour les logs."""
-    return {"cycle": entry.cycle, "process": entry.process}
-
-
 # Pour isoler parse_trace et faciliter son evolution sous tests.
 def parse_trace(path: Path) -> list[TraceEntry]:
     """Parse un fichier de trace au format ``cycle:process``.
@@ -106,16 +79,6 @@ def parse_trace(path: Path) -> list[TraceEntry]:
         La premiere erreur rencontree doit interrompre le parsing pour
         produire un diagnostic localise.
     """
-    # Pour garder un canal de diagnostic coherent dans tout le module.
-    logger = logging.getLogger(__name__)
-    # Pour obtenir le logger d'analyse partage avec la couche CLI.
-    analysis_logger = get_active_analysis_logger()
-    # Pour etiqueter clairement les logs emis par cette fonction.
-    scope = "parse_trace"
-    # Pour exposer clairement la phase de lecture de trace.
-    analysis_logger.log_header("TRACE PARSING", scope=scope)
-    # Pour tracer la cible exacte lue par le parser.
-    analysis_logger.log_key_value("TRACE_PATH", str(path), scope=scope)
     # Pour typer explicitement le champ et fiabiliser le contrat de donnees.
     entries: list[TraceEntry] = []
     # Pour appliquer uniformement la regle a chaque element concerne.
@@ -123,8 +86,7 @@ def parse_trace(path: Path) -> list[TraceEntry]:
         lines = enumerate(stream, start=1)
         for idx, raw_line in lines:
             line = raw_line.rstrip("\n")
-            _parse_trace_line(line, idx, entries, logger, analysis_logger, scope)
-    analysis_logger.log_key_value("PARSED_TRACE_COUNT", len(entries), scope=scope)
+            _parse_trace_line(line, idx, entries)
     return entries
 
 
@@ -132,77 +94,28 @@ def _parse_trace_line(
     line: str,
     idx: int,
     entries: list[TraceEntry],
-    logger: logging.Logger,
-    analysis_logger: AnalysisLogger,
-    scope: str,
 ) -> None:
     """Valide une ligne et l'ajoute a la trace structuree."""
 
-    analysis_logger.log_key_value(
-        "TRACE_LINE_READ", {"line_number": idx, "content": line}, scope=scope
-    )
     if not line:
-        analysis_logger.log_step(
-            "TRACE_LINE_ERROR",
-            {"line_number": idx, "reason": "empty"},
-            scope=scope,
-        )
         raise TraceError(f"empty trace line {idx}")
     if line.startswith("#"):
-        analysis_logger.log_step(
-            "TRACE_LINE_SKIPPED",
-            {"line_number": idx, "reason": "comment"},
-            scope=scope,
-        )
         return
     if ":" not in line:
-        analysis_logger.log_step(
-            "TRACE_LINE_ERROR",
-            {"line_number": idx, "reason": "missing_separator"},
-            scope=scope,
-        )
         raise TraceError(f"invalid trace line {idx}: '{line}'")
     cycle_str, name = line.split(":", 1)
     if not cycle_str.isdigit() or not name:
-        analysis_logger.log_step(
-            "TRACE_LINE_ERROR",
-            {
-                "line_number": idx,
-                "reason": "invalid_cycle",
-                "cycle": cycle_str,
-            },
-            scope=scope,
-        )
         raise TraceError(f"invalid trace line {idx}: '{line}'")
     entry = TraceEntry(int(cycle_str), sys.intern(name))
-    analysis_logger.log_key_value(
-        "TRACE_ENTRY_PARSED", _serialize_trace_entry(entry), scope=scope
-    )
-    logger.info("%d:%s", entry.cycle, entry.process)
     entries.append(entry)
 
 
-def _verify_empty_trace(
-    config: Config, analysis_logger: AnalysisLogger, scope: str
-) -> Simulator:
+def _verify_empty_trace(config: Config) -> Simulator:
     """Validate and execute the special empty-trace case."""
     if not config.optimize:
         for proc in config.processes.values():
             can_start = all(config.stocks.get(n, 0) >= q for n, q in proc.needs.items())
-            analysis_logger.log_key_value(
-                "EMPTY_TRACE_PROCESS_CHECK",
-                {
-                    "process_name": proc.name,
-                    "needs": proc.needs,
-                    "initial_stocks": config.stocks,
-                    "can_start": can_start,
-                },
-                scope=scope,
-            )
             if can_start:
-                analysis_logger.log_step(
-                    "EMPTY_TRACE_ERROR", f"process '{proc.name}' can start", scope=scope
-                )
                 raise TraceError("empty trace")
     return Simulator(config)
 
@@ -320,25 +233,9 @@ def verify_trace(config: Config, trace: list[TraceEntry]) -> Simulator:
         La verification s'arrete sur le premier ecart pour garder un message
         de diagnostic directement exploitable.
     """
-    # Pour garder un canal de diagnostic coherent dans tout le module.
-    logger = logging.getLogger(__name__)
-    # Pour obtenir le logger d'analyse partage avec la couche CLI.
-    analysis_logger = get_active_analysis_logger()
-    # Pour etiqueter clairement les logs emis par cette fonction.
-    scope = "verify_trace"
-    # Pour exposer clairement la phase de comparaison metier.
-    analysis_logger.log_header("TRACE VERIFICATION", scope=scope)
-    # Pour tracer la configuration qui sert de reference.
-    analysis_logger.log_key_value("CONFIG", _serialize_config(config), scope=scope)
-    analysis_logger.log_key_value("INPUT_TRACE_COUNT", len(trace), scope=scope)
 
     if not trace:
-        analysis_logger.log_step("EMPTY_TRACE_BRANCH", scope=scope)
-        sim = _verify_empty_trace(config, analysis_logger, scope)
-        # Pour laisser une preuve exploitable du succes de verification.
-        logger.info("trace validated successfully")
-        # Pour marquer la fin positive de cette branche.
-        analysis_logger.log_step("VERIFICATION_SUCCESS", "empty trace", scope=scope)
+        sim = _verify_empty_trace(config)
         # Pour rendre a l'appelant le resultat promis par le contrat.
         return sim
 
@@ -348,12 +245,6 @@ def verify_trace(config: Config, trace: list[TraceEntry]) -> Simulator:
 
     sim = _build_verified_simulator(config, state)
 
-    # Pour laisser une preuve exploitable du succes de verification.
-    logger.info("trace validated successfully")
-    # Pour exposer l'etat final valide apres comparaison.
-    analysis_logger.log_key_value("FINAL_STOCKS", sim.stocks, scope=scope)
-    # Pour marquer la fin positive du controle.
-    analysis_logger.log_step("VERIFICATION_SUCCESS", scope=scope)
     # Pour rendre a l'appelant le resultat promis par le contrat.
     return sim
 
@@ -381,32 +272,9 @@ def verify_files(config_path: Path, trace_path: Path) -> Simulator:
         Cette fonction sert de point d'entree unique pour la CLI afin de
         conserver un flux de verification coherent.
     """
-    # Pour garder un canal de diagnostic coherent dans tout le module.
-    logger = logging.getLogger(__name__)
-    # Pour obtenir le logger d'analyse partage avec la couche CLI.
-    analysis_logger = get_active_analysis_logger()
-    # Pour etiqueter clairement les logs emis par cette fonction.
-    scope = "verify_files"
-    # Pour exposer clairement la phase fichier du verificateur.
-    analysis_logger.log_header("FILE VERIFICATION", scope=scope)
-    # Pour tracer les chemins exacts recus par l'appelant.
-    analysis_logger.log_key_value("CONFIG_PATH", str(config_path), scope=scope)
-    # Pour tracer les chemins exacts recus par l'appelant.
-    analysis_logger.log_key_value("TRACE_PATH", str(trace_path), scope=scope)
     # Pour reutiliser la validation canonique plutot qu'un parsing local.
     config = parse_file(config_path)
-    # Pour exposer la configuration validee avant comparaison.
-    analysis_logger.log_key_value(
-        "PARSED_CONFIG",
-        _serialize_config(config),
-        scope=scope,
-    )
     # Pour verifier la syntaxe de trace avant toute comparaison metier.
     trace = parse_trace(trace_path)
-    analysis_logger.log_key_value("PARSED_TRACE_COUNT", len(trace), scope=scope)
-    # Pour tracer clairement la paire de fichiers en cours de controle.
-    logger.info("verifying trace against %s", config_path)
-    # Pour indiquer le passage a la verification metier.
-    analysis_logger.log_step("VERIFY_TRACE_START", scope=scope)
     # Pour rendre a l'appelant le resultat promis par le contrat.
     return verify_trace(config, trace)

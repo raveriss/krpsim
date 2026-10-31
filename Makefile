@@ -6,7 +6,7 @@
 #   make krpsim ...     -> exécute krpsim depuis .venv
 
 .PHONY: default install install-bin uninstall-bin \
-        lint format test krpsim analysis_log_krpsim krpsim_verif analysis_log_krpsim_verif analysis_log_verif graph analysis_log_gantt_project analysis_log_gantt_projet process_resources \
+        lint format test krpsim krpsim_verif process_resources \
         clean fclean re uninstall which-bin print-path help doctor \
 			ensure-uv shell venv-shell
 
@@ -18,15 +18,12 @@ VENV_PYTHON = $(VENV_DIR)/bin/python
 PROJECT_VENV = $(abspath $(VENV_DIR))
 UV_RUN = UV_PROJECT_ENVIRONMENT="$(PROJECT_VENV)" $(UV_BIN) run --no-sync
 PINNED_PYTHON_VERSION := $(strip $(shell sed -n '1p' .python-version 2>/dev/null || printf '3.13'))
-OPEN_GRAPH_IMAGE = GRAPH_IMAGE_ABS="$$(realpath "$$GRAPH_IMAGE" 2>/dev/null || printf '%s' "$$GRAPH_IMAGE")"; if [ "$${KRPSIM_OPEN_GRAPH:-1}" = "0" ]; then echo "[GRAPH] Ouverture ignorée: $$GRAPH_IMAGE_ABS"; elif command -v xdg-open >/dev/null 2>&1; then xdg-open "$$GRAPH_IMAGE_ABS" >/dev/null 2>&1 && echo "[GRAPH] Ouverture: $$GRAPH_IMAGE_ABS" || echo "[GRAPH] Graphe généré: $$GRAPH_IMAGE_ABS"; elif command -v gio >/dev/null 2>&1; then gio open "$$GRAPH_IMAGE_ABS" >/dev/null 2>&1 && echo "[GRAPH] Ouverture: $$GRAPH_IMAGE_ABS" || echo "[GRAPH] Graphe généré: $$GRAPH_IMAGE_ABS"; elif command -v open >/dev/null 2>&1; then open "$$GRAPH_IMAGE_ABS" >/dev/null 2>&1 && echo "[GRAPH] Ouverture: $$GRAPH_IMAGE_ABS" || echo "[GRAPH] Graphe généré: $$GRAPH_IMAGE_ABS"; elif command -v code >/dev/null 2>&1; then code --new-window "$$GRAPH_IMAGE_ABS" >/dev/null 2>&1 && echo "[GRAPH] Ouverture: $$GRAPH_IMAGE_ABS" || echo "[GRAPH] Graphe généré: $$GRAPH_IMAGE_ABS"; else echo "[GRAPH] Graphe généré: $$GRAPH_IMAGE_ABS"; fi
 KRPSIM_INPUT = $(word 2,$(MAKECMDGOALS))
 KRPSIM_CYCLES = $(word 3,$(MAKECMDGOALS))
 KRPSIM_VERIF_INPUT = $(word 2,$(MAKECMDGOALS))
 KRPSIM_VERIF_TRACE = $(word 3,$(MAKECMDGOALS))
-GANTT_INPUT = $(word 2,$(MAKECMDGOALS))
-GANTT_TRACE = $(word 3,$(MAKECMDGOALS))
 KRPSIM_ARGS_COUNT = $(words $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS)))
-CLI_ARG_TARGETS = krpsim analysis_log_krpsim krpsim_verif analysis_log_krpsim_verif analysis_log_verif analysis_log_gantt_project analysis_log_gantt_projet
+CLI_ARG_TARGETS = krpsim krpsim_verif
 INSTALL_GOAL_REQUESTED = $(filter install,$(MAKECMDGOALS))
 
 ifneq (,$(filter $(firstword $(MAKECMDGOALS)),$(CLI_ARG_TARGETS)))
@@ -138,7 +135,7 @@ lint: install
 # ------------------------------------------------------------
 # Mise en forme automatique du code
 # ------------------------------------------------------------
-PY_FILES := $(shell git ls-files '*.py')
+PY_FILES := $(wildcard $(shell git ls-files '*.py'))
 
 format: install
 	@set -e; \
@@ -199,27 +196,11 @@ krpsim: install
 	CONFIG_BASENAME="$$(basename "$(KRPSIM_INPUT)")"; \
 	CONFIG_STEM="$${CONFIG_BASENAME%.*}"; \
 	TRACE_FILE="trace_$${CONFIG_STEM}.txt"; \
-	GRAPH_CONFIG_FILE="graph_config_$${CONFIG_STEM}.json"; \
 	echo "[KRPSIM] Exécution: file=$(KRPSIM_INPUT), max_cycles=$(KRPSIM_CYCLES)"; \
 	echo "[KRPSIM] Trace de sortie: $$TRACE_FILE"; \
-	echo "[KRPSIM] Config graphe: $$GRAPH_CONFIG_FILE"; \
 	OUT="$$(mktemp)"; \
 	if $(UV_RUN) krpsim "$(KRPSIM_INPUT)" "$(KRPSIM_CYCLES)" --trace "$$TRACE_FILE" >"$$OUT" 2>&1; then \
 		cat "$$OUT"; \
-		CFG_OUT="$$(mktemp)"; \
-		if $(UV_RUN) python gantt_project/build_graph_config.py \
-			--config "$(KRPSIM_INPUT)" \
-			--trace "$$TRACE_FILE" \
-			--output "$$GRAPH_CONFIG_FILE" >"$$CFG_OUT" 2>&1; then \
-			[ -s "$$CFG_OUT" ] && cat "$$CFG_OUT"; \
-		else \
-			CFG_CODE=$$?; \
-			echo "[KRPSIM][ERREUR] Génération de la config graphe échouée (code=$$CFG_CODE)."; \
-			echo "Action: vérifie le fichier de config, la trace, puis relance la commande."; \
-			echo "Détail technique:"; \
-			sed 's/^/  /' "$$CFG_OUT"; \
-		fi; \
-		rm -f "$$CFG_OUT"; \
 	else \
 		CODE=$$?; \
 		if grep -q "^invalid config:" "$$OUT"; then \
@@ -244,50 +225,6 @@ krpsim: install
 		sed 's/^/  /' "$$OUT"; \
 	fi; \
 	rm -f "$$OUT"
-
-analysis_log_krpsim: install
-	@set -u; \
-	HAS_ERROR=0; \
-	CYCLE_IS_INT=1; \
-	if [ "$(KRPSIM_ARGS_COUNT)" -ne 2 ]; then \
-		echo "[ANALYSIS_LOG_KRPSIM][ERREUR] Arguments invalides."; \
-		echo "Usage: make analysis_log_krpsim <resource_file> <max_cycles>"; \
-		echo "Exemple: make analysis_log_krpsim resources/simple 10"; \
-		echo "Action: fournis exactement 2 arguments."; \
-		HAS_ERROR=1; \
-	fi; \
-	if [ "$$HAS_ERROR" -eq 1 ]; then \
-		exit 0; \
-	fi; \
-	if [ ! -f "$(KRPSIM_INPUT)" ]; then \
-		echo "[ANALYSIS_LOG_KRPSIM][ERREUR] Fichier de configuration introuvable: $(KRPSIM_INPUT)"; \
-		echo "Action: vérifie le chemin du fichier (ex: resources/simple)."; \
-		HAS_ERROR=1; \
-	fi; \
-	case "$(KRPSIM_CYCLES)" in \
-		''|*[!0-9]*) \
-			echo "[ANALYSIS_LOG_KRPSIM][ERREUR] <max_cycles> doit etre un entier positif."; \
-			echo "Valeur reçue: $(KRPSIM_CYCLES)"; \
-			echo "Action: utilise un entier positif."; \
-			CYCLE_IS_INT=0; \
-			HAS_ERROR=1; \
-			;; \
-	esac; \
-	if [ "$$CYCLE_IS_INT" -eq 1 ] && [ "$(KRPSIM_CYCLES)" -le 0 ]; then \
-		echo "[ANALYSIS_LOG_KRPSIM][ERREUR] <max_cycles> doit etre strictement supérieur a 0."; \
-		echo "Valeur reçue: $(KRPSIM_CYCLES)"; \
-		echo "Action: utilise une valeur comme 1, 10, 100."; \
-		HAS_ERROR=1; \
-	fi; \
-	if [ "$$HAS_ERROR" -eq 1 ]; then \
-		exit 0; \
-	fi; \
-	CONFIG_BASENAME="$$(basename "$(KRPSIM_INPUT)")"; \
-	CONFIG_STEM="$${CONFIG_BASENAME%.*}"; \
-	TRACE_FILE="trace_$${CONFIG_STEM}.txt"; \
-	echo "[ANALYSIS_LOG_KRPSIM] Exécution: file=$(KRPSIM_INPUT), max_cycles=$(KRPSIM_CYCLES)"; \
-	echo "[ANALYSIS_LOG_KRPSIM] Trace de sortie: $$TRACE_FILE"; \
-	$(UV_RUN) krpsim "$(KRPSIM_INPUT)" "$(KRPSIM_CYCLES)" --trace "$$TRACE_FILE" --analysis-log
 
 krpsim_verif: install
 	@set -u; \
@@ -319,136 +256,10 @@ krpsim_verif: install
 	OUT="$$(mktemp)"; \
 	if $(UV_RUN) krpsim_verif "$(KRPSIM_VERIF_INPUT)" "$(KRPSIM_VERIF_TRACE)" >"$$OUT" 2>&1; then \
 		cat "$$OUT"; \
-		CONFIG_BASENAME="$$(basename "$(KRPSIM_VERIF_INPUT)")"; \
-		CONFIG_STEM="$${CONFIG_BASENAME%.*}"; \
-		GRAPH_CONFIG_FILE="graph_config_$${CONFIG_STEM}.json"; \
-		CFG_OUT="$$(mktemp)"; \
-		if $(UV_RUN) python gantt_project/build_graph_config.py \
-			--config "$(KRPSIM_VERIF_INPUT)" \
-			--trace "$(KRPSIM_VERIF_TRACE)" \
-			--output "$$GRAPH_CONFIG_FILE" >"$$CFG_OUT" 2>&1; then \
-			[ -s "$$CFG_OUT" ] && cat "$$CFG_OUT"; \
-			echo "[GRAPH] Génération du graphe Gantt"; \
-			GRAPH_IMAGE="docs/graphs/diagramme_gantt_$${CONFIG_STEM}.png"; \
-			GRAPH_OUT="$$(mktemp)"; \
-			if $(UV_RUN) python gantt_project/gantt.py --config "$$GRAPH_CONFIG_FILE" --output "$$GRAPH_IMAGE" --no-show >"$$GRAPH_OUT" 2>&1; then \
-				[ -s "$$GRAPH_OUT" ] && cat "$$GRAPH_OUT"; \
-				$(OPEN_GRAPH_IMAGE); \
-			else \
-				GRAPH_CODE=$$?; \
-				echo "[GRAPH][ERREUR] La génération a échoué (code=$$GRAPH_CODE)."; \
-				echo "Action: vérifie le fichier $$GRAPH_CONFIG_FILE et les dépendances graphiques."; \
-				echo "Détail technique:"; \
-				sed 's/^/  /' "$$GRAPH_OUT"; \
-			fi; \
-			rm -f "$$GRAPH_OUT"; \
-		else \
-			CFG_CODE=$$?; \
-			echo "[KRPSIM_VERIF][ERREUR] Génération de la config graphe échouée (code=$$CFG_CODE)."; \
-			echo "Action: vérifie le fichier de config, la trace, puis relance la commande."; \
-			echo "Détail technique:"; \
-			sed 's/^/  /' "$$CFG_OUT"; \
-		fi; \
-		rm -f "$$CFG_OUT"; \
 	else \
 		CODE=$$?; \
 		echo "[KRPSIM_VERIF][ERREUR] L'exécution a échoué (code=$$CODE)."; \
 		echo "Action: vérifie le format de la trace et la cohérence avec le fichier source."; \
-		echo "Détail technique:"; \
-		sed 's/^/  /' "$$OUT"; \
-	fi; \
-	rm -f "$$OUT"
-
-analysis_log_krpsim_verif: install
-	@set -u; \
-	HAS_ERROR=0; \
-	if [ "$(KRPSIM_ARGS_COUNT)" -ne 2 ]; then \
-		echo "[ANALYSIS_LOG_KRPSIM_VERIF][ERREUR] Arguments invalides."; \
-		echo "Usage: make analysis_log_krpsim_verif <resource_file> <trace_file>"; \
-		echo "Exemple: make analysis_log_krpsim_verif resources/simple trace_simple.txt"; \
-		echo "Action: fournis exactement 2 arguments."; \
-		HAS_ERROR=1; \
-	fi; \
-	if [ "$$HAS_ERROR" -eq 1 ]; then \
-		exit 0; \
-	fi; \
-	if [ ! -f "$(KRPSIM_VERIF_INPUT)" ]; then \
-		echo "[ANALYSIS_LOG_KRPSIM_VERIF][ERREUR] Fichier de configuration introuvable: $(KRPSIM_VERIF_INPUT)"; \
-		echo "Action: vérifie le chemin du fichier (ex: resources/simple)."; \
-		HAS_ERROR=1; \
-	fi; \
-	if [ ! -f "$(KRPSIM_VERIF_TRACE)" ]; then \
-		echo "[ANALYSIS_LOG_KRPSIM_VERIF][ERREUR] Fichier de trace introuvable: $(KRPSIM_VERIF_TRACE)"; \
-		echo "Action: génère d'abord une trace puis relance la vérification."; \
-		HAS_ERROR=1; \
-	fi; \
-	if [ "$$HAS_ERROR" -eq 1 ]; then \
-		exit 0; \
-	fi; \
-	echo "[ANALYSIS_LOG_KRPSIM_VERIF] Vérification: file=$(KRPSIM_VERIF_INPUT), trace=$(KRPSIM_VERIF_TRACE)"; \
-	$(UV_RUN) krpsim_verif "$(KRPSIM_VERIF_INPUT)" "$(KRPSIM_VERIF_TRACE)" --analysis-log
-
-analysis_log_verif: analysis_log_krpsim_verif
-
-analysis_log_gantt_project: install
-	@set -u; \
-	HAS_ERROR=0; \
-	if [ "$(KRPSIM_ARGS_COUNT)" -ne 2 ]; then \
-		echo "[ANALYSIS_LOG_GANTT_PROJECT][ERREUR] Arguments invalides."; \
-		echo "Usage: make analysis_log_gantt_project <resource_file> <trace_file>"; \
-		echo "Exemple: make analysis_log_gantt_project resources/simple trace_simple.txt"; \
-		echo "Action: fournis exactement 2 arguments."; \
-		HAS_ERROR=1; \
-	fi; \
-	if [ "$$HAS_ERROR" -eq 1 ]; then \
-		exit 0; \
-	fi; \
-	if [ ! -f "$(GANTT_INPUT)" ]; then \
-		echo "[ANALYSIS_LOG_GANTT_PROJECT][ERREUR] Fichier de configuration introuvable: $(GANTT_INPUT)"; \
-		echo "Action: vérifie le chemin du fichier (ex: resources/simple)."; \
-		HAS_ERROR=1; \
-	fi; \
-	if [ ! -f "$(GANTT_TRACE)" ]; then \
-		echo "[ANALYSIS_LOG_GANTT_PROJECT][ERREUR] Fichier de trace introuvable: $(GANTT_TRACE)"; \
-		echo "Action: génère d'abord une trace puis relance la génération Gantt."; \
-		HAS_ERROR=1; \
-	fi; \
-	if [ "$$HAS_ERROR" -eq 1 ]; then \
-		exit 0; \
-	fi; \
-	CONFIG_BASENAME="$$(basename "$(GANTT_INPUT)")"; \
-	CONFIG_STEM="$${CONFIG_BASENAME%.*}"; \
-	GRAPH_CONFIG_FILE="graph_config_$${CONFIG_STEM}.json"; \
-	echo "[ANALYSIS_LOG_GANTT_PROJECT] Config: file=$(GANTT_INPUT), trace=$(GANTT_TRACE)"; \
-	echo "[ANALYSIS_LOG_GANTT_PROJECT] Config graphe: $$GRAPH_CONFIG_FILE"; \
-	if $(UV_RUN) python gantt_project/build_graph_config.py \
-		--config "$(GANTT_INPUT)" \
-		--trace "$(GANTT_TRACE)" \
-		--output "$$GRAPH_CONFIG_FILE" \
-		--analysis-log; then \
-		echo "[ANALYSIS_LOG_GANTT_PROJECT] Génération du graphe Gantt"; \
-		GRAPH_IMAGE="docs/graphs/diagramme_gantt_$${CONFIG_STEM}.png"; \
-		$(UV_RUN) python gantt_project/gantt.py --config "$$GRAPH_CONFIG_FILE" --output "$$GRAPH_IMAGE" --no-show --analysis-log; \
-		$(OPEN_GRAPH_IMAGE); \
-	else \
-		CODE=$$?; \
-		echo "[ANALYSIS_LOG_GANTT_PROJECT][ERREUR] Génération de la config graphe échouée (code=$$CODE)."; \
-		echo "Action: vérifie le fichier de config, la trace, puis relance la commande."; \
-	fi
-
-analysis_log_gantt_projet: analysis_log_gantt_project
-
-graph: install
-	@echo "[GRAPH] Génération du graphe Gantt"; \
-	GRAPH_IMAGE="docs/graphs/diagramme_gantt_simple.png"; \
-	OUT="$$(mktemp)"; \
-	if $(UV_RUN) python gantt_project/gantt.py --config graph_config_simple.json --output "$$GRAPH_IMAGE" --no-show >"$$OUT" 2>&1; then \
-		cat "$$OUT"; \
-		$(OPEN_GRAPH_IMAGE); \
-	else \
-		CODE=$$?; \
-		echo "[GRAPH][ERREUR] La génération a échoué (code=$$CODE)."; \
-		echo "Action: vérifie graph_config_simple.json, les dépendances graphiques et le script gantt_project/gantt.py."; \
 		echo "Détail technique:"; \
 		sed 's/^/  /' "$$OUT"; \
 	fi; \
@@ -532,8 +343,8 @@ clean:
 	  .coverage coverage.xml htmlcov \
 	  .ruff_cache .tox \
 	  **/__pycache__ \
-	  log.txt trace.txt trace_*.txt graph_config_*.json junit.xml \
-	  .artifacts docs/graphs 2>/dev/null || true
+	  log.txt trace.txt trace_*.txt junit.xml \
+	  .artifacts 2>/dev/null || true
 
 fclean:
 	@echo "🧹 Nettoyage"
@@ -605,13 +416,9 @@ help:
 	@echo "  uninstall-bin -> supprime les symlinks utilisateur"
 	@echo "  shell         -> ouvre un shell interactif dans le venv"
 	@echo "  krpsim <file> <cycles>          -> exécute via uv"
-	@echo "    sortie: trace_<file>.txt + graph_config_<file>.json"
-	@echo "  analysis_log_krpsim <file> <cycles> -> exécute krpsim avec logs d'analyse"
+	@echo "    sortie: trace_<file>.txt"
 	@echo "  krpsim_verif <file> <trace>     -> exécute via uv"
-	@echo "  analysis_log_krpsim_verif <file> <trace> -> exécute krpsim_verif avec logs d'analyse"
-	@echo "  analysis_log_gantt_project <file> <trace> -> génère la config graphe + Gantt avec logs d'analyse"
 	@echo "  note          -> si un argument commence par '-', utilise: make -- <target> ..."
-	@echo "  graph         -> génère le graphe Gantt"
 	@echo "  lint | format | test | process_resources"
 	@echo "  clean | fclean | re | uninstall (supprime .venv et les liens)"
 	@echo "  doctor        -> vérifie uv, Python, uv.lock et l'environnement"

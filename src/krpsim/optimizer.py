@@ -11,8 +11,6 @@ from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from logger.analysis_log_krpsim import get_active_analysis_logger
-
 # Pour limiter le couplage aux composants internes necessaires.
 from .parser import Config, Process
 
@@ -45,6 +43,8 @@ class ProductionPlanner:
     """
 
     _MAX_EXPANSIONS = 100_000
+    _LOOKAHEAD_DEPTH = 3
+    _LOOKAHEAD_BUDGET = 256
 
     def __init__(self, config: Config):
         self.config = config
@@ -96,7 +96,9 @@ class ProductionPlanner:
             for resource, quantity in self.terminal.needs.items()
         )
 
-    def build_batch(self, stocks: dict[str, int]) -> BatchPlan | None:
+    def build_batch(
+        self, stocks: dict[str, int], max_duration: int | None = None
+    ) -> BatchPlan | None:
         """Choisit le meilleur producteur et construit ses dependances."""
 
         if self.goal is None:
@@ -105,6 +107,18 @@ class ProductionPlanner:
         for process in self._producers.get(self.goal, []):
             candidate = self._build_candidate(process, stocks)
             if candidate is not None:
+                if self.config.optimize and self.config.optimize[0] == "time":
+                    quality = self._completion_quality(
+                        stocks,
+                        candidate.state,
+                        candidate.counts,
+                        self._LOOKAHEAD_DEPTH,
+                        [self._LOOKAHEAD_BUDGET],
+                        max_duration,
+                    )
+                    candidate = _BatchCandidate(
+                        quality, process, candidate.state, candidate.counts
+                    )
                 candidates.append(candidate)
         best = self._select_candidate(candidates)
         if best is None:
@@ -114,6 +128,52 @@ class ProductionPlanner:
             counts=best.counts,
             expected_gain=self._gain(stocks, best.state),
         )
+
+    def _completion_quality(
+        self,
+        initial: dict[str, int],
+        state: dict[str, int],
+        counts: dict[str, int],
+        depth: int,
+        budget: list[int],
+        max_duration: int | None,
+    ) -> tuple[object, ...]:
+        """Compare la production atteignable avant sa durée cumulée.
+
+        Une recherche bornée anticipe les lots suivants pour éviter qu'un
+        gain immédiat laisse des ressources inachevées. C'est une heuristique,
+        pas une preuve d'optimalité globale; l'exécution parallélise les lots.
+        """
+
+        quality: tuple[object, ...] = (
+            self._gain(initial, state),
+            -self._batch_duration(counts),
+            -self._material_cost(counts),
+        )
+        if depth == 0:
+            return quality
+        for process in self._producers.get(self.goal or "", []):
+            if budget[0] == 0:
+                break
+            budget[0] -= 1
+            candidate = self._build_candidate(process, state)
+            if candidate is None:
+                continue
+            combined = counts.copy()
+            for name, count in candidate.counts.items():
+                combined[name] = combined.get(name, 0) + count
+            if (
+                max_duration is not None
+                and self._batch_duration(combined) > max_duration
+            ):
+                continue
+            quality = max(
+                quality,
+                self._completion_quality(
+                    initial, candidate.state, combined, depth - 1, budget, max_duration
+                ),
+            )
+        return quality
 
     def _build_candidate(
         self,
@@ -297,6 +357,10 @@ class ProductionPlanner:
                 resource, quantity, state, counts, visiting, expansions
             ):
                 return False
+        # Une dépendance peut avoir consommé une entrée vérifiée plus tôt.
+        # Tous les besoins doivent être disponibles ensemble avant le débit.
+        if any(state.get(resource, 0) < qty for resource, qty in process.needs.items()):
+            return False
         for resource, quantity in process.needs.items():
             state[resource] = state.get(resource, 0) - quantity
         for resource, quantity in process.results.items():
@@ -326,7 +390,6 @@ def _sort_key_factory(
     target_requirements: dict[str, dict[str, int]],
 ) -> Callable[[Process], tuple[int | str, ...]]:
     """Create the deterministic multi-criteria sort key."""
-    analysis_logger = get_active_analysis_logger()
 
     def sort_key(proc: Process) -> tuple[int | str, ...]:
         key: list[int | str] = []
@@ -346,17 +409,6 @@ def _sort_key_factory(
                 )
             )
         key.append(proc.name)
-        analysis_logger.log_key_value(
-            "SORT_KEY_RESULT",
-            {
-                "process_name": proc.name,
-                "delay": proc.delay,
-                "needs": proc.needs,
-                "results": proc.results,
-                "key": tuple(key),
-            },
-            scope="optimizer.order_processes.sort_key",
-        )
         return tuple(key)
 
     return sort_key
@@ -379,30 +431,11 @@ def order_processes(config: Config) -> list[Process]:
         A criteres equivalents, l'ordre alphabétique des noms doit rester
         stable pour eviter des traces non deterministes.
     """
-    # Pour obtenir le logger d'analyse partage avec la couche CLI.
-    analysis_logger = get_active_analysis_logger()
-    # Pour etiqueter clairement les logs emis par ce module.
-    order_scope = "optimizer.order_processes"
-    # Pour exposer les donnees d'entree du tri avant toute transformation.
-    analysis_logger.log_step(
-        "ORDER_PROCESSES_START",
-        {
-            "optimize": config.optimize or [],
-            "process_names": list(config.processes),
-        },
-        scope=order_scope,
-    )
 
     target_requirements = _target_requirements(config)
     sort_key = _sort_key_factory(config, target_requirements)
 
     # Pour calculer un ordre deterministic selon les regles d'optimisation.
     ordered = sorted(config.processes.values(), key=sort_key)
-    # Pour exposer le resultat final produit par ce module.
-    analysis_logger.log_key_value(
-        "ORDERED_PROCESS_NAMES",
-        [proc.name for proc in ordered],
-        scope=order_scope,
-    )
     # Pour rendre a l'appelant le resultat promis par le contrat.
     return ordered

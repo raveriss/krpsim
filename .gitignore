@@ -26,5 +26,3 @@ dist/
 
 # Divers
 *.txt
-graph_config_*.json
-docs/graphs/

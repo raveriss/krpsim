@@ -1,6 +1,6 @@
 # Pipeline global KRPSIM
 
-Ce document décrit le flux d'exécution complet de KRPSIM, de la lecture d'un fichier de configuration jusqu'à la génération d'un graphe Gantt.
+Ce document décrit le flux d'exécution complet de KRPSIM, de la lecture d'un fichier de configuration jusqu'à la vérification de la trace d'exécution.
 
 ## Vue d'ensemble
 
@@ -11,8 +11,6 @@ flowchart LR
     C --> D[Simulator]
     D --> E[Trace machine]
     E --> F[Verifier]
-    F --> G[Graph Config JSON]
-    G --> H[Diagramme de Gantt PNG]
 ```
 
 ## 1. Entrée: configuration
@@ -76,17 +74,6 @@ Le vérificateur:
 - Rejoue la simulation attendue.
 - Compare trace fournie vs trace attendue.
 - Retourne l'état final si la trace est valide.
-
-## 6. Génération des artefacts de graphe
-
-Modules: `gantt_project/build_graph_config.py`, `gantt_project/gantt.py`
-
-Après `make krpsim` ou `make krpsim_verif`, le pipeline produit:
-
-- `graph_config_<resource>.json` (intermédiaire)
-- Un graphe Gantt (PNG) via `gantt.py`
-
-Exemple d'image: [diagramme_gantt_ikea.png](diagramme_gantt_ikea.png)
 
 ## Commandes de bout en bout
 

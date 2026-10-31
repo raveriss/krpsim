@@ -176,9 +176,9 @@ def _parse_resources(block: str) -> dict[str, int]:
             # Pour ignorer ce cas et laisser la boucle traiter les suivants.
             continue
         # Pour isoler une etape de validation et garder un diagnostic clair.
-        name, qty = item.split(":", 1)
+        name, _, qty = item.partition(":")
         # Pour traiter explicitement un cas d'entree invalide ou absent.
-        if not qty.isdigit():
+        if not name or not qty.isdigit():
             # Pour signaler sans delai une violation explicite du contrat.
             raise ParseError(f"invalid quantity for resource '{item}'")
         # Pour verrouiller les calculs suivants sur un type numerique fiable.

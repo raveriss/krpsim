@@ -383,3 +383,34 @@ def test_order_processes_skips_target_without_unique_producer() -> None:
     )
 
     assert [process.name for process in order_processes(cfg)] == ["make"]
+
+
+def test_time_lookahead_budget_preserves_executable_plans(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(ProductionPlanner, "_LOOKAHEAD_BUDGET", 1)
+    cfg = parser.parse_file(Path("resources/steak"))
+    sim = Simulator(cfg)
+    sim.run(100)
+
+    assert sim.stocks["steak_cuit"] == 3
+    assert sim.stocks["steak_cru"] == sim.stocks["steak_mi_cuit"] == 0
+
+
+def test_time_lookahead_on_renewable_production_is_bounded() -> None:
+    cfg = parser.parse_file(Path("resources/best"))
+    sim = Simulator(cfg)
+
+    assert sim.run(12) == [(cycle, "rapide") for cycle in range(12)]
+    assert sim.stocks["gateau"] == 12
+    assert sim.time == 12
+
+
+def test_time_planner_without_explicit_horizon_anticipates_remaining_stock() -> None:
+    cfg = parser.parse_file(Path("resources/steak"))
+    plan = ProductionPlanner(cfg).build_batch(cfg.stocks)
+
+    assert plan is not None
+    assert plan.counts == {"cuisson_1": 1, "cuisson_3": 1}
+    assert plan.expected_gain == (1,)
+    assert cfg.stocks == {"steak_cru": 3, "poele": 1}
