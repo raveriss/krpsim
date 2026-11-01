@@ -172,11 +172,40 @@ Les besoins sont revérifiés ensemble après la préparation des dépendances p
 pas l'optimum global sur tous les graphes. Sur `steak`, elle cuit les trois
 steaks en 30 cycles (`cuisson_1`, `cuisson_3`, `cuisson_2`).
 
+Si aucun plan complet n'est trouvé, le diagnostic distingue l'épuisement du
+budget d'exploration d'un échec de l'heuristique. Le simulateur peut alors
+produire des ressources intermédiaires liées à l'objectif, avec les stocks
+réellement disponibles et sans dépasser l'horizon. Ce repli conserve les
+objectifs déjà acquis et les ressources réutilisables (comme `clock`) ; il
+préfère les conversions disponibles aux sources renouvelables, évite de
+revisiter un état et respecte un budget de trace. Il ne garantit pas l'optimum
+et ne relance pas la recherche complète à chaque cycle.
+
+Avec `resources/time` et `optimize:(year)`, une limite de 50 cycles produit
+50 `second`, conserve `clock:1` et laisse `year:0`. Avec `optimize:(time;year)`,
+l'horizon interne reste de 500 cycles : le repli produit 7 `minute` et 38
+`second`, avec `clock:1` et `year:0`. Les traces sont vérifiables et la sortie
+signale explicitement la production intermédiaire. Une recherche infructueuse
+n'est plus présentée comme une preuve qu'aucune amélioration n'est possible.
+
 Un même processus peut être lancé plusieurs fois au même cycle. Les processus
 instantanés sont exécutés jusqu'à la multiplicité utile, avec une protection
 contre les boucles instantanées sans progression. Lorsqu'un convertisseur final
 instantané est détecté, sa ressource d'entrée reste disponible comme fonds de
 roulement pendant la production et n'est convertie qu'à la fin.
+
+Une production directe à délai positif qui consomme sa propre ressource cible
+peut lancer plusieurs instances, financées uniquement par les stocks disponibles
+au début du lot. Avec `resources/self`, les lancements doublent : 1 au cycle 0,
+2 au cycle 1, 4 au cycle 2, soit 8 unités de `X` au cycle 3.
+Pour ces lots, un budget de 100 000 lignes, trace déjà produite comprise, borne
+la recherche. Le dernier lot utilise le budget restant puis se termine ; les
+stocks finaux et la trace classique sont enregistrés normalement. Un message
+signale la recherche bornée, sans garantie d'optimalité, avec un code retour 0.
+Les éventuelles conversions terminales restent exécutées après ce lot.
+Ainsi, `resources/self 50` produit 100 000 lancements vérifiables et 100 001
+unités de `X` au cycle 17. Cette solution est réalisable dans les 50 cycles
+demandés ; elle ne représente pas l'optimum théorique de 2⁵⁰ unités.
 
 Le vérificateur rejoue directement la trace fournie : il accepte donc tout
 ordonnancement valide, y compris les répétitions au même cycle et les solutions

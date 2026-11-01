@@ -5,6 +5,7 @@ import pytest
 from krpsim import parser
 from krpsim.optimizer import ProductionPlanner, order_processes
 from krpsim.simulator import Simulator
+from krpsim_verif.verifier import TraceEntry, verify_trace
 
 
 def test_run_simple(tmp_path):
@@ -58,15 +59,47 @@ def test_no_process_possible():
     assert sim.stocks["a"] == 1
 
 
-def test_deadlock_flag() -> None:
+@pytest.mark.parametrize("optimize", [None, ["a"]])
+def test_deadlock_flag(optimize: list[str] | None) -> None:
     cfg = parser.Config(
         stocks={"a": 0},
         processes={"p": parser.Process("p", {"a": 1}, {"a": 1}, 1)},
+        optimize=optimize,
     )
     sim = Simulator(cfg)
     trace = sim.run(5)
     assert trace == []
     assert sim.deadlock is True
+    assert sim.no_improvement is False
+
+
+@pytest.mark.parametrize("produced", [1, 2])
+def test_unprofitable_objective_stops_normally(produced: int) -> None:
+    cfg = parser.Config(
+        stocks={"item": 2},
+        processes={"loop": parser.Process("loop", {"item": 2}, {"item": produced}, 1)},
+        optimize=["item"],
+    )
+    sim = Simulator(cfg)
+
+    assert sim.run(25) == []
+    assert sim.time == 0
+    assert sim.stocks == {"item": 2}
+    assert sim.deadlock is False
+    assert sim.no_improvement is True
+
+
+def test_unprofitable_objective_exceeding_horizon_is_not_normal_stop() -> None:
+    cfg = parser.Config(
+        stocks={"item": 1},
+        processes={"loop": parser.Process("loop", {"item": 1}, {"item": 1}, 26)},
+        optimize=["item"],
+    )
+    sim = Simulator(cfg)
+
+    assert sim.run(25) == []
+    assert sim.deadlock is True
+    assert sim.no_improvement is False
 
 
 def test_zero_delay_process_applies_results_immediately() -> None:
@@ -252,13 +285,17 @@ def test_finite_resource() -> None:
     assert sim.time == 1
 
 
-def test_loop_resource() -> None:
-    cfg = parser.parse_file(Path("resources/loop"))
+def test_loop_without_objective(tmp_path: Path) -> None:
+    config = tmp_path / "loop"
+    config.write_text("item:1\nloop:(item:1):(item:1):1\n")
+    cfg = parser.parse_file(config)
     sim = Simulator(cfg)
     trace = sim.run(5)
     # the loop process runs every cycle until max time
     assert trace == [(i, "loop") for i in range(5)]
     assert sim.time == 5
+    assert sim.deadlock is False
+    assert sim.no_improvement is False
 
 
 def test_recre_optimal() -> None:
@@ -358,6 +395,154 @@ def test_renewable_input_is_not_expanded_into_an_unbounded_batch() -> None:
 
     assert plan is not None
     assert plan.counts == {"make": 1}
+
+
+@pytest.mark.parametrize("delay,horizon", [(1, 4), (2, 5), (3, 2), (1, 0)])
+def test_self_production_doubles_each_completed_generation(
+    delay: int, horizon: int
+) -> None:
+    cfg = parser.parse_file(Path("resources/self"))
+    cfg.processes["genX"] = parser.Process("genX", {"X": 1}, {"X": 2}, delay)
+    sim = Simulator(cfg)
+    generations = horizon // delay
+    expected = [
+        (generation * delay, "genX")
+        for generation in range(generations)
+        for _ in range(2**generation)
+    ]
+
+    assert sim.run(horizon) == expected
+    assert sim.stocks == {"X": 2**generations}
+    assert sim.time == generations * delay
+    replay = verify_trace(cfg, [TraceEntry(*entry) for entry in expected])
+    assert replay.stocks == sim.stocks
+    assert replay.time == sim.time
+
+
+@pytest.mark.parametrize("machines,instances", [(1, 1), (3, 2)])
+def test_parallel_self_production_respects_all_inputs_and_remainders(
+    machines: int, instances: int
+) -> None:
+    cfg = parser.Config(
+        stocks={"X": 5, "machine": machines},
+        processes={
+            "grow": parser.Process(
+                "grow", {"X": 2, "machine": 1}, {"X": 4, "machine": 1, "waste": 1}, 2
+            ),
+        },
+        optimize=["X", "waste"],
+    )
+    plan = ProductionPlanner(cfg).build_batch(cfg.stocks)
+    assert plan is not None
+    assert plan.counts == {"grow": instances}
+    assert plan.expected_gain == (2 * instances, instances)
+    sim = Simulator(cfg)
+    assert sim.run(2) == [(0, "grow")] * instances
+    assert sim.stocks == {
+        "X": 5 + 2 * instances,
+        "machine": machines,
+        "waste": instances,
+    }
+    assert cfg.stocks == {"X": 5, "machine": machines}
+
+
+def test_self_production_with_dependencies_keeps_its_plan() -> None:
+    cfg = parser.Config(
+        stocks={"X": 3, "raw": 2},
+        processes={
+            "prepare": parser.Process("prepare", {"raw": 1}, {"fuel": 1}, 1),
+            "grow": parser.Process("grow", {"X": 1, "fuel": 1}, {"X": 2}, 1),
+        },
+        optimize=["X"],
+    )
+    plan = ProductionPlanner(cfg).build_batch(cfg.stocks)
+    assert plan is not None
+    assert plan.counts == {"prepare": 1, "grow": 1}
+    sim = Simulator(cfg)
+    trace = sim.run(4)
+    assert sim.stocks["X"] == 5
+    replay = verify_trace(cfg, [TraceEntry(*entry) for entry in trace])
+    assert replay.stocks == sim.stocks
+
+
+def test_instant_self_production_keeps_a_single_instance_batch() -> None:
+    cfg = parser.Config(
+        stocks={"X": 5},
+        processes={"grow": parser.Process("grow", {"X": 1}, {"X": 2}, 0)},
+        optimize=["X"],
+    )
+    plan = ProductionPlanner(cfg).build_batch(cfg.stocks)
+    assert plan is not None
+    assert plan.counts == {"grow": 1}
+    assert plan.expected_gain == (1,)
+
+
+@pytest.mark.parametrize("budget", [7, 10, 15])
+@pytest.mark.parametrize("horizon", [3, 50])
+def test_self_production_budget_returns_a_valid_bounded_solution(
+    monkeypatch: pytest.MonkeyPatch, budget: int, horizon: int
+) -> None:
+    monkeypatch.setattr(Simulator, "_SELF_PRODUCTION_TRACE_BUDGET", budget)
+    cfg = parser.parse_file(Path("resources/self"))
+    sim = Simulator(cfg)
+    trace = sim.run(horizon)
+    launches = min(budget, 2**horizon - 1)
+    assert len(trace) == launches
+    assert sim.stocks == {"X": launches + 1}
+    assert sim.time == launches.bit_length()
+    assert sim.search_limited is (budget < 2**horizon - 1)
+    assert not sim.deadlock
+    assert not sim.no_improvement
+    assert not sim._running
+    replay = verify_trace(cfg, [TraceEntry(*entry) for entry in trace])
+    assert replay.stocks == sim.stocks
+    assert replay.time == sim.time
+
+
+@pytest.mark.parametrize("budget", [0, 2, 5, 10])
+def test_parallel_plan_gain_matches_budgeted_instances(budget: int) -> None:
+    cfg = parser.parse_file(Path("resources/self"))
+    cfg.stocks["X"] = 5
+    plan = ProductionPlanner(cfg).build_batch(cfg.stocks, max_parallel_starts=budget)
+    assert plan is not None
+    assert plan.counts == {"genX": min(5, budget)}
+    assert plan.expected_gain == (min(5, budget),)
+    assert plan.limited is (budget < 5)
+    assert cfg.stocks == {"X": 5}
+
+
+def test_bounded_self_production_still_converts_final_stock(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(Simulator, "_SELF_PRODUCTION_TRACE_BUDGET", 10)
+    cfg = parser.Config(
+        stocks={"X": 1},
+        processes={
+            "grow": parser.Process("grow", {"X": 1}, {"X": 2}, 1),
+            "finish": parser.Process("finish", {"X": 1}, {"score": 1}, 0),
+        },
+        optimize=["score"],
+    )
+    sim = Simulator(cfg)
+    trace = sim.run(50)
+    assert sim.search_limited
+    assert sim.stocks == {"X": 0, "score": 11}
+    assert len(trace) == 21
+    replay = verify_trace(cfg, [TraceEntry(*entry) for entry in trace])
+    assert replay.stocks == sim.stocks
+    assert replay.time == sim.time == 4
+
+
+def test_parallel_batch_limit_ignores_production_beyond_horizon() -> None:
+    cfg = parser.Config(
+        stocks={"X": 100_001},
+        processes={"grow": parser.Process("grow", {"X": 1}, {"X": 2}, 2)},
+        optimize=["X"],
+    )
+    sim = Simulator(cfg)
+    assert sim.run(1) == []
+    assert sim.stocks == cfg.stocks
+    assert not sim.search_limited
 
 
 def test_order_processes_covers_time_and_component_priorities() -> None:

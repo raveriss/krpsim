@@ -156,7 +156,7 @@ def _run_simulation(args: argparse.Namespace) -> tuple[Simulator, bool]:
     # Pour contextualiser l'execution avant la trace des cycles.
     print_header(config)
     # Pour imposer une borne finie meme en mode optimisation.
-    run_delay = args.delay if not ignore_delay else 500
+    run_delay = args.delay if not ignore_delay else 500000000
     # Pour produire l'etat de reference a partir du moteur unique.
     trace = sim.run(run_delay)
     # Pour conserver l'ordre temporel lors de la sortie de trace.
@@ -177,12 +177,33 @@ def _run_checked_simulation(args: argparse.Namespace) -> tuple[Simulator, bool]:
         raise SystemExit(1) from exc
 
 
+def _print_planning_outcome(sim: Simulator) -> None:
+    """Expose la limite de recherche sans prétendre prouver l'impossibilité."""
+
+    if sim.planning_status == "budget_exhausted":
+        print("Budget d’exploration atteint : plan complet non trouvé.")
+    if sim.partial_production:
+        print(
+            f"Production intermédiaire enregistrée au temps {sim.time} ; "
+            "optimalité non garantie."
+        )
+    elif sim.no_improvement:
+        print(f"Aucun plan améliorant trouvé par l’heuristique au temps {sim.time}")
+
+
 def _exit_code_for_simulation(
     sim: Simulator,
     requested_delay: int,
     ignore_delay: bool,
 ) -> int:
     """Print the simulation outcome and return its process exit code."""
+    _print_planning_outcome(sim)
+    if sim.search_limited:
+        print(
+            f"Recherche bornée au temps {sim.time} : budget de trace atteint. "
+            "Solution valide enregistrée, optimalité non garantie."
+        )
+        return 0
     if not ignore_delay and sim.time >= requested_delay:
         limit = requested_delay if sim.time > requested_delay else sim.time
         print(f"Max time reached at time {limit}")
@@ -190,7 +211,8 @@ def _exit_code_for_simulation(
     if sim.deadlock:
         print(f"Deadlock detected at time {sim.time}")
         return 1
-    print(f"No more process doable at time {sim.time}")
+    if not (sim.no_improvement or sim.partial_production):
+        print(f"No more process doable at time {sim.time}")
     return 0
 
 

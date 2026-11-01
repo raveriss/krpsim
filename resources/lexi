@@ -24,4 +24,4 @@ c_g10_s5_b7:(machine:1;fuel:1):(machine:1;gold:10;silver:5;bronze:7):1
 d_g9_s99_b99:(machine:1;fuel:1):(machine:1;gold:9;silver:99;bronze:99):1
 e_g10_s4_b50:(machine:1;fuel:1):(machine:1;gold:10;silver:4;bronze:50):1
 
-optimize:(gold;silver;bronze)
+optimize:(silver;gold;bronze)

@@ -7,6 +7,7 @@ from pytest import CaptureFixture, MonkeyPatch
 
 from krpsim import cli, parser
 from krpsim_verif import cli as verifier_cli
+from krpsim_verif.verifier import verify_files
 
 
 def test_cli_help(capsys: CaptureFixture[str]) -> None:
@@ -153,13 +154,89 @@ def test_cli_max_time(tmp_path: Path, capsys: CaptureFixture[str]) -> None:
     assert "b  => 1" in captured.out
 
 
-def test_cli_deadlock(tmp_path: Path, capsys: CaptureFixture[str]) -> None:
+def test_cli_self_production_trace(tmp_path: Path, capsys: CaptureFixture[str]) -> None:
+    trace_path = tmp_path / "self.trace"
+    assert cli.main(["resources/self", "3", "--trace", str(trace_path)]) == 1
+    output = capsys.readouterr().out
+    assert "X  => 8" in output
+    assert trace_path.read_text().splitlines() == [
+        "0:genX",
+        "1:genX",
+        "1:genX",
+        "2:genX",
+        "2:genX",
+        "2:genX",
+        "2:genX",
+    ]
+    assert verifier_cli.main(["resources/self", str(trace_path)]) == 0
+
+
+@pytest.mark.parametrize("existing_trace", [False, True])
+def test_cli_self_50_saves_a_valid_bounded_solution(
+    tmp_path: Path,
+    capsys: CaptureFixture[str],
+    existing_trace: bool,
+) -> None:
+    trace_path = tmp_path / "self.trace"
+    if existing_trace:
+        trace_path.write_text("previous trace\n")
+    assert cli.main(["resources/self", "50", "--trace", str(trace_path)]) == 0
+    output = capsys.readouterr().out
+    assert "Recherche bornée au temps 17" in output
+    assert "optimalité non garantie" in output
+    assert "Final Stocks:" in output
+    assert "X  => 100001" in output
+    assert "simulation limit:" not in output
+    assert "No more process doable" not in output
+    assert "Deadlock" not in output
+    lines = trace_path.read_text().splitlines()
+    assert len(lines) == 100_000
+    assert lines[:3] == ["0:genX", "1:genX", "1:genX"]
+    assert lines[-1] == "16:genX"
+    replay = verify_files(Path("resources/self"), trace_path)
+    assert replay.stocks == {"X": 100_001}
+    assert replay.time == 17
+
+
+@pytest.mark.parametrize("objective", ["", "optimize:(a)\n"])
+def test_cli_deadlock(
+    tmp_path: Path, capsys: CaptureFixture[str], objective: str
+) -> None:
     config = tmp_path / "conf.txt"
-    config.write_text("a:0\nproc:(a:1):(a:1):1\n")
+    config.write_text("a:0\nproc:(a:1):(a:1):1\n" + objective)
     trace_path = tmp_path / "trace.txt"
     assert cli.main([str(config), "5", "--trace", str(trace_path)]) == 1
     captured = capsys.readouterr()
     assert "Deadlock detected" in captured.out
+
+
+@pytest.mark.parametrize("optimized", [False, True])
+def test_cli_loop_with_and_without_objective(
+    tmp_path: Path, capsys: CaptureFixture[str], optimized: bool
+) -> None:
+    config = tmp_path / "loop"
+    objective = "optimize:(item)\n" if optimized else ""
+    config.write_text("item:1\nloop:(item:1):(item:1):1\n" + objective)
+    trace_path = tmp_path / "trace.txt"
+
+    assert cli.main([str(config), "25", "--trace", str(trace_path)]) == (
+        0 if optimized else 1
+    )
+    output = capsys.readouterr().out
+    assert "Deadlock" not in output
+    assert "item  => 1" in output
+    if optimized:
+        assert "Aucun plan améliorant trouvé par l’heuristique au temps 0" in output
+        assert "Max time reached" not in output
+        assert "No more process doable" not in output
+        assert trace_path.read_text().splitlines() == [
+            "# no process executed (optimization)"
+        ]
+    else:
+        assert "Max time reached at time 25" in output
+        assert "Aucune amélioration" not in output
+        assert trace_path.read_text().splitlines() == [f"{i}:loop" for i in range(25)]
+    assert verifier_cli.main([str(config), str(trace_path)]) == 0
 
 
 def test_cli_path_traversal(tmp_path: Path) -> None:
@@ -211,7 +288,6 @@ def test_cli_invalid_config(file: Path, capsys: CaptureFixture[str]) -> None:
         ("recre", 100),
         ("time", 100),
         ("finite", 100),
-        ("loop", 5),
     ],
 )
 def test_cli_run_resources(
@@ -221,9 +297,7 @@ def test_cli_run_resources(
     exit_code = cli.main([str(res), str(delay)])
     captured = capsys.readouterr()
     assert exit_code in (0, 1)
-    if resource == "loop":
-        assert exit_code == 1
-        assert "Max time reached" in captured.out
+    assert "Final Stocks:" in captured.out
 
 
 def test_cli_accepts_zero_delay_process_resource(

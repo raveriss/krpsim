@@ -15,6 +15,7 @@ from .optimizer import ProductionPlanner, order_processes
 
 # Pour limiter le couplage aux composants internes necessaires.
 from .parser import Config, Process
+from .partial import PartialPlanner
 
 
 # Pour fiabiliser les objets metier via un schema declaratif.
@@ -49,6 +50,9 @@ class Simulator:
         deterministe pour des entrees identiques.
     """
 
+    # Borne les lots auto-producteurs et le repli, sans perdre leur trace.
+    _SELF_PRODUCTION_TRACE_BUDGET = 100_000
+
     # Pour isoler __init__ et faciliter son evolution sous tests.
     def __init__(self, config: Config):
         """Initialise l'etat mutable d'une execution.
@@ -79,6 +83,12 @@ class Simulator:
         self.trace: list[tuple[int, str]] = []
         # Pour repartir d'un etat neutre a chaque nouvelle simulation.
         self.deadlock = False
+        # Distingue un arrêt volontaire de l'optimiseur d'un blocage.
+        self.no_improvement = False
+        self.search_limited = False
+        self.planning_status = "complete"
+        self.partial_production = False
+        self._partial_planner: PartialPlanner | None = None
         # Pour imposer une borne explicite avant tout lancement de processus.
         self._max_time = 0
         # Pour construire les lots a partir du graphe de dependances.
@@ -106,7 +116,7 @@ class Simulator:
             fois, au cycle ou ``remaining`` atteint exactement zero.
         """
         # Pour typer explicitement le champ et fiabiliser le contrat de donnees.
-        completed: list[_RunningProcess] = []
+        pending: list[_RunningProcess] = []
         # Pour appliquer uniformement la regle a chaque element concerne.
         for rp in self._running:
             # Pour avancer d'un cycle l'execution des processus differes.
@@ -119,13 +129,10 @@ class Simulator:
                     # Pour cumuler les resultats sans supposer un stock deja
                     # present.
                     self.stocks[name] = self.stocks.get(name, 0) + qty
-                # Pour deferer la suppression et eviter de muter la liste
-                # iteree.
-                completed.append(rp)
-        # Pour appliquer uniformement la regle a chaque element concerne.
-        for rp in completed:
-            # Pour retirer seulement les processus reellement termines.
-            self._running.remove(rp)
+            else:
+                pending.append(rp)
+        # Reconstruit la liste en un passage, même pour de grands lots.
+        self._running = pending
 
     # Pour isoler _start_processes et faciliter son evolution sous tests.
     def _start_processes(self) -> tuple[bool, bool]:
@@ -204,12 +211,44 @@ class Simulator:
             return None
         if self.time >= self._max_time or self._planning_finished:
             return self._launch_terminal()
-        plan = self._planner.build_batch(self.stocks, self._max_time - self.time)
+        if self._partial_planner is not None:
+            return self._start_partial_processes(self._partial_planner)
+        result = self._planner.search_batch(
+            self.stocks,
+            self._max_time - self.time,
+            max_parallel_starts=max(
+                0, self._SELF_PRODUCTION_TRACE_BUDGET - len(self.trace)
+            ),
+        )
+        plan = result.plan
         if plan is None:
-            self._planning_finished = True
-            return self._launch_terminal()
+            self.planning_status = result.status
+            self._partial_planner = PartialPlanner(
+                self.config, self._planner.targets + (self._planner.goal or "",)
+            )
+            return self._start_partial_processes(self._partial_planner)
         self._plan_counts = plan.counts.copy()
+        self.search_limited = plan.limited
+        self._planning_finished = plan.limited
         return None
+
+    def _start_partial_processes(self, planner: PartialPlanner) -> tuple[bool, bool]:
+        """Exécute le repli sans relancer l'expansion complète à chaque cycle."""
+
+        started = False
+        while len(self.trace) < self._SELF_PRODUCTION_TRACE_BUDGET:
+            process = planner.next_process(self.stocks, self._max_time - self.time)
+            if process is None:
+                break
+            self._launch(process)
+            self.partial_production = True
+            started = True
+            if process.delay > 0:
+                return True, True
+        self.search_limited = len(self.trace) >= self._SELF_PRODUCTION_TRACE_BUDGET
+        self._planning_finished = True
+        terminal_started, _ = self._launch_terminal()
+        return started or terminal_started, False
 
     def _launch_planned_processes(self) -> tuple[bool, bool]:
         """Lance autant d'instances que possible du lot préparé."""
@@ -297,11 +336,14 @@ class Simulator:
             Aucune exception n'est levee explicitement.
 
         Contrat:
-            ``deadlock`` vaut ``True`` seulement si aucun processus n'a pu
-            demarrer alors que des processus existent.
+            Une trace vide avec des processus exécutables et un objectif
+            signale ``no_improvement``, sinon ``deadlock`` si des processus
+            existent mais ne peuvent pas démarrer.
         """
         # Pour repartir d'un etat neutre a chaque nouvelle simulation.
         self.deadlock = False
+        self.no_improvement = False
+        self.search_limited = False
         # Pour centraliser la borne utilisee par toutes les etapes internes.
         self._max_time = max_time
         # Pour expliciter une decision qui impacte le flux metier.
@@ -314,9 +356,10 @@ class Simulator:
             pass
         # Pour traiter explicitement un cas d'entree invalide ou absent.
         if not self.trace and self.config.processes:
-            # Pour marquer explicitement l'absence totale de progression
-            # possible.
-            self.deadlock = True
+            self.no_improvement = self._planner.enabled and any(
+                self._can_start(process) for process in self.config.processes.values()
+            )
+            self.deadlock = not self.no_improvement
         # Pour rendre a l'appelant le resultat promis par le contrat.
         return self.trace
 

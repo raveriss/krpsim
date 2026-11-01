@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Literal
 
 # Pour limiter le couplage aux composants internes necessaires.
 from .parser import Config, Process
@@ -21,6 +22,15 @@ class BatchPlan:
 
     counts: dict[str, int]
     expected_gain: tuple[int, ...]
+    limited: bool = False
+
+
+@dataclass(frozen=True)
+class PlanningResult:
+    """Distingue un plan trouvé des deux causes d'arrêt de la recherche."""
+
+    plan: BatchPlan | None
+    status: Literal["complete", "budget_exhausted", "not_found"]
 
 
 @dataclass(frozen=True)
@@ -48,6 +58,7 @@ class ProductionPlanner:
 
     def __init__(self, config: Config):
         self.config = config
+        self._expansion_exhausted = False
         self.targets = tuple(t for t in (config.optimize or []) if t != "time")
         self._producers: dict[str, list[Process]] = defaultdict(list)
         for process in config.processes.values():
@@ -96,8 +107,27 @@ class ProductionPlanner:
             for resource, quantity in self.terminal.needs.items()
         )
 
+    def search_batch(
+        self,
+        stocks: dict[str, int],
+        max_duration: int,
+        max_parallel_starts: int,
+    ) -> PlanningResult:
+        """Retourne un diagnostic sans transformer un échec en impossibilité."""
+
+        self._expansion_exhausted = False
+        plan = self.build_batch(stocks, max_duration, max_parallel_starts)
+        if plan is not None:
+            return PlanningResult(plan, "complete")
+        return PlanningResult(
+            None, "budget_exhausted" if self._expansion_exhausted else "not_found"
+        )
+
     def build_batch(
-        self, stocks: dict[str, int], max_duration: int | None = None
+        self,
+        stocks: dict[str, int],
+        max_duration: int | None = None,
+        max_parallel_starts: int | None = None,
     ) -> BatchPlan | None:
         """Choisit le meilleur producteur et construit ses dependances."""
 
@@ -124,10 +154,49 @@ class ProductionPlanner:
         if best is None:
             return None
         self._extend_finite_batch(best.process, stocks, best.state, best.counts)
+        limited = False
+        if max_duration is None or best.process.delay <= max_duration:
+            limited = self._extend_parallel_self_production(
+                best, stocks, max_parallel_starts
+            )
         return BatchPlan(
             counts=best.counts,
             expected_gain=self._gain(stocks, best.state),
+            limited=limited,
         )
+
+    def _extend_parallel_self_production(
+        self,
+        candidate: _BatchCandidate,
+        stocks: dict[str, int],
+        max_starts: int | None,
+    ) -> bool:
+        """Finance les instances directes avec les seuls stocks déjà disponibles.
+
+        Les chaînes de dépendances et les processus instantanés conservent
+        leur plan habituel. Les résultats futurs ne financent jamais une
+        autre instance du même lot.
+        """
+
+        process = candidate.process
+        if (
+            process.delay <= 0
+            or process.needs.get(self.goal or "", 0) <= 0
+            or candidate.counts != {process.name: 1}
+        ):
+            return False
+        available = min(
+            stocks.get(resource, 0) // quantity
+            for resource, quantity in process.needs.items()
+        )
+        count = available if max_starts is None else min(available, max(0, max_starts))
+        candidate.counts[process.name] = count
+        for resource in process.needs.keys() | process.results.keys():
+            net = process.results.get(resource, 0) - process.needs.get(resource, 0)
+            candidate.state[resource] = candidate.state.get(resource, 0) + net * (
+                count - 1
+            )
+        return count < available
 
     def _completion_quality(
         self,
@@ -351,6 +420,7 @@ class ProductionPlanner:
 
         expansions[0] += 1
         if expansions[0] > self._MAX_EXPANSIONS:
+            self._expansion_exhausted = True
             return False
         for resource, quantity in process.needs.items():
             if not self._ensure(
