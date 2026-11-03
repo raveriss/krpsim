@@ -156,7 +156,7 @@ def _run_simulation(args: argparse.Namespace) -> tuple[Simulator, bool]:
     # Pour contextualiser l'execution avant la trace des cycles.
     print_header(config)
     # Pour imposer une borne finie meme en mode optimisation.
-    run_delay = args.delay if not ignore_delay else 500000000
+    run_delay = args.delay if not ignore_delay else 100000
     # Pour produire l'etat de reference a partir du moteur unique.
     trace = sim.run(run_delay)
     # Pour conserver l'ordre temporel lors de la sortie de trace.
@@ -184,8 +184,7 @@ def _print_planning_outcome(sim: Simulator) -> None:
         print("Budget d’exploration atteint : plan complet non trouvé.")
     if sim.partial_production:
         print(
-            f"Production intermédiaire enregistrée au temps {sim.time} ; "
-            "optimalité non garantie."
+            f"Production intermédiaire enregistrée au temps {sim.time}"
         )
     elif sim.no_improvement:
         print(f"Aucun plan améliorant trouvé par l’heuristique au temps {sim.time}")
