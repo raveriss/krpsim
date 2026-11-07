@@ -1,0 +1,35 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Recevoir un bloc de ressources</FONT>>];
+init [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Créer un dictionnaire vide</FONT><BR/><FONT POINT-SIZE="10.5">resources = {}</FONT>>];
+D33 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D33 · Le bloc de ressources est-il<BR/>vide ?</FONT><BR/><FONT POINT-SIZE="10.5">not block</FONT>>];
+more [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">Reste-t-il un élément séparé par « ;<BR/>» ?</FONT><BR/><FONT POINT-SIZE="10.5">for item in block.split(&quot;;&quot;)</FONT>>];
+D34 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D34 · Cet élément est-il vide ?</FONT><BR/><FONT POINT-SIZE="10.5">not item</FONT>>];
+split [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Séparer son nom et sa quantité</FONT><BR/><FONT POINT-SIZE="10.5">name, _, qty = item.partition(&quot;:&quot;)</FONT>>];
+D35 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D35 · Le nom est-il vide ou la<BR/>quantité mal écrite ?</FONT><BR/><FONT POINT-SIZE="10.5">not name or not qty.isdigit()</FONT>>];
+int [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Convertir la quantité</FONT><BR/><FONT POINT-SIZE="10.5">quantity = int(qty)</FONT>>];
+D36 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D36 · La quantité est-elle nulle ou<BR/>négative ?</FONT><BR/><FONT POINT-SIZE="10.5">quantity &lt;= 0</FONT>>];
+D37 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D37 · Cette ressource est-elle déjà<BR/>dans ce bloc ?</FONT><BR/><FONT POINT-SIZE="10.5">name in resources</FONT>>];
+store [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Mémoriser la quantité</FONT><BR/><FONT POINT-SIZE="10.5">resources[name] = quantity</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Renvoyer le dictionnaire à G18</FONT><BR/><FONT POINT-SIZE="10.5">return resources</FONT>>];
+error [shape=ellipse, style="filled", fillcolor="#fbe7e2", peripheries=1, label=<<FONT POINT-SIZE="13">Refuser le bloc de ressources</FONT><BR/><FONT POINT-SIZE="10.5">ParseError → G02<BR/>invalid quantity / duplicate resource</FONT>>];
+start -> init [label=""];
+init -> D33 [label=""];
+D33 -> end [label="Oui"];
+D33 -> more [label="Non"];
+more -> D34 [label="Oui"];
+more -> end [label="Non"];
+D34 -> more [xlabel="Oui", constraint=false, tailport=w, headport=w];
+D34 -> split [label="Non"];
+split -> D35 [label=""];
+D35 -> error [label="Oui"];
+D35 -> int [label="Non"];
+int -> D36 [label=""];
+D36 -> error [label="Oui"];
+D36 -> D37 [label="Non"];
+D37 -> error [label="Oui"];
+D37 -> store [label="Non"];
+store -> more [xlabel="Élément suivant", constraint=false];
+}

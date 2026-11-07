@@ -1,0 +1,21 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Entrer dans la fonction</FONT>>];
+D38 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D38 · Une directive d’optimisation<BR/>a-t-elle déjà été lue ?</FONT><BR/><FONT POINT-SIZE="10.5">optimize is not None</FONT>>];
+match [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Reconnaître la forme optimize:(...)</FONT><BR/><FONT POINT-SIZE="10.5">match = re.match(..., line)</FONT>>];
+D39 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D39 · La directive est-elle mal<BR/>formée ?</FONT><BR/><FONT POINT-SIZE="10.5">not match</FONT>>];
+filter [shape=box, style="filled,rounded", fillcolor="#e3f1f3", peripheries=2, label=<<FONT POINT-SIZE="13">Conserver les objectifs non vides<BR/>Suite : G28</FONT><BR/><FONT POINT-SIZE="10.5">block = match.group(1) ; filtrage de items</FONT>>];
+dedup [shape=box, style="filled,rounded", fillcolor="#e3f1f3", peripheries=2, label=<<FONT POINT-SIZE="13">Vérifier les doublons et conserver l’ordre<BR/>Détail : G21</FONT><BR/><FONT POINT-SIZE="10.5">Suite de _parse_optimize(items)</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Renvoyer les objectifs à G16</FONT><BR/><FONT POINT-SIZE="10.5">return result</FONT>>];
+error [shape=ellipse, style="filled", fillcolor="#fbe7e2", peripheries=1, label=<<FONT POINT-SIZE="13">Refuser la directive</FONT><BR/><FONT POINT-SIZE="10.5">ParseError → G02<BR/>duplicate / invalid optimize line</FONT>>];
+start -> D38 [label=""];
+D38 -> error [label="Oui"];
+D38 -> match [label="Non"];
+match -> D39 [label=""];
+D39 -> error [label="Oui"];
+D39 -> filter [label="Non"];
+filter -> dedup [label=""];
+dedup -> end [label=""];
+}

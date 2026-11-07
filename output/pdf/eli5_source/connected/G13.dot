@@ -1,0 +1,25 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Les ressources nécessaires sont toutes<BR/>disponibles</FONT>>];
+needs [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">Reste-t-il une ressource nécessaire<BR/>à retirer ?</FONT><BR/><FONT POINT-SIZE="10.5">for resource, quantity in<BR/>process.needs.items()</FONT>>];
+consume [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Retirer la quantité nécessaire du stock</FONT><BR/><FONT POINT-SIZE="10.5">state.stocks[resource] -= quantity</FONT>>];
+D14 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D14 · La durée de cette opération<BR/>est-elle nulle ?</FONT><BR/><FONT POINT-SIZE="10.5">process.delay == 0</FONT>>];
+results [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">Reste-t-il un résultat à produire<BR/>immédiatement ?</FONT><BR/><FONT POINT-SIZE="10.5">for resource, quantity in<BR/>process.results.items()</FONT>>];
+credit [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Ajouter ce résultat au stock</FONT><BR/><FONT POINT-SIZE="10.5">state.stocks[resource] =<BR/>state.stocks.get(resource, 0) + quantity</FONT>>];
+seq [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Attribuer un numéro à cette fin future</FONT><BR/><FONT POINT-SIZE="10.5">state.sequence += 1</FONT>>];
+schedule [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Placer la fin future dans la file</FONT><BR/><FONT POINT-SIZE="10.5">heapq.heappush(state.running,<BR/>(entry.cycle + process.delay, state.sequence,<BR/>process))</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Revenir mettre le temps à jour dans G08</FONT>>];
+start -> needs [label=""];
+needs -> consume [label="Oui"];
+needs -> D14 [label="Non"];
+consume -> needs [xlabel="Besoin suivant", constraint=false, tailport=w, headport=w];
+D14 -> results [label="Oui"];
+D14 -> seq [label="Non"];
+results -> credit [label="Oui"];
+results -> end [label="Non"];
+credit -> results [xlabel="Résultat suivant", constraint=false, tailport=w, headport=w];
+seq -> schedule [label=""];
+schedule -> end [label=""];
+}

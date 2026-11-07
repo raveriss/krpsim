@@ -1,0 +1,25 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Entrer dans la fonction</FONT>>];
+open [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Ouvrir la trace en texte UTF-8</FONT><BR/><FONT POINT-SIZE="10.5">path.open(encoding=&quot;utf-8&quot;)</FONT>>];
+init [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Préparer une liste de départs vide</FONT><BR/><FONT POINT-SIZE="10.5">entries = []</FONT>>];
+readline [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Essayer de lire la ligne suivante</FONT><BR/><FONT POINT-SIZE="10.5">Avancement de stream / enumerate</FONT>>];
+more [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">Reste-t-il une ligne dans le fichier<BR/>?</FONT><BR/><FONT POINT-SIZE="10.5">for idx, raw_line in enumerate(stream, 1)</FONT>>];
+strip [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Retirer la fin de ligne</FONT><BR/><FONT POINT-SIZE="10.5">line = raw_line.rstrip(&quot;\n&quot;)</FONT>>];
+parse [shape=box, style="filled,rounded", fillcolor="#e3f1f3", peripheries=2, label=<<FONT POINT-SIZE="13">Contrôler cette ligne ; l’ajouter ou<BR/>l’ignorer<BR/>Détail : G05</FONT><BR/><FONT POINT-SIZE="10.5">_parse_trace_line(line, idx, entries)</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Renvoyer la liste à G03</FONT><BR/><FONT POINT-SIZE="10.5">return entries</FONT>>];
+error [shape=ellipse, style="filled", fillcolor="#fbe7e2", peripheries=1, label=<<FONT POINT-SIZE="13">Interrompre la lecture ; transmettre à G02</FONT><BR/><FONT POINT-SIZE="10.5">OSError / TraceError ; UnicodeDecodeError non<BR/>interceptée</FONT>>];
+open -> error [label="Échec"];
+more -> strip [label="Oui"];
+more -> end [label="Non"];
+strip -> parse [label=""];
+parse -> error [label="Erreur"];
+start -> init [label=""];
+init -> open [label=""];
+open -> readline [label="Ouvert"];
+readline -> more [label="Lecture réussie ou fin"];
+readline -> error [label="Erreur lecture / décodage"];
+parse -> readline [xlabel="Ligne suivante", constraint=false];
+}

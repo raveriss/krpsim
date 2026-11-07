@@ -1,0 +1,19 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Préparer le répertoire vide</FONT><BR/><FONT POINT-SIZE="10.5">self._producers = defaultdict(list)</FONT>>];
+procs [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">Reste-t-il une opération à examiner<BR/>?</FONT><BR/><FONT POINT-SIZE="10.5">for process in config.processes.values()</FONT>>];
+results [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">Reste-t-il un résultat de cette<BR/>opération ?</FONT><BR/><FONT POINT-SIZE="10.5">for resource, quantity in<BR/>process.results.items()</FONT>>];
+D53 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D53 · La quantité produite est-elle<BR/>positive ?</FONT><BR/><FONT POINT-SIZE="10.5">quantity &gt; 0</FONT>>];
+add [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Enregistrer cette opération comme<BR/>producteur</FONT><BR/><FONT POINT-SIZE="10.5">self._producers[resource].append(process)</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Répertoire prêt ; revenir dans G25</FONT>>];
+start -> procs [label=""];
+procs -> results [label="Oui"];
+procs -> end [label="Non"];
+results -> D53 [label="Oui"];
+results -> procs [xlabel="Non", constraint=false, tailport=w, headport=w];
+D53 -> add [label="Oui"];
+D53 -> results [xlabel="Non", constraint=false, tailport=w, headport=w];
+add -> results [xlabel="Résultat suivant", constraint=false];
+}

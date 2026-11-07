@@ -1,0 +1,22 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Entrer dans la fonction</FONT>>];
+read [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Lire le fichier sous forme d’octets</FONT><BR/><FONT POINT-SIZE="10.5">raw = path.read_bytes()</FONT>>];
+D19 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D19 · Le fichier commence-t-il par<BR/>une marque UTF-8 BOM ?</FONT><BR/><FONT POINT-SIZE="10.5">raw.startswith(UTF8_BOM)</FONT>>];
+D20 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D20 · Le décodage UTF-8 a-t-il<BR/>échoué ?</FONT><BR/><FONT POINT-SIZE="10.5">text = raw.decode(&quot;utf-8&quot;)<BR/>except UnicodeDecodeError</FONT>>];
+D21 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D21 · Un caractère retour chariot<BR/>est-il présent ?</FONT><BR/><FONT POINT-SIZE="10.5">b&quot;\r&quot; in raw</FONT>>];
+length [shape=box, style="filled,rounded", fillcolor="#e3f1f3", peripheries=2, label=<<FONT POINT-SIZE="13">Séparer et mesurer toutes les lignes<BR/>Suite : G27</FONT><BR/><FONT POINT-SIZE="10.5">text.splitlines() ; boucle de _read_lines</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Renvoyer les lignes à G10</FONT><BR/><FONT POINT-SIZE="10.5">return lines</FONT>>];
+error [shape=ellipse, style="filled", fillcolor="#fbe7e2", peripheries=1, label=<<FONT POINT-SIZE="13">Refuser le texte de configuration</FONT><BR/><FONT POINT-SIZE="10.5">ParseError → G02</FONT>>];
+start -> read [label=""];
+read -> D19 [label=""];
+D19 -> error [label="Oui"];
+D19 -> D20 [label="Non"];
+D20 -> error [label="Oui"];
+D20 -> D21 [label="Non"];
+D21 -> error [label="Oui"];
+D21 -> length [label="Non"];
+length -> end [label=""];
+}

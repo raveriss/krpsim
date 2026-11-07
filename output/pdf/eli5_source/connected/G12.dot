@@ -1,0 +1,18 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Recevoir l’opération et les stocks<BR/>disponibles</FONT>>];
+init [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Préparer un dictionnaire des manques vide</FONT><BR/><FONT POINT-SIZE="10.5">missing = {} (forme développée de la<BR/>compréhension)</FONT>>];
+more [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">Reste-t-il une ressource nécessaire<BR/>à comparer ?</FONT><BR/><FONT POINT-SIZE="10.5">for resource, quantity in<BR/>process.needs.items()</FONT>>];
+D12 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D12 · Le stock de cette ressource<BR/>est-il trop petit ?</FONT><BR/><FONT POINT-SIZE="10.5">stocks.get(resource, 0) &lt; quantity</FONT>>];
+add [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Noter la quantité manquante</FONT><BR/><FONT POINT-SIZE="10.5">missing[resource] = quantity -<BR/>stocks.get(resource, 0)</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Renvoyer les manques à G08</FONT><BR/><FONT POINT-SIZE="10.5">return missing ({} si aucun manque)</FONT>>];
+start -> init [label=""];
+init -> more [label=""];
+more -> D12 [label="Oui"];
+more -> end [label="Non"];
+D12 -> add [label="Oui"];
+D12 -> more [xlabel="Non", constraint=false, tailport=w, headport=w];
+add -> more [xlabel="Ressource suivante", constraint=false];
+}

@@ -1,0 +1,29 @@
+@font-face {font-family:Inter;src:url('../fonts/Inter-Regular.otf');font-weight:400;}
+@font-face {font-family:Inter;src:url('../fonts/Inter-Bold.otf');font-weight:700;}
+@page landscape {size:A3 landscape;margin:0;}
+@page portrait {size:A3 portrait;margin:0;}
+* {box-sizing:border-box;}
+body {margin:0;font-family:Inter,sans-serif;font-size:11pt;color:#172e43;line-height:1.4;}
+.page {position:relative;break-after:page;padding:11mm 14mm;}
+.landscape {page:landscape;width:420mm;height:297mm;}
+.portrait {page:portrait;width:297mm;height:420mm;}
+.eyebrow {font-size:9pt;font-weight:700;letter-spacing:1pt;color:#267477;}
+h1 {font-size:25pt;line-height:1.15;margin:3mm 0 2mm;}
+.subtitle {font-size:11pt;color:#506579;margin:0 0 3mm;}
+.drawing {height:220mm;display:flex;justify-content:center;align-items:center;}
+.portrait .drawing {height:343mm;}
+.drawing img {display:block;max-width:100%;}
+.note {margin:3mm 0 1mm;font-size:10.5pt;}
+.source {font-size:9pt;color:#506579;margin:1mm 0;}
+footer {position:absolute;left:14mm;right:14mm;bottom:5mm;border-top:1px solid #d5e0e7;
+ padding-top:2mm;display:flex;justify-content:space-between;font-size:8.5pt;color:#506579;}
+a {color:#18666e;text-decoration:none;}
+.toc {display:grid;grid-template-columns:1fr 1fr;gap:0 10mm;}
+.toc a {display:block;padding:2mm 0;border-bottom:1px solid #d5e0e7;font-size:11pt;}
+.toc a span {float:right;font-weight:700;}
+.cover h1 {font-size:45pt;margin-top:18mm;}
+.cover .lead {font-size:22pt;margin:8mm 0;}
+.cover p {max-width:310mm;font-size:14pt;}
+.cover .source {font-size:10pt;}
+.legend {background:#edf4fa;padding:5mm;margin:7mm 0;font-size:17pt;}
+.panel {background:#e3f1f3;border-left:3pt solid #267477;padding:5mm;margin:7mm 0;font-size:14pt;}

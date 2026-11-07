@@ -1,0 +1,8 @@
+{
+  "pages": 52,
+  "decisions": 60,
+  "internal_links": 181,
+  "fonts": "Inter regular and bold; embedded Noto fallback for Arabic digit",
+  "bounds": "All extracted words inside page bounds",
+  "visual_review": "See validation.md for the separate visual inspection"
+}

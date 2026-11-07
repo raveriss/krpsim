@@ -1,0 +1,19 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Recevoir les éléments non vides</FONT>>];
+init [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Préparer les noms déjà vus et la liste<BR/>résultat</FONT><BR/><FONT POINT-SIZE="10.5">seen = set(); result = []</FONT>>];
+more [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">Reste-t-il un objectif à examiner ?</FONT><BR/><FONT POINT-SIZE="10.5">for item in items</FONT>>];
+D42 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D42 · Cet objectif a-t-il déjà été<BR/>rencontré ?</FONT><BR/><FONT POINT-SIZE="10.5">item in seen</FONT>>];
+store [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Mémoriser le nom et l’ajouter dans l’ordre</FONT><BR/><FONT POINT-SIZE="10.5">seen.add(item)<BR/>result.append(item)</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Renvoyer la liste à G20</FONT><BR/><FONT POINT-SIZE="10.5">return result</FONT>>];
+error [shape=ellipse, style="filled", fillcolor="#fbe7e2", peripheries=1, label=<<FONT POINT-SIZE="13">Refuser : objectif répété</FONT><BR/><FONT POINT-SIZE="10.5">ParseError(&quot;duplicate optimize target …&quot;) →<BR/>G02</FONT>>];
+start -> init [label=""];
+init -> more [label=""];
+more -> D42 [label="Oui"];
+more -> end [label="Non"];
+D42 -> error [label="Oui"];
+D42 -> store [label="Non"];
+store -> more [xlabel="Objectif suivant", constraint=false];
+}

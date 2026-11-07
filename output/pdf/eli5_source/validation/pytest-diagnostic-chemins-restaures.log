@@ -1,0 +1,115 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.20, pytest-8.4.2, pluggy-1.6.0
+rootdir: /tmp/krpsim-eli5-review
+configfile: pyproject.toml
+testpaths: tests
+plugins: hypothesis-6.165.10, cov-5.0.0
+collected 207 items
+
+tests/test_cli.py ..........................................             [ 20%]
+tests/test_display.py ...                                                [ 21%]
+tests/test_evaluation.py ..............................................  [ 43%]
+tests/test_parser.py .......................                             [ 55%]
+tests/test_parser_hypothesis.py ...                                      [ 56%]
+tests/test_partial.py ....FF......                                       [ 62%]
+tests/test_simulator.py ................................................ [ 85%]
+..........                                                               [ 90%]
+tests/test_verifier.py ...................                               [ 99%]
+tests/test_version.py ./tmp/krpsim-eli5-ci/lib/python3.10/site-packages/coverage/inorout.py:574: CoverageWarning: Module krpsim was previously imported, but not measured (module-not-measured); see https://coverage.readthedocs.io/en/7.15.4/messages.html#warning-module-not-measured
+  self.warn(msg, slug="module-not-measured")
+/tmp/krpsim-eli5-ci/lib/python3.10/site-packages/coverage/inorout.py:574: CoverageWarning: Module krpsim_verif was previously imported, but not measured (module-not-measured); see https://coverage.readthedocs.io/en/7.15.4/messages.html#warning-module-not-measured
+  self.warn(msg, slug="module-not-measured")
+                                                  [100%]
+
+=================================== FAILURES ===================================
+________ test_time_cli_saves_and_explains_partial_production[year-50-1] ________
+
+tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-1/test_time_cli_saves_and_explai0')
+capsys = <_pytest.capture.CaptureFixture object at 0x7f5242a72380>
+objective = 'year', expected_time = 50, exit_code = 1
+
+    @pytest.mark.parametrize(
+        "objective,expected_time,exit_code", [("year", 50, 1), ("time;year", 500, 0)]
+    )
+    def test_time_cli_saves_and_explains_partial_production(
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+        objective: str,
+        expected_time: int,
+        exit_code: int,
+    ) -> None:
+        source = Path("resources/time").read_text()
+        config = tmp_path / "time.conf"
+        config.write_text(
+            "\n".join(
+                line for line in source.splitlines() if not line.startswith("optimize:")
+            )
+            + f"\noptimize:({objective})\n"
+        )
+        trace = tmp_path / "time.trace"
+        assert cli.main([str(config), "50", "--trace", str(trace)]) == exit_code
+        output = capsys.readouterr().out
+        assert "Budget d’exploration atteint : plan complet non trouvé." in output
+        assert "Production intermédiaire enregistrée" in output
+>       assert "optimalité non garantie" in output
+E       AssertionError: assert 'optimalité non garantie' in 'Nice file! 11 processes, 7 stocks, 1 to optimize\nEvaluating ... done.\nMain walk:\nOptimization criteria: year\n0:ma...ks:\n  clock   => 1\n  day     => 0\n  dream   => 0\n  hour    => 0\n  minute  => 0\n  second  => 50\n  year    => 0\n'
+
+tests/test_partial.py:86: AssertionError
+_____ test_time_cli_saves_and_explains_partial_production[time;year-500-0] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-1/test_time_cli_saves_and_explai1')
+capsys = <_pytest.capture.CaptureFixture object at 0x7f52430cbd30>
+objective = 'time;year', expected_time = 500, exit_code = 0
+
+    @pytest.mark.parametrize(
+        "objective,expected_time,exit_code", [("year", 50, 1), ("time;year", 500, 0)]
+    )
+    def test_time_cli_saves_and_explains_partial_production(
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+        objective: str,
+        expected_time: int,
+        exit_code: int,
+    ) -> None:
+        source = Path("resources/time").read_text()
+        config = tmp_path / "time.conf"
+        config.write_text(
+            "\n".join(
+                line for line in source.splitlines() if not line.startswith("optimize:")
+            )
+            + f"\noptimize:({objective})\n"
+        )
+        trace = tmp_path / "time.trace"
+        assert cli.main([str(config), "50", "--trace", str(trace)]) == exit_code
+        output = capsys.readouterr().out
+        assert "Budget d’exploration atteint : plan complet non trouvé." in output
+        assert "Production intermédiaire enregistrée" in output
+>       assert "optimalité non garantie" in output
+E       AssertionError: assert 'optimalité non garantie' in 'Nice file! 11 processes, 7 stocks, 1 to optimize\nEvaluating ... done.\nMain walk:\nOptimization criteria: time, year...ks:\n  clock   => 1\n  day     => 1\n  dream   => 0\n  hour    => 1\n  minute  => 0\n  second  => 14\n  year    => 0\n'
+
+tests/test_partial.py:86: AssertionError
+------------ generated xml file: /tmp/krpsim-eli5-review/junit.xml -------------
+
+---------- coverage: platform linux, python 3.10.20-final-0 ----------
+Name                           Stmts   Miss Branch BrPart  Cover   Missing
+--------------------------------------------------------------------------
+src/krpsim/__init__.py             4      0      0      0   100%
+src/krpsim/cli.py                 79      0     26      0   100%
+src/krpsim/display.py             34      0      8      0   100%
+src/krpsim/optimizer.py          225      0    100      0   100%
+src/krpsim/parser.py             153      0     76      0   100%
+src/krpsim/partial.py             35      0     10      0   100%
+src/krpsim/simulator.py          218      0     80      0   100%
+src/krpsim_verif/__init__.py       0      0      0      0   100%
+src/krpsim_verif/cli.py           36      0      4      0   100%
+src/krpsim_verif/verifier.py     103      0     36      0   100%
+--------------------------------------------------------------------------
+TOTAL                            887      0    340      0   100%
+Coverage HTML written to dir htmlcov
+Coverage XML written to file coverage.xml
+
+Required test coverage of 100% reached. Total coverage: 100.00%
+=========================== short test summary info ============================
+FAILED tests/test_partial.py::test_time_cli_saves_and_explains_partial_production[year-50-1]
+FAILED tests/test_partial.py::test_time_cli_saves_and_explains_partial_production[time;year-500-0]
+======================== 2 failed, 205 passed in 55.73s ========================

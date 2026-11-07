@@ -1,0 +1,359 @@
+{
+  "cases": [
+    {
+      "id": "E01",
+      "config": "bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\n",
+      "trace": "0:scier\n2:assembler\n",
+      "expected": 0,
+      "observed": 0,
+      "stdout": "trace is valid\nFinal Stocks:\n  bois       => 1\n  chaise     => 1\n  clou       => 4\n  livraison  => 0\n  planche    => 0\nLast cycle: 3\n",
+      "stocks": {
+        "bois": 1,
+        "clou": 4,
+        "planche": 0,
+        "chaise": 1
+      },
+      "time": 3
+    },
+    {
+      "id": "E02",
+      "config": "bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\n",
+      "trace": "0:assembler\n",
+      "expected": 1,
+      "observed": 1,
+      "stdout": "invalid trace: line 1 at cycle 0: process 'assembler' lacks resources {'planche': 3}\n"
+    },
+    {
+      "id": "E03",
+      "config": "bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\n",
+      "trace": "2:scier\n1:scier\n",
+      "expected": 1,
+      "observed": 1,
+      "stdout": "invalid trace: line 2: cycle 1 is before cycle 2\n"
+    },
+    {
+      "id": "E04",
+      "config": "bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\n",
+      "trace": "0:scier\n2:assembler\n3:livrer\n",
+      "expected": 0,
+      "observed": 0,
+      "stdout": "trace is valid\nFinal Stocks:\n  bois       => 1\n  chaise     => 0\n  clou       => 4\n  livraison  => 1\n  planche    => 0\nLast cycle: 3\n",
+      "stocks": {
+        "bois": 1,
+        "clou": 4,
+        "planche": 0,
+        "chaise": 0,
+        "livraison": 1
+      },
+      "time": 3
+    },
+    {
+      "id": "E05",
+      "config": "bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\n",
+      "trace": "0:scier\n0:scier\n",
+      "expected": 0,
+      "observed": 0,
+      "stdout": "trace is valid\nFinal Stocks:\n  bois       => 0\n  chaise     => 0\n  clou       => 8\n  livraison  => 0\n  planche    => 6\nLast cycle: 2\n",
+      "stocks": {
+        "bois": 0,
+        "clou": 8,
+        "planche": 6
+      },
+      "time": 2
+    },
+    {
+      "id": "E06",
+      "config": "bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\n",
+      "trace": "",
+      "expected": 1,
+      "observed": 1,
+      "stdout": "invalid trace: empty trace\n"
+    },
+    {
+      "id": "E07",
+      "config": "bois:0\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\n",
+      "trace": "",
+      "expected": 0,
+      "observed": 0,
+      "stdout": "trace is valid\nFinal Stocks:\n  bois       => 0\n  chaise     => 0\n  clou       => 8\n  livraison  => 0\n  planche    => 0\nLast cycle: 0\n",
+      "stocks": {
+        "bois": 0,
+        "clou": 8
+      },
+      "time": 0
+    },
+    {
+      "id": "E08",
+      "config": "bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\noptimize:(chaise)\n",
+      "trace": "",
+      "expected": 0,
+      "observed": 0,
+      "stdout": "trace is valid\nFinal Stocks:\n  bois       => 2\n  chaise     => 0\n  clou       => 8\n  livraison  => 0\n  planche    => 0\nLast cycle: 0\n",
+      "stocks": {
+        "bois": 2,
+        "clou": 8
+      },
+      "time": 0
+    },
+    {
+      "id": "E09",
+      "config": "bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\noptimize:(chaise)\n",
+      "trace": "# commentaire\n",
+      "expected": 0,
+      "observed": 0,
+      "stdout": "trace is valid\nFinal Stocks:\n  bois       => 2\n  chaise     => 0\n  clou       => 8\n  livraison  => 0\n  planche    => 0\nLast cycle: 0\n",
+      "stocks": {
+        "bois": 2,
+        "clou": 8
+      },
+      "time": 0
+    },
+    {
+      "id": "E10",
+      "config": "bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\n",
+      "trace": "0:inconnue\n",
+      "expected": 1,
+      "observed": 1,
+      "stdout": "invalid trace: unknown process 'inconnue' in trace\n"
+    },
+    {
+      "id": "E11",
+      "config": "bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\n",
+      "trace": "0:scier\r\n",
+      "expected": 0,
+      "observed": 0,
+      "stdout": "trace is valid\nFinal Stocks:\n  bois       => 1\n  chaise     => 0\n  clou       => 8\n  livraison  => 0\n  planche    => 3\nLast cycle: 2\n",
+      "stocks": {
+        "bois": 1,
+        "clou": 8,
+        "planche": 3
+      },
+      "time": 2
+    },
+    {
+      "id": "E12",
+      "config": "bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\n",
+      "trace": "0:scier\n",
+      "expected": 0,
+      "observed": 0,
+      "stdout": "trace is valid\nFinal Stocks:\n  bois       => 1\n  chaise     => 0\n  clou       => 8\n  livraison  => 0\n  planche    => 3\nLast cycle: 2\n",
+      "stocks": {
+        "bois": 1,
+        "clou": 8,
+        "planche": 3
+      },
+      "time": 2
+    },
+    {
+      "id": "E13",
+      "config": "bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\nplanche:2\n",
+      "trace": "0:assembler\n",
+      "expected": 1,
+      "observed": 1,
+      "stdout": "invalid trace: line 1 at cycle 0: process 'assembler' lacks resources {'planche': 1}\n"
+    },
+    {
+      "id": "E14",
+      "config": "bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\n",
+      "trace": "\n",
+      "expected": 1,
+      "observed": 1,
+      "stdout": "invalid trace: empty trace line 1\n"
+    },
+    {
+      "id": "E15",
+      "config": "bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\n",
+      "trace": "  # commentaire\n",
+      "expected": 1,
+      "observed": 1,
+      "stdout": "invalid trace: invalid trace line 1: '  # commentaire'\n"
+    },
+    {
+      "id": "E16",
+      "config": "bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\n",
+      "trace": "00:scier\n",
+      "expected": 0,
+      "observed": 0,
+      "stdout": "trace is valid\nFinal Stocks:\n  bois       => 1\n  chaise     => 0\n  clou       => 8\n  livraison  => 0\n  planche    => 3\nLast cycle: 2\n",
+      "stocks": {
+        "bois": 1,
+        "clou": 8,
+        "planche": 3
+      },
+      "time": 2
+    },
+    {
+      "id": "E17",
+      "config": "bois:1\nscier:(bois:1):(planche:3):9223372036854775808\n",
+      "trace": "0:scier\n",
+      "expected": 0,
+      "observed": 0,
+      "stdout": "trace is valid\nFinal Stocks:\n  bois     => 0\n  planche  => 0\nLast cycle: 0\n",
+      "stocks": {
+        "bois": 0
+      },
+      "time": 0
+    },
+    {
+      "id": "E18",
+      "config": "bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\n",
+      "trace": "# commentaire\n0:assembler\n",
+      "expected": 1,
+      "observed": 1,
+      "stdout": "invalid trace: line 1 at cycle 0: process 'assembler' lacks resources {'planche': 3}\n"
+    },
+    {
+      "id": "E19",
+      "config": "bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\n",
+      "trace": "0:assembler\nmalforme\n",
+      "expected": 1,
+      "observed": 1,
+      "stdout": "invalid trace: invalid trace line 2: 'malforme'\n"
+    },
+    {
+      "id": "E23",
+      "config": "bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\n",
+      "trace": "²:scier\n",
+      "expected": "ValueError",
+      "observed": "ValueError",
+      "stdout": ""
+    },
+    {
+      "id": "E24",
+      "config": "bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\n",
+      "trace": "٢:scier\n",
+      "expected": 0,
+      "observed": 0,
+      "stdout": "trace is valid\nFinal Stocks:\n  bois       => 1\n  chaise     => 0\n  clou       => 8\n  livraison  => 0\n  planche    => 3\nLast cycle: 4\n",
+      "stocks": {
+        "bois": 1,
+        "clou": 8,
+        "planche": 3
+      },
+      "time": 4
+    },
+    {
+      "id": "E25",
+      "config": "bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\noptimize:(livraison)\n",
+      "trace": "",
+      "expected": 0,
+      "observed": 0,
+      "stdout": "trace is valid\nFinal Stocks:\n  bois       => 2\n  chaise     => 0\n  clou       => 8\n  livraison  => 0\n  planche    => 0\nLast cycle: 0\n",
+      "stocks": {
+        "bois": 2,
+        "clou": 8
+      },
+      "time": 0
+    },
+    {
+      "id": "E26",
+      "config": "bois:1\nscier:(bois:1):(planche:3):0\nassembler:(planche:3):(chaise:1):0\n",
+      "trace": "0:scier\n0:assembler\n",
+      "expected": 0,
+      "observed": 0,
+      "stdout": "trace is valid\nFinal Stocks:\n  bois     => 0\n  chaise   => 1\n  planche  => 0\nLast cycle: 0\n",
+      "stocks": {
+        "bois": 0,
+        "planche": 0,
+        "chaise": 1
+      },
+      "time": 0
+    },
+    {
+      "id": "E27",
+      "config": "bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\n",
+      "trace": "0:scier\n0:scier\n0:scier\n",
+      "expected": 1,
+      "observed": 1,
+      "stdout": "invalid trace: line 3 at cycle 0: process 'scier' lacks resources {'bois': 1}\n"
+    },
+    {
+      "id": "E28",
+      "config": "bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\n",
+      "trace": "0:scier\n2:assembler\n2:livrer\n",
+      "expected": 1,
+      "observed": 1,
+      "stdout": "invalid trace: line 3 at cycle 2: process 'livrer' lacks resources {'chaise': 1}\n"
+    },
+    {
+      "id": "EX02",
+      "config": "bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0\n",
+      "trace": "2:scier\n1:inconnue\n",
+      "expected": 1,
+      "observed": 1,
+      "stdout": "invalid trace: line 2: cycle 1 is before cycle 2\n"
+    },
+    {
+      "id": "E20",
+      "observed": "SystemExit:2",
+      "stdout": "usage: krpsim_verif [-h] config trace\nkrpsim_verif: error: the following arguments are required: trace\n"
+    },
+    {
+      "id": "E21",
+      "observed": 1,
+      "stdout": "invalid trace: [Errno 2] No such file or directory: '/sgoinfre/goinfre/Perso/raveriss/krpsim/output/pdf/eli5_source/examples/absent.txt'\n"
+    },
+    {
+      "id": "E22",
+      "observed": "UnicodeDecodeError",
+      "stdout": ""
+    },
+    {
+      "id": "API01",
+      "observed": "line 1: cycle -1 is before cycle 0"
+    }
+  ],
+  "replay": [
+    {
+      "entry": "0:scier",
+      "before": {
+        "bois": 2,
+        "clou": 8
+      },
+      "after": {
+        "bois": 1,
+        "clou": 8
+      },
+      "running": [
+        [
+          2,
+          "scier"
+        ]
+      ]
+    },
+    {
+      "entry": "2:assembler",
+      "before": {
+        "bois": 1,
+        "clou": 8
+      },
+      "after": {
+        "bois": 1,
+        "clou": 4,
+        "planche": 0
+      },
+      "running": [
+        [
+          3,
+          "assembler"
+        ]
+      ]
+    },
+    {
+      "entry": "3:livrer",
+      "before": {
+        "bois": 1,
+        "clou": 4,
+        "planche": 0
+      },
+      "after": {
+        "bois": 1,
+        "clou": 4,
+        "planche": 0,
+        "chaise": 0,
+        "livraison": 1
+      },
+      "running": []
+    }
+  ]
+}

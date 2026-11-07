@@ -1,0 +1,28 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Recevoir entry et l’état courant</FONT>>];
+D09 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D09 · Le départ lu est-il prévu<BR/>avant le départ précédent ?</FONT><BR/><FONT POINT-SIZE="10.5">entry.cycle &lt; state.previous_cycle</FONT>>];
+complete [shape=box, style="filled,rounded", fillcolor="#e3f1f3", peripheries=2, label=<<FONT POINT-SIZE="13">Ajouter les résultats déjà terminés à ce<BR/>cycle<BR/>Détail : G09</FONT><BR/><FONT POINT-SIZE="10.5">_complete_until(entry.cycle, state.running,<BR/>state.stocks)</FONT>>];
+resolve [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Garder la dernière fin ; rechercher<BR/>l’opération</FONT><BR/><FONT POINT-SIZE="10.5">state.last_cycle = max(state.last_cycle,<BR/>completion)<BR/>process = _resolve_process(config,<BR/>entry.process)</FONT>>];
+D11 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D11 · Le nom demandé est-il absent<BR/>de la configuration ?</FONT><BR/><FONT POINT-SIZE="10.5">process is None</FONT>>];
+missing [shape=box, style="filled,rounded", fillcolor="#e3f1f3", peripheries=2, label=<<FONT POINT-SIZE="13">Calculer les quantités de ressources<BR/>manquantes<BR/>Détail : G12</FONT><BR/><FONT POINT-SIZE="10.5">missing = _missing_resources(process,<BR/>state.stocks)</FONT>>];
+D13 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D13 · Manque-t-il au moins une<BR/>ressource pour démarrer ?</FONT><BR/><FONT POINT-SIZE="10.5">if missing</FONT>>];
+launch [shape=box, style="filled,rounded", fillcolor="#e3f1f3", peripheries=2, label=<<FONT POINT-SIZE="13">Consommer les ressources et produire ou<BR/>programmer la fin<BR/>Détail : G13</FONT><BR/><FONT POINT-SIZE="10.5">_consume_and_schedule(entry, process, state)</FONT>>];
+update [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Mémoriser le moment de ce départ</FONT><BR/><FONT POINT-SIZE="10.5">state.previous_cycle = entry.cycle<BR/>state.last_cycle = max(state.last_cycle,<BR/>entry.cycle)</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Départ accepté ; revenir dans G06</FONT>>];
+error [shape=ellipse, style="filled", fillcolor="#fbe7e2", peripheries=1, label=<<FONT POINT-SIZE="13">Refuser et arrêter la vérification</FONT><BR/><FONT POINT-SIZE="10.5">TraceError → G02<BR/>cycle antérieur / nom inconnu / ressources<BR/>manquantes</FONT>>];
+start -> D09 [label=""];
+D09 -> error [label="Oui"];
+D09 -> complete [label="Non"];
+complete -> resolve [label=""];
+resolve -> D11 [label=""];
+D11 -> error [label="Oui"];
+D11 -> missing [label="Non"];
+missing -> D13 [label=""];
+D13 -> error [label="Oui"];
+D13 -> launch [label="Non"];
+launch -> update [label=""];
+update -> end [label=""];
+}

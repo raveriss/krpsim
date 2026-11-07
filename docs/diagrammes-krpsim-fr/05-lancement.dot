@@ -1,0 +1,23 @@
+digraph parcours {
+graph [rankdir=TB, bgcolor="white", pad="0.35", nodesep="0.35", ranksep="0.48", fontname="DejaVu Sans", fontsize=20, labelloc=t, label="5. simulator.py : exécuter un processus"];
+node [shape=box, style="rounded,filled", fillcolor="#EEF4FB", color="#56718C", fontname="DejaVu Sans", fontsize=12, margin="0.18,0.12"];
+edge [color="#61758A", fontname="DejaVu Sans", fontsize=11, arrowsize=0.7];
+entry [label="Essayer de lancer un processus\n_launch(process)", shape=box, fillcolor="#EEF4FB"];
+possible [label="Stocks suffisants ET\ntime + process.delay ≤ _max_time ?\n_can_start", shape=diamond, fillcolor="#FFF1CF"];
+reject [label="Ne rien modifier\nRetourner False", shape=box, fillcolor="#FDE4E1"];
+consume [label="Retirer les besoins des stocks\nprocess.needs", shape=box, fillcolor="#EEF4FB"];
+zero [label="Durée du processus = 0 ?", shape=diamond, fillcolor="#FFF1CF"];
+immediate [label="Ajouter les résultats immédiatement\nprocess.results", shape=box, fillcolor="#EEF4FB"];
+running [label="Ajouter un processus en cours\n_RunningProcess(process, delay)", shape=box, fillcolor="#EEF4FB"];
+trace [label="Enregistrer le démarrage\ntrace.append((time, process.name))", shape=box, fillcolor="#DEF3E5"];
+future [label="Aux prochains step : décrémenter remaining\nÀ zéro : créditer les résultats et retirer le travail", shape=box, fillcolor="#EEF4FB"];
+entry -> possible [label=""];
+possible -> reject [label="Non"];
+possible -> consume [label="Oui"];
+consume -> zero [label=""];
+zero -> immediate [label="Oui"];
+zero -> running [label="Non"];
+immediate -> trace [label=""];
+running -> trace [label=""];
+running -> future [label="Au fil des cycles"];
+}

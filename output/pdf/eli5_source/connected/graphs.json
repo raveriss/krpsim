@@ -1,0 +1,3947 @@
+[
+  {
+    "id": "G01",
+    "title": "De la commande à l’affichage",
+    "function": "build_parser → main",
+    "source": "src/krpsim_verif/cli.py:25-102",
+    "note": "Les codes 0, 1 et 2 sont des résultats de commande. Une exception inattendue peut interrompre le parcours dans G02.",
+    "calls": [
+      "G02",
+      "G32"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Lancer krpsim_verif",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "D01",
+        "text": "D01 · La commande demande-t-elle l’aide ?",
+        "code": "parse_args(argv) : option -h / --help",
+        "kind": "decision"
+      },
+      {
+        "id": "help",
+        "text": "Afficher l’aide et terminer",
+        "code": "SystemExit(0)",
+        "kind": "end"
+      },
+      {
+        "id": "D02",
+        "text": "D02 · Les arguments de la commande sont-ils incorrects ?",
+        "code": "parse_args(argv) : erreur d’arguments",
+        "kind": "decision"
+      },
+      {
+        "id": "usage",
+        "text": "Afficher usage et erreur ; terminer",
+        "code": "SystemExit(2)",
+        "kind": "error"
+      },
+      {
+        "id": "verify",
+        "text": "Vérifier les fichiers et obtenir un résultat\nDétail : G02",
+        "code": "sim, exit_code = _verify_inputs(args)",
+        "kind": "call"
+      },
+      {
+        "id": "D05",
+        "text": "D05 · Dispose-t-on d’un état final après la vérification ?",
+        "code": "sim is not None",
+        "kind": "decision"
+      },
+      {
+        "id": "print",
+        "text": "Afficher les stocks et le dernier cycle\nDétail : G32",
+        "code": "_print_final_stocks(sim)",
+        "kind": "call"
+      },
+      {
+        "id": "end",
+        "text": "Terminer la commande",
+        "code": "return exit_code",
+        "kind": "end"
+      }
+    ],
+    "edges": [
+      {
+        "to": "D01",
+        "label": "",
+        "loop": false,
+        "from": "start"
+      },
+      {
+        "to": "help",
+        "label": "Oui",
+        "loop": false,
+        "from": "D01"
+      },
+      {
+        "to": "D02",
+        "label": "Non",
+        "loop": false,
+        "from": "D01"
+      },
+      {
+        "to": "usage",
+        "label": "Oui",
+        "loop": false,
+        "from": "D02"
+      },
+      {
+        "to": "verify",
+        "label": "Non",
+        "loop": false,
+        "from": "D02"
+      },
+      {
+        "to": "D05",
+        "label": "",
+        "loop": false,
+        "from": "verify"
+      },
+      {
+        "to": "print",
+        "label": "Oui",
+        "loop": false,
+        "from": "D05"
+      },
+      {
+        "to": "end",
+        "label": "Non",
+        "loop": false,
+        "from": "D05"
+      },
+      {
+        "to": "end",
+        "label": "",
+        "loop": false,
+        "from": "print"
+      }
+    ]
+  },
+  {
+    "id": "G02",
+    "title": "Succès ou erreur : quel message afficher ?",
+    "function": "_verify_inputs",
+    "source": "src/krpsim_verif/cli.py:47-60",
+    "note": "ParseError devient invalid config. OSError et TraceError deviennent invalid trace. Les autres exceptions ne sont pas interceptées.",
+    "calls": [
+      "G03",
+      "G01"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Entrer dans la fonction",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "files",
+        "text": "Lire et vérifier les deux fichiers\nDétail : G03",
+        "code": "verify_files(config, trace)",
+        "kind": "call"
+      },
+      {
+        "id": "success",
+        "text": "Afficher « trace is valid »",
+        "code": "print(\"trace is valid\")",
+        "kind": "action"
+      },
+      {
+        "id": "end",
+        "text": "Renvoyer l’état final et le code 0 à G01",
+        "code": "return sim, 0",
+        "kind": "end"
+      },
+      {
+        "id": "D03",
+        "text": "D03 · Une erreur de configuration a-t-elle été signalée ?",
+        "code": "except ParseError as exc",
+        "kind": "decision"
+      },
+      {
+        "id": "D04",
+        "text": "D04 · La lecture ou la vérification a-t-elle signalé une erreur attendue ?",
+        "code": "except (OSError, TraceError) as exc",
+        "kind": "decision"
+      },
+      {
+        "id": "configerr",
+        "text": "Afficher « invalid config: … »",
+        "code": "print(f\"invalid config: {exc}\")",
+        "kind": "action"
+      },
+      {
+        "id": "traceerr",
+        "text": "Afficher « invalid trace: … »",
+        "code": "print(f\"invalid trace: {exc}\")",
+        "kind": "action"
+      },
+      {
+        "id": "rejected",
+        "text": "Renvoyer aucun état et le code 1 à G01",
+        "code": "return None, 1",
+        "kind": "end"
+      },
+      {
+        "id": "unexpected",
+        "text": "Laisser remonter l’exception inattendue",
+        "code": "Non interceptée par _verify_inputs",
+        "kind": "error"
+      }
+    ],
+    "edges": [
+      {
+        "to": "files",
+        "label": "",
+        "loop": false,
+        "from": "start"
+      },
+      {
+        "to": "success",
+        "label": "Retour normal",
+        "loop": false,
+        "from": "files"
+      },
+      {
+        "to": "end",
+        "label": "",
+        "loop": false,
+        "from": "success"
+      },
+      {
+        "to": "D03",
+        "label": "Exception",
+        "loop": false,
+        "from": "files"
+      },
+      {
+        "to": "configerr",
+        "label": "Oui",
+        "loop": false,
+        "from": "D03"
+      },
+      {
+        "to": "D04",
+        "label": "Non",
+        "loop": false,
+        "from": "D03"
+      },
+      {
+        "to": "traceerr",
+        "label": "Oui",
+        "loop": false,
+        "from": "D04"
+      },
+      {
+        "to": "unexpected",
+        "label": "Non",
+        "loop": false,
+        "from": "D04"
+      },
+      {
+        "to": "rejected",
+        "label": "",
+        "loop": false,
+        "from": "configerr"
+      },
+      {
+        "to": "rejected",
+        "label": "",
+        "loop": false,
+        "from": "traceerr"
+      }
+    ]
+  },
+  {
+    "id": "G03",
+    "title": "Lire dans le bon ordre",
+    "function": "verify_files",
+    "source": "src/krpsim_verif/verifier.py:253-280",
+    "note": "La lecture complète de la trace précède le contrôle des stocks. Une erreur de syntaxe tardive peut donc masquer un manque de ressources au début.",
+    "calls": [
+      "G10",
+      "G04",
+      "G06",
+      "G02"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Deux chemins de fichiers reçus",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "config",
+        "text": "Lire et valider la configuration\nDétail : G10",
+        "code": "config = parse_file(config_path)",
+        "kind": "call"
+      },
+      {
+        "id": "trace",
+        "text": "Lire et vérifier le format de la trace\nDétail : G04",
+        "code": "trace = parse_trace(trace_path)",
+        "kind": "call"
+      },
+      {
+        "id": "replay",
+        "text": "Rejouer les départs annoncés\nDétail : G06",
+        "code": "sim = verify_trace(config, trace)",
+        "kind": "call"
+      },
+      {
+        "id": "end",
+        "text": "Renvoyer l’état vérifié à G02",
+        "code": "return sim",
+        "kind": "end"
+      },
+      {
+        "id": "error",
+        "text": "Transmettre l’exception à G02",
+        "code": "Aucune conversion dans verify_files",
+        "kind": "error"
+      }
+    ],
+    "edges": [
+      {
+        "to": "config",
+        "label": "",
+        "loop": false,
+        "from": "start"
+      },
+      {
+        "to": "trace",
+        "label": "Réussite",
+        "loop": false,
+        "from": "config"
+      },
+      {
+        "to": "replay",
+        "label": "Réussite",
+        "loop": false,
+        "from": "trace"
+      },
+      {
+        "to": "end",
+        "label": "Réussite",
+        "loop": false,
+        "from": "replay"
+      },
+      {
+        "to": "error",
+        "label": "Exception",
+        "loop": false,
+        "from": "config"
+      },
+      {
+        "to": "error",
+        "label": "Exception",
+        "loop": false,
+        "from": "trace"
+      },
+      {
+        "to": "error",
+        "label": "Exception",
+        "loop": false,
+        "from": "replay"
+      }
+    ]
+  },
+  {
+    "id": "G04",
+    "title": "Lire toutes les lignes de la trace",
+    "function": "parse_trace",
+    "source": "src/krpsim_verif/verifier.py:63-90",
+    "note": "idx compte les lignes physiques. L’ouverture texte normalise les fins CRLF. Les espaces de début et de fin ne sont pas supprimés. Une erreur de décodage pendant la lecture interrompt aussi le parcours et remonte à G02.",
+    "calls": [
+      "G05",
+      "G03",
+      "G02"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Entrer dans la fonction",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "open",
+        "text": "Ouvrir la trace en texte UTF-8",
+        "code": "path.open(encoding=\"utf-8\")",
+        "kind": "action"
+      },
+      {
+        "id": "init",
+        "text": "Préparer une liste de départs vide",
+        "code": "entries = []",
+        "kind": "action"
+      },
+      {
+        "id": "readline",
+        "text": "Essayer de lire la ligne suivante",
+        "code": "Avancement de stream / enumerate",
+        "kind": "action"
+      },
+      {
+        "id": "more",
+        "text": "Reste-t-il une ligne dans le fichier ?",
+        "code": "for idx, raw_line in enumerate(stream, 1)",
+        "kind": "decision"
+      },
+      {
+        "id": "strip",
+        "text": "Retirer la fin de ligne",
+        "code": "line = raw_line.rstrip(\"\\n\")",
+        "kind": "action"
+      },
+      {
+        "id": "parse",
+        "text": "Contrôler cette ligne ; l’ajouter ou l’ignorer\nDétail : G05",
+        "code": "_parse_trace_line(line, idx, entries)",
+        "kind": "call"
+      },
+      {
+        "id": "end",
+        "text": "Renvoyer la liste à G03",
+        "code": "return entries",
+        "kind": "end"
+      },
+      {
+        "id": "error",
+        "text": "Interrompre la lecture ; transmettre à G02",
+        "code": "OSError / TraceError ; UnicodeDecodeError non interceptée",
+        "kind": "error"
+      }
+    ],
+    "edges": [
+      {
+        "to": "error",
+        "label": "Échec",
+        "loop": false,
+        "from": "open"
+      },
+      {
+        "to": "strip",
+        "label": "Oui",
+        "loop": false,
+        "from": "more"
+      },
+      {
+        "to": "end",
+        "label": "Non",
+        "loop": false,
+        "from": "more"
+      },
+      {
+        "to": "parse",
+        "label": "",
+        "loop": false,
+        "from": "strip"
+      },
+      {
+        "to": "error",
+        "label": "Erreur",
+        "loop": false,
+        "from": "parse"
+      },
+      {
+        "from": "start",
+        "to": "init",
+        "label": ""
+      },
+      {
+        "from": "init",
+        "to": "open",
+        "label": ""
+      },
+      {
+        "from": "open",
+        "to": "readline",
+        "label": "Ouvert"
+      },
+      {
+        "from": "readline",
+        "to": "more",
+        "label": "Lecture réussie ou fin"
+      },
+      {
+        "from": "readline",
+        "to": "error",
+        "label": "Erreur lecture / décodage"
+      },
+      {
+        "from": "parse",
+        "to": "readline",
+        "label": "Ligne suivante",
+        "loop": true
+      }
+    ]
+  },
+  {
+    "id": "G05",
+    "title": "Décider quoi faire d’une ligne de trace",
+    "function": "_parse_trace_line",
+    "source": "src/krpsim_verif/verifier.py:93-110",
+    "note": "Un fichier vide n’a aucune ligne ; une ligne vide est une erreur. Le premier « : » sépare le cycle et le nom ; les autres restent dans le nom.",
+    "calls": [
+      "G31",
+      "G04",
+      "G02"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Recevoir une ligne et son numéro idx",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "D47",
+        "text": "D47 · La ligne est-elle vide ?",
+        "code": "not line",
+        "kind": "decision"
+      },
+      {
+        "id": "D48",
+        "text": "D48 · La ligne commence-t-elle directement par « # » ?",
+        "code": "line.startswith(\"#\")",
+        "kind": "decision"
+      },
+      {
+        "id": "D49",
+        "text": "D49 · Le séparateur « : » est-il absent ?",
+        "code": "\":\" not in line",
+        "kind": "decision"
+      },
+      {
+        "id": "split",
+        "text": "Séparer au premier deux-points",
+        "code": "cycle_str, name = line.split(\":\", 1)",
+        "kind": "action"
+      },
+      {
+        "id": "format",
+        "text": "Vérifier le cycle et mémoriser le départ\nSuite : G31",
+        "code": "Fin de _parse_trace_line",
+        "kind": "call"
+      },
+      {
+        "id": "end",
+        "text": "Revenir lire la ligne suivante dans G04",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "error",
+        "text": "Refuser cette ligne et remonter à G02",
+        "code": "TraceError : empty / invalid trace line idx",
+        "kind": "error"
+      }
+    ],
+    "edges": [
+      {
+        "to": "D47",
+        "label": "",
+        "loop": false,
+        "from": "start"
+      },
+      {
+        "to": "error",
+        "label": "Oui",
+        "loop": false,
+        "from": "D47"
+      },
+      {
+        "to": "D48",
+        "label": "Non",
+        "loop": false,
+        "from": "D47"
+      },
+      {
+        "to": "end",
+        "label": "Oui",
+        "loop": false,
+        "from": "D48"
+      },
+      {
+        "to": "D49",
+        "label": "Non",
+        "loop": false,
+        "from": "D48"
+      },
+      {
+        "to": "error",
+        "label": "Oui",
+        "loop": false,
+        "from": "D49"
+      },
+      {
+        "to": "split",
+        "label": "Non",
+        "loop": false,
+        "from": "D49"
+      },
+      {
+        "from": "split",
+        "to": "format",
+        "label": ""
+      },
+      {
+        "from": "format",
+        "to": "end",
+        "label": "Retour normal"
+      }
+    ]
+  },
+  {
+    "id": "G06",
+    "title": "Rejouer la liste des départs",
+    "function": "verify_trace",
+    "source": "src/krpsim_verif/verifier.py:218-249",
+    "note": "Les départs sont traités dans l’ordre de la liste. Deux départs au même cycle ne sont pas réordonnés.",
+    "calls": [
+      "G07",
+      "G08",
+      "G11",
+      "G03",
+      "G02"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Recevoir config et trace",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "D06",
+        "text": "D06 · La liste des départs est-elle vide ?",
+        "code": "not trace",
+        "kind": "decision"
+      },
+      {
+        "id": "empty",
+        "text": "Appliquer la règle spéciale de trace vide\nDétail : G07",
+        "code": "_verify_empty_trace(config)",
+        "kind": "call"
+      },
+      {
+        "id": "init",
+        "text": "Copier les stocks et vider les opérations en cours",
+        "code": "state = _VerificationState(config.stocks.copy(), [])",
+        "kind": "action"
+      },
+      {
+        "id": "D15",
+        "text": "D15 · Reste-t-il un départ à vérifier ?",
+        "code": "for line_number, entry in enumerate(trace, start=1)",
+        "kind": "decision"
+      },
+      {
+        "id": "entry",
+        "text": "Vérifier et appliquer ce départ\nDétail : G08",
+        "code": "_verify_entry(config, entry, line_number, state)",
+        "kind": "call"
+      },
+      {
+        "id": "finish",
+        "text": "Finaliser les productions et construire le résultat\nDétail : G11",
+        "code": "_build_verified_simulator(config, state)",
+        "kind": "call"
+      },
+      {
+        "id": "end",
+        "text": "Renvoyer sim à G03",
+        "code": "return sim",
+        "kind": "end"
+      },
+      {
+        "id": "error",
+        "text": "Arrêter au premier échec ; remonter à G02",
+        "code": "TraceError ou exception inattendue",
+        "kind": "error"
+      }
+    ],
+    "edges": [
+      {
+        "to": "D06",
+        "label": "",
+        "loop": false,
+        "from": "start"
+      },
+      {
+        "to": "empty",
+        "label": "Oui",
+        "loop": false,
+        "from": "D06"
+      },
+      {
+        "to": "init",
+        "label": "Non",
+        "loop": false,
+        "from": "D06"
+      },
+      {
+        "to": "end",
+        "label": "Acceptée",
+        "loop": false,
+        "from": "empty"
+      },
+      {
+        "to": "error",
+        "label": "Erreur",
+        "loop": false,
+        "from": "empty"
+      },
+      {
+        "to": "D15",
+        "label": "",
+        "loop": false,
+        "from": "init"
+      },
+      {
+        "to": "entry",
+        "label": "Oui",
+        "loop": false,
+        "from": "D15"
+      },
+      {
+        "to": "finish",
+        "label": "Non",
+        "loop": false,
+        "from": "D15"
+      },
+      {
+        "to": "D15",
+        "label": "Départ suivant",
+        "loop": true,
+        "from": "entry"
+      },
+      {
+        "to": "error",
+        "label": "Erreur",
+        "loop": false,
+        "from": "entry"
+      },
+      {
+        "to": "end",
+        "label": "Retour normal",
+        "loop": false,
+        "from": "finish"
+      }
+    ]
+  },
+  {
+    "id": "G07",
+    "title": "Accepter ou refuser une trace vide",
+    "function": "_verify_empty_trace",
+    "source": "src/krpsim_verif/verifier.py:113-120",
+    "note": "Sans optimize, une trace vide est refusée dès qu’une opération peut démarrer. Les besoins sont les ressources consommées au départ.",
+    "calls": [
+      "G24",
+      "G06",
+      "G02"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Aucun départ annoncé",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "D07",
+        "text": "D07 · Aucune optimisation n’est-elle demandée ?",
+        "code": "not config.optimize",
+        "kind": "decision"
+      },
+      {
+        "id": "more",
+        "text": "Reste-t-il une opération configurée à examiner ?",
+        "code": "for proc in config.processes.values()",
+        "kind": "decision"
+      },
+      {
+        "id": "D08",
+        "text": "D08 · Cette opération peut-elle démarrer avec les stocks initiaux ?",
+        "code": "all(config.stocks.get(n, 0) >= q for n, q in proc.needs.items())",
+        "kind": "decision"
+      },
+      {
+        "id": "sim",
+        "text": "Construire l’état initial, au cycle 0\nDétail : G24",
+        "code": "Simulator(config)",
+        "kind": "call"
+      },
+      {
+        "id": "end",
+        "text": "Accepter et revenir dans G06",
+        "code": "return sim",
+        "kind": "end"
+      },
+      {
+        "id": "error",
+        "text": "Refuser : du travail était possible au départ",
+        "code": "TraceError(\"empty trace\") → G02",
+        "kind": "error"
+      }
+    ],
+    "edges": [
+      {
+        "to": "D07",
+        "label": "",
+        "loop": false,
+        "from": "start"
+      },
+      {
+        "to": "more",
+        "label": "Oui",
+        "loop": false,
+        "from": "D07"
+      },
+      {
+        "to": "sim",
+        "label": "Non",
+        "loop": false,
+        "from": "D07"
+      },
+      {
+        "to": "D08",
+        "label": "Oui",
+        "loop": false,
+        "from": "more"
+      },
+      {
+        "to": "sim",
+        "label": "Non",
+        "loop": false,
+        "from": "more"
+      },
+      {
+        "to": "error",
+        "label": "Oui",
+        "loop": false,
+        "from": "D08"
+      },
+      {
+        "to": "more",
+        "label": "Non",
+        "loop": true,
+        "from": "D08"
+      },
+      {
+        "to": "end",
+        "label": "",
+        "loop": false,
+        "from": "sim"
+      }
+    ]
+  },
+  {
+    "id": "G08",
+    "title": "Valider un départ, dans l’ordre exact",
+    "function": "_verify_entry / _resolve_process",
+    "source": "src/krpsim_verif/verifier.py:139-145,178-202",
+    "note": "Exemple : après un départ au cycle 8, un départ au cycle 5 est refusé. Un nouveau départ au cycle 8 passe le contrôle de chronologie.",
+    "calls": [
+      "G09",
+      "G12",
+      "G13",
+      "G06",
+      "G02"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Recevoir entry et l’état courant",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "D09",
+        "text": "D09 · Le départ lu est-il prévu avant le départ précédent ?",
+        "code": "entry.cycle < state.previous_cycle",
+        "kind": "decision"
+      },
+      {
+        "id": "complete",
+        "text": "Ajouter les résultats déjà terminés à ce cycle\nDétail : G09",
+        "code": "_complete_until(entry.cycle, state.running, state.stocks)",
+        "kind": "call"
+      },
+      {
+        "id": "resolve",
+        "text": "Garder la dernière fin ; rechercher l’opération",
+        "code": "state.last_cycle = max(state.last_cycle, completion)\nprocess = _resolve_process(config, entry.process)",
+        "kind": "action"
+      },
+      {
+        "id": "D11",
+        "text": "D11 · Le nom demandé est-il absent de la configuration ?",
+        "code": "process is None",
+        "kind": "decision"
+      },
+      {
+        "id": "missing",
+        "text": "Calculer les quantités de ressources manquantes\nDétail : G12",
+        "code": "missing = _missing_resources(process, state.stocks)",
+        "kind": "call"
+      },
+      {
+        "id": "D13",
+        "text": "D13 · Manque-t-il au moins une ressource pour démarrer ?",
+        "code": "if missing",
+        "kind": "decision"
+      },
+      {
+        "id": "launch",
+        "text": "Consommer les ressources et produire ou programmer la fin\nDétail : G13",
+        "code": "_consume_and_schedule(entry, process, state)",
+        "kind": "call"
+      },
+      {
+        "id": "update",
+        "text": "Mémoriser le moment de ce départ",
+        "code": "state.previous_cycle = entry.cycle\nstate.last_cycle = max(state.last_cycle, entry.cycle)",
+        "kind": "action"
+      },
+      {
+        "id": "end",
+        "text": "Départ accepté ; revenir dans G06",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "error",
+        "text": "Refuser et arrêter la vérification",
+        "code": "TraceError → G02\ncycle antérieur / nom inconnu / ressources manquantes",
+        "kind": "error"
+      }
+    ],
+    "edges": [
+      {
+        "to": "D09",
+        "label": "",
+        "loop": false,
+        "from": "start"
+      },
+      {
+        "to": "error",
+        "label": "Oui",
+        "loop": false,
+        "from": "D09"
+      },
+      {
+        "to": "complete",
+        "label": "Non",
+        "loop": false,
+        "from": "D09"
+      },
+      {
+        "to": "resolve",
+        "label": "",
+        "loop": false,
+        "from": "complete"
+      },
+      {
+        "to": "D11",
+        "label": "",
+        "loop": false,
+        "from": "resolve"
+      },
+      {
+        "to": "error",
+        "label": "Oui",
+        "loop": false,
+        "from": "D11"
+      },
+      {
+        "to": "missing",
+        "label": "Non",
+        "loop": false,
+        "from": "D11"
+      },
+      {
+        "to": "D13",
+        "label": "",
+        "loop": false,
+        "from": "missing"
+      },
+      {
+        "to": "error",
+        "label": "Oui",
+        "loop": false,
+        "from": "D13"
+      },
+      {
+        "to": "launch",
+        "label": "Non",
+        "loop": false,
+        "from": "D13"
+      },
+      {
+        "to": "update",
+        "label": "",
+        "loop": false,
+        "from": "launch"
+      },
+      {
+        "to": "end",
+        "label": "",
+        "loop": false,
+        "from": "update"
+      }
+    ]
+  },
+  {
+    "id": "G09",
+    "title": "Ajouter les résultats des opérations terminées",
+    "function": "_complete_until",
+    "source": "src/krpsim_verif/verifier.py:123-136",
+    "note": "Une fin exactement au cycle demandé est incluse. Une ressource absente du dictionnaire stocks est considérée comme disponible en quantité 0.",
+    "calls": [
+      "G08",
+      "G11"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Recevoir un cycle seuil et les opérations en cours",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "init",
+        "text": "Initialiser la dernière fin ajoutée",
+        "code": "last_completion = 0",
+        "kind": "action"
+      },
+      {
+        "id": "D10",
+        "text": "D10 · Reste-t-il une opération dont la fin est atteinte ou dépassée ?",
+        "code": "running and running[0][0] <= cycle",
+        "kind": "decision"
+      },
+      {
+        "id": "pop",
+        "text": "Retirer la fin la plus proche de la file",
+        "code": "completion, _, process = heapq.heappop(running)",
+        "kind": "action"
+      },
+      {
+        "id": "time",
+        "text": "Mémoriser la plus grande fin ajoutée",
+        "code": "last_completion = max(last_completion, completion)",
+        "kind": "action"
+      },
+      {
+        "id": "results",
+        "text": "Reste-t-il un résultat de cette opération à ajouter ?",
+        "code": "for resource, quantity in process.results.items()",
+        "kind": "decision"
+      },
+      {
+        "id": "credit",
+        "text": "Ajouter sa quantité au stock",
+        "code": "stocks[resource] = stocks.get(resource, 0) + quantity",
+        "kind": "action"
+      },
+      {
+        "id": "end",
+        "text": "Retourner la dernière fin ajoutée, ou 0",
+        "code": "return last_completion",
+        "kind": "end"
+      }
+    ],
+    "edges": [
+      {
+        "to": "init",
+        "label": "",
+        "loop": false,
+        "from": "start"
+      },
+      {
+        "to": "D10",
+        "label": "",
+        "loop": false,
+        "from": "init"
+      },
+      {
+        "to": "pop",
+        "label": "Oui",
+        "loop": false,
+        "from": "D10"
+      },
+      {
+        "to": "end",
+        "label": "Non",
+        "loop": false,
+        "from": "D10"
+      },
+      {
+        "to": "time",
+        "label": "",
+        "loop": false,
+        "from": "pop"
+      },
+      {
+        "to": "results",
+        "label": "",
+        "loop": false,
+        "from": "time"
+      },
+      {
+        "to": "credit",
+        "label": "Oui",
+        "loop": false,
+        "from": "results"
+      },
+      {
+        "to": "D10",
+        "label": "Non",
+        "loop": true,
+        "from": "results"
+      },
+      {
+        "to": "results",
+        "label": "Résultat suivant",
+        "loop": true,
+        "from": "credit"
+      }
+    ]
+  },
+  {
+    "id": "G10",
+    "title": "Valider toute la configuration",
+    "function": "parse_file",
+    "source": "src/krpsim/parser.py:574-619",
+    "note": "Toute ParseError interrompt la lecture et remonte à G02. La validation des objectifs précède celle des ressources utilisées par les opérations.",
+    "calls": [
+      "G14",
+      "G15",
+      "G16",
+      "G22",
+      "G23",
+      "G03",
+      "G02"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Recevoir le chemin de configuration",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "path",
+        "text": "Contrôler le chemin et les droits\nDétail : G14",
+        "code": "Début de parse_file(path)",
+        "kind": "call"
+      },
+      {
+        "id": "read",
+        "text": "Lire les octets, décoder et vérifier les lignes\nDétail : G15",
+        "code": "lines = _read_lines(path)",
+        "kind": "call"
+      },
+      {
+        "id": "parse",
+        "text": "Lire stocks, opérations et objectifs\nDétail : G16",
+        "code": "stocks, processes, optimize = _parse_lines(lines)",
+        "kind": "call"
+      },
+      {
+        "id": "D43",
+        "text": "D43 · Manque-t-il tout stock initial ou toute opération ?",
+        "code": "not stocks or not processes",
+        "kind": "decision"
+      },
+      {
+        "id": "D44",
+        "text": "D44 · Une liste d’objectifs non vide est-elle présente ?",
+        "code": "if optimize",
+        "kind": "decision"
+      },
+      {
+        "id": "goals",
+        "text": "Vérifier que les objectifs sont connus\nDétail : G22",
+        "code": "_validate_optimize(optimize, stocks, processes)",
+        "kind": "call"
+      },
+      {
+        "id": "needs",
+        "text": "Vérifier l’existence des ressources nécessaires\nDétail : G23",
+        "code": "_validate_process_resources(stocks, processes)",
+        "kind": "call"
+      },
+      {
+        "id": "end",
+        "text": "Renvoyer Config à G03",
+        "code": "return Config(stocks, processes, optimize)",
+        "kind": "end"
+      },
+      {
+        "id": "error",
+        "text": "Refuser : configuration incomplète",
+        "code": "ParseError → G02",
+        "kind": "error"
+      }
+    ],
+    "edges": [
+      {
+        "to": "path",
+        "label": "",
+        "loop": false,
+        "from": "start"
+      },
+      {
+        "to": "read",
+        "label": "",
+        "loop": false,
+        "from": "path"
+      },
+      {
+        "to": "parse",
+        "label": "",
+        "loop": false,
+        "from": "read"
+      },
+      {
+        "to": "D43",
+        "label": "",
+        "loop": false,
+        "from": "parse"
+      },
+      {
+        "to": "error",
+        "label": "Oui",
+        "loop": false,
+        "from": "D43"
+      },
+      {
+        "to": "D44",
+        "label": "Non",
+        "loop": false,
+        "from": "D43"
+      },
+      {
+        "to": "goals",
+        "label": "Oui",
+        "loop": false,
+        "from": "D44"
+      },
+      {
+        "to": "needs",
+        "label": "Non",
+        "loop": false,
+        "from": "D44"
+      },
+      {
+        "to": "needs",
+        "label": "",
+        "loop": false,
+        "from": "goals"
+      },
+      {
+        "to": "end",
+        "label": "",
+        "loop": false,
+        "from": "needs"
+      }
+    ]
+  },
+  {
+    "id": "G11",
+    "title": "Finaliser le résultat du rejeu",
+    "function": "_build_verified_simulator",
+    "source": "src/krpsim_verif/verifier.py:205-214",
+    "note": "Le seuil 2**63 - 1 est fini. Une opération qui termine au-delà peut rester non créditée ; sim.trace et sim._running ne sont pas remplis avec le rejeu.",
+    "calls": [
+      "G09",
+      "G24",
+      "G06"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Tous les départs ont été acceptés",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "complete",
+        "text": "Ajouter les résultats des fins jusqu’au seuil final\nDétail : G09",
+        "code": "completion = _complete_until(2**63 - 1, state.running, state.stocks)",
+        "kind": "call"
+      },
+      {
+        "id": "last",
+        "text": "Conserver le plus grand moment atteint",
+        "code": "state.last_cycle = max(state.last_cycle, completion)",
+        "kind": "action"
+      },
+      {
+        "id": "construct",
+        "text": "Créer l’objet qui portera le résultat\nDétail : G24",
+        "code": "sim = Simulator(config)",
+        "kind": "call"
+      },
+      {
+        "id": "replace",
+        "text": "Placer les stocks et le temps vérifiés dans cet objet",
+        "code": "sim.stocks = state.stocks\nsim.time = sim._max_time = state.last_cycle",
+        "kind": "action"
+      },
+      {
+        "id": "end",
+        "text": "Renvoyer cet état à G06",
+        "code": "return sim",
+        "kind": "end"
+      }
+    ],
+    "edges": [
+      {
+        "to": "complete",
+        "label": "",
+        "loop": false,
+        "from": "start"
+      },
+      {
+        "to": "last",
+        "label": "",
+        "loop": false,
+        "from": "complete"
+      },
+      {
+        "to": "construct",
+        "label": "",
+        "loop": false,
+        "from": "last"
+      },
+      {
+        "to": "replace",
+        "label": "",
+        "loop": false,
+        "from": "construct"
+      },
+      {
+        "to": "end",
+        "label": "",
+        "loop": false,
+        "from": "replace"
+      }
+    ]
+  },
+  {
+    "id": "G12",
+    "title": "Calculer précisément les ressources manquantes",
+    "function": "_missing_resources",
+    "source": "src/krpsim_verif/verifier.py:148-155",
+    "note": "Exemple : 3 planches nécessaires, 2 disponibles → manque de 1 planche. Avoir 10 clous ne compense pas ce manque.",
+    "calls": [
+      "G08"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Recevoir l’opération et les stocks disponibles",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "init",
+        "text": "Préparer un dictionnaire des manques vide",
+        "code": "missing = {} (forme développée de la compréhension)",
+        "kind": "action"
+      },
+      {
+        "id": "more",
+        "text": "Reste-t-il une ressource nécessaire à comparer ?",
+        "code": "for resource, quantity in process.needs.items()",
+        "kind": "decision"
+      },
+      {
+        "id": "D12",
+        "text": "D12 · Le stock de cette ressource est-il trop petit ?",
+        "code": "stocks.get(resource, 0) < quantity",
+        "kind": "decision"
+      },
+      {
+        "id": "add",
+        "text": "Noter la quantité manquante",
+        "code": "missing[resource] = quantity - stocks.get(resource, 0)",
+        "kind": "action"
+      },
+      {
+        "id": "end",
+        "text": "Renvoyer les manques à G08",
+        "code": "return missing ({} si aucun manque)",
+        "kind": "end"
+      }
+    ],
+    "edges": [
+      {
+        "to": "init",
+        "label": "",
+        "loop": false,
+        "from": "start"
+      },
+      {
+        "to": "more",
+        "label": "",
+        "loop": false,
+        "from": "init"
+      },
+      {
+        "to": "D12",
+        "label": "Oui",
+        "loop": false,
+        "from": "more"
+      },
+      {
+        "to": "end",
+        "label": "Non",
+        "loop": false,
+        "from": "more"
+      },
+      {
+        "to": "add",
+        "label": "Oui",
+        "loop": false,
+        "from": "D12"
+      },
+      {
+        "to": "more",
+        "label": "Non",
+        "loop": true,
+        "from": "D12"
+      },
+      {
+        "to": "more",
+        "label": "Ressource suivante",
+        "loop": true,
+        "from": "add"
+      }
+    ]
+  },
+  {
+    "id": "G13",
+    "title": "Consommer maintenant, produire au bon moment",
+    "function": "_consume_and_schedule",
+    "source": "src/krpsim_verif/verifier.py:158-175",
+    "note": "Les besoins sont consommés avant de produire, même avec une durée nulle. sequence départage les opérations qui finissent au même cycle.",
+    "calls": [
+      "G08"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Les ressources nécessaires sont toutes disponibles",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "needs",
+        "text": "Reste-t-il une ressource nécessaire à retirer ?",
+        "code": "for resource, quantity in process.needs.items()",
+        "kind": "decision"
+      },
+      {
+        "id": "consume",
+        "text": "Retirer la quantité nécessaire du stock",
+        "code": "state.stocks[resource] -= quantity",
+        "kind": "action"
+      },
+      {
+        "id": "D14",
+        "text": "D14 · La durée de cette opération est-elle nulle ?",
+        "code": "process.delay == 0",
+        "kind": "decision"
+      },
+      {
+        "id": "results",
+        "text": "Reste-t-il un résultat à produire immédiatement ?",
+        "code": "for resource, quantity in process.results.items()",
+        "kind": "decision"
+      },
+      {
+        "id": "credit",
+        "text": "Ajouter ce résultat au stock",
+        "code": "state.stocks[resource] = state.stocks.get(resource, 0) + quantity",
+        "kind": "action"
+      },
+      {
+        "id": "seq",
+        "text": "Attribuer un numéro à cette fin future",
+        "code": "state.sequence += 1",
+        "kind": "action"
+      },
+      {
+        "id": "schedule",
+        "text": "Placer la fin future dans la file",
+        "code": "heapq.heappush(state.running,\n(entry.cycle + process.delay, state.sequence, process))",
+        "kind": "action"
+      },
+      {
+        "id": "end",
+        "text": "Revenir mettre le temps à jour dans G08",
+        "code": "",
+        "kind": "end"
+      }
+    ],
+    "edges": [
+      {
+        "to": "needs",
+        "label": "",
+        "loop": false,
+        "from": "start"
+      },
+      {
+        "to": "consume",
+        "label": "Oui",
+        "loop": false,
+        "from": "needs"
+      },
+      {
+        "to": "D14",
+        "label": "Non",
+        "loop": false,
+        "from": "needs"
+      },
+      {
+        "to": "needs",
+        "label": "Besoin suivant",
+        "loop": true,
+        "from": "consume"
+      },
+      {
+        "to": "results",
+        "label": "Oui",
+        "loop": false,
+        "from": "D14"
+      },
+      {
+        "to": "seq",
+        "label": "Non",
+        "loop": false,
+        "from": "D14"
+      },
+      {
+        "to": "credit",
+        "label": "Oui",
+        "loop": false,
+        "from": "results"
+      },
+      {
+        "to": "end",
+        "label": "Non",
+        "loop": false,
+        "from": "results"
+      },
+      {
+        "to": "results",
+        "label": "Résultat suivant",
+        "loop": true,
+        "from": "credit"
+      },
+      {
+        "to": "schedule",
+        "label": "",
+        "loop": false,
+        "from": "seq"
+      },
+      {
+        "to": "end",
+        "label": "",
+        "loop": false,
+        "from": "schedule"
+      }
+    ]
+  },
+  {
+    "id": "G14",
+    "title": "Autoriser la lecture de la configuration",
+    "function": "Début de parse_file",
+    "source": "src/krpsim/parser.py:592-605",
+    "note": "Ces contrôles concernent le chemin de configuration. Un échec disque après ces contrôles peut encore lever OSError et arriver à G02.",
+    "calls": [
+      "G10",
+      "G02"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Chemin de configuration reçu",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "D16",
+        "text": "D16 · Le chemin de configuration contient-il un élément « .. » ?",
+        "code": "\"..\" in path.parts",
+        "kind": "decision"
+      },
+      {
+        "id": "D17",
+        "text": "D17 · Le chemin ne désigne-t-il pas un fichier existant ?",
+        "code": "not path.is_file()",
+        "kind": "decision"
+      },
+      {
+        "id": "D18",
+        "text": "D18 · Le système refuse-t-il la lecture de la configuration ?",
+        "code": "not os.access(path, os.R_OK)",
+        "kind": "decision"
+      },
+      {
+        "id": "end",
+        "text": "Chemin accepté ; continuer dans G10",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "error",
+        "text": "Refuser ce chemin ou ses droits",
+        "code": "ParseError → G02\npath traversal / invalid path / not readable",
+        "kind": "error"
+      }
+    ],
+    "edges": [
+      {
+        "to": "D16",
+        "label": "",
+        "loop": false,
+        "from": "start"
+      },
+      {
+        "to": "error",
+        "label": "Oui",
+        "loop": false,
+        "from": "D16"
+      },
+      {
+        "to": "D17",
+        "label": "Non",
+        "loop": false,
+        "from": "D16"
+      },
+      {
+        "to": "error",
+        "label": "Oui",
+        "loop": false,
+        "from": "D17"
+      },
+      {
+        "to": "D18",
+        "label": "Non",
+        "loop": false,
+        "from": "D17"
+      },
+      {
+        "to": "error",
+        "label": "Oui",
+        "loop": false,
+        "from": "D18"
+      },
+      {
+        "to": "end",
+        "label": "Non",
+        "loop": false,
+        "from": "D18"
+      }
+    ]
+  },
+  {
+    "id": "G15",
+    "title": "Lire et contrôler le texte de configuration",
+    "function": "_read_lines",
+    "source": "src/krpsim/parser.py:486-513",
+    "note": "La longueur est contrôlée avant de supprimer les espaces et commentaires. Tout retour chariot CR est refusé ici, contrairement à la lecture de trace.",
+    "calls": [
+      "G27",
+      "G10",
+      "G02"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Entrer dans la fonction",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "read",
+        "text": "Lire le fichier sous forme d’octets",
+        "code": "raw = path.read_bytes()",
+        "kind": "action"
+      },
+      {
+        "id": "D19",
+        "text": "D19 · Le fichier commence-t-il par une marque UTF-8 BOM ?",
+        "code": "raw.startswith(UTF8_BOM)",
+        "kind": "decision"
+      },
+      {
+        "id": "D20",
+        "text": "D20 · Le décodage UTF-8 a-t-il échoué ?",
+        "code": "text = raw.decode(\"utf-8\")\nexcept UnicodeDecodeError",
+        "kind": "decision"
+      },
+      {
+        "id": "D21",
+        "text": "D21 · Un caractère retour chariot est-il présent ?",
+        "code": "b\"\\r\" in raw",
+        "kind": "decision"
+      },
+      {
+        "id": "length",
+        "text": "Séparer et mesurer toutes les lignes\nSuite : G27",
+        "code": "text.splitlines() ; boucle de _read_lines",
+        "kind": "call"
+      },
+      {
+        "id": "end",
+        "text": "Renvoyer les lignes à G10",
+        "code": "return lines",
+        "kind": "end"
+      },
+      {
+        "id": "error",
+        "text": "Refuser le texte de configuration",
+        "code": "ParseError → G02",
+        "kind": "error"
+      }
+    ],
+    "edges": [
+      {
+        "from": "start",
+        "to": "read",
+        "label": "",
+        "loop": false
+      },
+      {
+        "from": "read",
+        "to": "D19",
+        "label": "",
+        "loop": false
+      },
+      {
+        "from": "D19",
+        "to": "error",
+        "label": "Oui",
+        "loop": false
+      },
+      {
+        "from": "D19",
+        "to": "D20",
+        "label": "Non",
+        "loop": false
+      },
+      {
+        "from": "D20",
+        "to": "error",
+        "label": "Oui",
+        "loop": false
+      },
+      {
+        "from": "D20",
+        "to": "D21",
+        "label": "Non",
+        "loop": false
+      },
+      {
+        "from": "D21",
+        "to": "error",
+        "label": "Oui",
+        "loop": false
+      },
+      {
+        "from": "D21",
+        "to": "length",
+        "label": "Non",
+        "loop": false
+      },
+      {
+        "from": "length",
+        "to": "end",
+        "label": "",
+        "loop": false
+      }
+    ]
+  },
+  {
+    "id": "G16",
+    "title": "Choisir comment lire chaque ligne de configuration",
+    "function": "_parse_lines",
+    "source": "src/krpsim/parser.py:538-570",
+    "note": "Le tri est prioritaire : commentaire ou vide, puis optimize:, puis :(, puis :. Après chaque lecture réussie, reprendre la boucle.",
+    "calls": [
+      "G17",
+      "G18",
+      "G20",
+      "G10",
+      "G02"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Entrer dans la fonction",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "init",
+        "text": "Préparer les stocks, opérations et objectifs",
+        "code": "stocks = {}; processes = {}; optimize = None",
+        "kind": "action"
+      },
+      {
+        "id": "more",
+        "text": "Reste-t-il une ligne de configuration ?",
+        "code": "for line in lines",
+        "kind": "decision"
+      },
+      {
+        "id": "strip",
+        "text": "Retirer les espaces aux bords",
+        "code": "line = line.strip()",
+        "kind": "action"
+      },
+      {
+        "id": "D23",
+        "text": "D23 · La ligne est-elle vide ou commence-t-elle par « # » ?",
+        "code": "not line or line.startswith(\"#\")",
+        "kind": "decision"
+      },
+      {
+        "id": "D24",
+        "text": "D24 · La ligne commence-t-elle par « optimize: » ?",
+        "code": "line.startswith(\"optimize:\")",
+        "kind": "decision"
+      },
+      {
+        "id": "D25",
+        "text": "D25 · La ligne contient-elle « :( » ?",
+        "code": "\":(\" in line",
+        "kind": "decision"
+      },
+      {
+        "id": "D26",
+        "text": "D26 · La ligne contient-elle « : » ?",
+        "code": "\":\" in line",
+        "kind": "decision"
+      },
+      {
+        "id": "opt",
+        "text": "Lire la directive d’optimisation\nDétail : G20",
+        "code": "optimize = _handle_optimize(line, optimize)",
+        "kind": "call"
+      },
+      {
+        "id": "process",
+        "text": "Lire une opération\nDétail : G18",
+        "code": "_handle_process(line, processes)",
+        "kind": "call"
+      },
+      {
+        "id": "stock",
+        "text": "Lire un stock initial\nDétail : G17",
+        "code": "_handle_stock(line, stocks)",
+        "kind": "call"
+      },
+      {
+        "id": "end",
+        "text": "Renvoyer les trois éléments à G10",
+        "code": "return stocks, processes, optimize",
+        "kind": "end"
+      },
+      {
+        "id": "error",
+        "text": "Refuser : ligne non reconnue",
+        "code": "ParseError(\"unrecognized line …\") → G02",
+        "kind": "error"
+      }
+    ],
+    "edges": [
+      {
+        "to": "init",
+        "label": "",
+        "loop": false,
+        "from": "start"
+      },
+      {
+        "to": "more",
+        "label": "",
+        "loop": false,
+        "from": "init"
+      },
+      {
+        "to": "strip",
+        "label": "Oui",
+        "loop": false,
+        "from": "more"
+      },
+      {
+        "to": "end",
+        "label": "Non",
+        "loop": false,
+        "from": "more"
+      },
+      {
+        "to": "D23",
+        "label": "",
+        "loop": false,
+        "from": "strip"
+      },
+      {
+        "to": "more",
+        "label": "Oui",
+        "loop": true,
+        "from": "D23"
+      },
+      {
+        "to": "D24",
+        "label": "Non",
+        "loop": false,
+        "from": "D23"
+      },
+      {
+        "to": "opt",
+        "label": "Oui",
+        "loop": false,
+        "from": "D24"
+      },
+      {
+        "to": "D25",
+        "label": "Non",
+        "loop": false,
+        "from": "D24"
+      },
+      {
+        "to": "process",
+        "label": "Oui",
+        "loop": false,
+        "from": "D25"
+      },
+      {
+        "to": "D26",
+        "label": "Non",
+        "loop": false,
+        "from": "D25"
+      },
+      {
+        "to": "stock",
+        "label": "Oui",
+        "loop": false,
+        "from": "D26"
+      },
+      {
+        "to": "error",
+        "label": "Non",
+        "loop": false,
+        "from": "D26"
+      },
+      {
+        "to": "more",
+        "label": "Ligne suivante",
+        "loop": true,
+        "from": "opt"
+      },
+      {
+        "to": "more",
+        "label": "Ligne suivante",
+        "loop": true,
+        "from": "process"
+      },
+      {
+        "to": "more",
+        "label": "Ligne suivante",
+        "loop": true,
+        "from": "stock"
+      }
+    ]
+  },
+  {
+    "id": "G17",
+    "title": "Lire un stock initial sans ambiguïté",
+    "function": "_handle_stock → _parse_stock",
+    "source": "src/krpsim/parser.py:109-145,352-376",
+    "note": "D29 est défensif : une quantité négative est normalement déjà refusée par isdigit. int peut aussi lever une ValueError non interceptée.",
+    "calls": [
+      "G16",
+      "G02"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Recevoir la déclaration de stock",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "split",
+        "text": "Séparer le nom et la quantité",
+        "code": "name, qty = line.split(\":\", 1)",
+        "kind": "action"
+      },
+      {
+        "id": "D27",
+        "text": "D27 · La séparation a-t-elle échoué ?",
+        "code": "except ValueError : line.split(\":\", 1)",
+        "kind": "decision"
+      },
+      {
+        "id": "D28",
+        "text": "D28 · Le nom est-il vide ou la quantité mal écrite ?",
+        "code": "not name or not qty.isdigit()",
+        "kind": "decision"
+      },
+      {
+        "id": "int",
+        "text": "Convertir la quantité en entier",
+        "code": "quantity = int(qty)",
+        "kind": "action"
+      },
+      {
+        "id": "D29",
+        "text": "D29 · La quantité obtenue est-elle négative ?",
+        "code": "quantity < 0",
+        "kind": "decision"
+      },
+      {
+        "id": "D30",
+        "text": "D30 · Ce nom de stock a-t-il déjà été déclaré ?",
+        "code": "name in stocks",
+        "kind": "decision"
+      },
+      {
+        "id": "returnpair",
+        "text": "Renvoyer le nom et la quantité à _handle_stock",
+        "code": "return name, quantity\nréception dans name, qty",
+        "kind": "action"
+      },
+      {
+        "id": "store",
+        "text": "Mémoriser cette quantité initiale",
+        "code": "stocks[name] = qty",
+        "kind": "action"
+      },
+      {
+        "id": "end",
+        "text": "Revenir à la ligne suivante dans G16",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "error",
+        "text": "Refuser le stock initial",
+        "code": "ParseError → G02\ninvalid stock line / quantity / duplicate stock",
+        "kind": "error"
+      }
+    ],
+    "edges": [
+      {
+        "to": "split",
+        "label": "",
+        "loop": false,
+        "from": "start"
+      },
+      {
+        "to": "D27",
+        "label": "",
+        "loop": false,
+        "from": "split"
+      },
+      {
+        "to": "error",
+        "label": "Oui",
+        "loop": false,
+        "from": "D27"
+      },
+      {
+        "to": "D28",
+        "label": "Non",
+        "loop": false,
+        "from": "D27"
+      },
+      {
+        "to": "error",
+        "label": "Oui",
+        "loop": false,
+        "from": "D28"
+      },
+      {
+        "to": "int",
+        "label": "Non",
+        "loop": false,
+        "from": "D28"
+      },
+      {
+        "to": "D29",
+        "label": "",
+        "loop": false,
+        "from": "int"
+      },
+      {
+        "to": "error",
+        "label": "Oui",
+        "loop": false,
+        "from": "D29"
+      },
+      {
+        "to": "returnpair",
+        "label": "Non",
+        "loop": false,
+        "from": "D29"
+      },
+      {
+        "to": "error",
+        "label": "Oui",
+        "loop": false,
+        "from": "D30"
+      },
+      {
+        "to": "store",
+        "label": "Non",
+        "loop": false,
+        "from": "D30"
+      },
+      {
+        "to": "end",
+        "label": "",
+        "loop": false,
+        "from": "store"
+      },
+      {
+        "from": "returnpair",
+        "to": "D30",
+        "label": ""
+      }
+    ]
+  },
+  {
+    "id": "G18",
+    "title": "Lire une opération et sa recette",
+    "function": "_handle_process → _parse_process",
+    "source": "src/krpsim/parser.py:201-245,324-348",
+    "note": "Format : nom:(besoins):(résultats):durée. Les résultats peuvent être omis sous la forme nom:(besoins)::durée. La durée 0 est autorisée.",
+    "calls": [
+      "G19",
+      "G16",
+      "G02"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Entrer dans la fonction",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "match",
+        "text": "Reconnaître le format de la déclaration",
+        "code": "match = re.match(..., line)",
+        "kind": "action"
+      },
+      {
+        "id": "D31",
+        "text": "D31 · La déclaration ne respecte-t-elle pas le format ?",
+        "code": "not match",
+        "kind": "decision"
+      },
+      {
+        "id": "fields",
+        "text": "Extraire le nom et convertir la durée",
+        "code": "name, needs_block, results_block, delay_str = match.groups()\ndelay = int(delay_str)",
+        "kind": "action"
+      },
+      {
+        "id": "needs",
+        "text": "Lire les ressources consommées au départ\nDétail : G19",
+        "code": "needs = _parse_resources(needs_block)",
+        "kind": "call"
+      },
+      {
+        "id": "results",
+        "text": "Lire les ressources produites à la fin\nDétail : G19",
+        "code": "results = _parse_resources(results_block or \"\")",
+        "kind": "call"
+      },
+      {
+        "id": "create",
+        "text": "Construire la recette",
+        "code": "process = Process(name, needs, results, delay)",
+        "kind": "action"
+      },
+      {
+        "id": "D32",
+        "text": "D32 · Une opération porte-t-elle déjà ce nom ?",
+        "code": "process.name in processes",
+        "kind": "decision"
+      },
+      {
+        "id": "store",
+        "text": "Enregistrer cette opération",
+        "code": "processes[process.name] = process",
+        "kind": "action"
+      },
+      {
+        "id": "end",
+        "text": "Revenir lire la ligne suivante dans G16",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "error",
+        "text": "Refuser la déclaration",
+        "code": "ParseError → G02\ninvalid process line / duplicate process",
+        "kind": "error"
+      }
+    ],
+    "edges": [
+      {
+        "to": "match",
+        "label": "",
+        "loop": false,
+        "from": "start"
+      },
+      {
+        "to": "D31",
+        "label": "",
+        "loop": false,
+        "from": "match"
+      },
+      {
+        "to": "error",
+        "label": "Oui",
+        "loop": false,
+        "from": "D31"
+      },
+      {
+        "to": "fields",
+        "label": "Non",
+        "loop": false,
+        "from": "D31"
+      },
+      {
+        "to": "needs",
+        "label": "",
+        "loop": false,
+        "from": "fields"
+      },
+      {
+        "to": "results",
+        "label": "",
+        "loop": false,
+        "from": "needs"
+      },
+      {
+        "to": "create",
+        "label": "",
+        "loop": false,
+        "from": "results"
+      },
+      {
+        "to": "D32",
+        "label": "",
+        "loop": false,
+        "from": "create"
+      },
+      {
+        "to": "error",
+        "label": "Oui",
+        "loop": false,
+        "from": "D32"
+      },
+      {
+        "to": "store",
+        "label": "Non",
+        "loop": false,
+        "from": "D32"
+      },
+      {
+        "to": "end",
+        "label": "",
+        "loop": false,
+        "from": "store"
+      }
+    ]
+  },
+  {
+    "id": "G19",
+    "title": "Lire un bloc de besoins ou de résultats",
+    "function": "_parse_resources",
+    "source": "src/krpsim/parser.py:149-197",
+    "note": "Les éléments vides entre ; sont ignorés. Dans une recette, les quantités doivent être strictement positives ; dans un stock initial, zéro est autorisé.",
+    "calls": [
+      "G18",
+      "G02"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Recevoir un bloc de ressources",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "init",
+        "text": "Créer un dictionnaire vide",
+        "code": "resources = {}",
+        "kind": "action"
+      },
+      {
+        "id": "D33",
+        "text": "D33 · Le bloc de ressources est-il vide ?",
+        "code": "not block",
+        "kind": "decision"
+      },
+      {
+        "id": "more",
+        "text": "Reste-t-il un élément séparé par « ; » ?",
+        "code": "for item in block.split(\";\")",
+        "kind": "decision"
+      },
+      {
+        "id": "D34",
+        "text": "D34 · Cet élément est-il vide ?",
+        "code": "not item",
+        "kind": "decision"
+      },
+      {
+        "id": "split",
+        "text": "Séparer son nom et sa quantité",
+        "code": "name, _, qty = item.partition(\":\")",
+        "kind": "action"
+      },
+      {
+        "id": "D35",
+        "text": "D35 · Le nom est-il vide ou la quantité mal écrite ?",
+        "code": "not name or not qty.isdigit()",
+        "kind": "decision"
+      },
+      {
+        "id": "int",
+        "text": "Convertir la quantité",
+        "code": "quantity = int(qty)",
+        "kind": "action"
+      },
+      {
+        "id": "D36",
+        "text": "D36 · La quantité est-elle nulle ou négative ?",
+        "code": "quantity <= 0",
+        "kind": "decision"
+      },
+      {
+        "id": "D37",
+        "text": "D37 · Cette ressource est-elle déjà dans ce bloc ?",
+        "code": "name in resources",
+        "kind": "decision"
+      },
+      {
+        "id": "store",
+        "text": "Mémoriser la quantité",
+        "code": "resources[name] = quantity",
+        "kind": "action"
+      },
+      {
+        "id": "end",
+        "text": "Renvoyer le dictionnaire à G18",
+        "code": "return resources",
+        "kind": "end"
+      },
+      {
+        "id": "error",
+        "text": "Refuser le bloc de ressources",
+        "code": "ParseError → G02\ninvalid quantity / duplicate resource",
+        "kind": "error"
+      }
+    ],
+    "edges": [
+      {
+        "to": "init",
+        "label": "",
+        "loop": false,
+        "from": "start"
+      },
+      {
+        "to": "D33",
+        "label": "",
+        "loop": false,
+        "from": "init"
+      },
+      {
+        "to": "end",
+        "label": "Oui",
+        "loop": false,
+        "from": "D33"
+      },
+      {
+        "to": "more",
+        "label": "Non",
+        "loop": false,
+        "from": "D33"
+      },
+      {
+        "to": "D34",
+        "label": "Oui",
+        "loop": false,
+        "from": "more"
+      },
+      {
+        "to": "end",
+        "label": "Non",
+        "loop": false,
+        "from": "more"
+      },
+      {
+        "to": "more",
+        "label": "Oui",
+        "loop": true,
+        "from": "D34"
+      },
+      {
+        "to": "split",
+        "label": "Non",
+        "loop": false,
+        "from": "D34"
+      },
+      {
+        "to": "D35",
+        "label": "",
+        "loop": false,
+        "from": "split"
+      },
+      {
+        "to": "error",
+        "label": "Oui",
+        "loop": false,
+        "from": "D35"
+      },
+      {
+        "to": "int",
+        "label": "Non",
+        "loop": false,
+        "from": "D35"
+      },
+      {
+        "to": "D36",
+        "label": "",
+        "loop": false,
+        "from": "int"
+      },
+      {
+        "to": "error",
+        "label": "Oui",
+        "loop": false,
+        "from": "D36"
+      },
+      {
+        "to": "D37",
+        "label": "Non",
+        "loop": false,
+        "from": "D36"
+      },
+      {
+        "to": "error",
+        "label": "Oui",
+        "loop": false,
+        "from": "D37"
+      },
+      {
+        "to": "store",
+        "label": "Non",
+        "loop": false,
+        "from": "D37"
+      },
+      {
+        "to": "more",
+        "label": "Élément suivant",
+        "loop": true,
+        "from": "store"
+      }
+    ]
+  },
+  {
+    "id": "G20",
+    "title": "Lire la directive d’optimisation",
+    "function": "_handle_optimize → début de _parse_optimize",
+    "source": "src/krpsim/parser.py:249-278,298-320",
+    "note": "La directive peut contenir plusieurs objectifs séparés par ;. Les éléments vides sont ignorés, mais au moins un objectif doit rester.",
+    "calls": [
+      "G28",
+      "G21",
+      "G16",
+      "G02"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Entrer dans la fonction",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "D38",
+        "text": "D38 · Une directive d’optimisation a-t-elle déjà été lue ?",
+        "code": "optimize is not None",
+        "kind": "decision"
+      },
+      {
+        "id": "match",
+        "text": "Reconnaître la forme optimize:(...)",
+        "code": "match = re.match(..., line)",
+        "kind": "action"
+      },
+      {
+        "id": "D39",
+        "text": "D39 · La directive est-elle mal formée ?",
+        "code": "not match",
+        "kind": "decision"
+      },
+      {
+        "id": "filter",
+        "text": "Conserver les objectifs non vides\nSuite : G28",
+        "code": "block = match.group(1) ; filtrage de items",
+        "kind": "call"
+      },
+      {
+        "id": "dedup",
+        "text": "Vérifier les doublons et conserver l’ordre\nDétail : G21",
+        "code": "Suite de _parse_optimize(items)",
+        "kind": "call"
+      },
+      {
+        "id": "end",
+        "text": "Renvoyer les objectifs à G16",
+        "code": "return result",
+        "kind": "end"
+      },
+      {
+        "id": "error",
+        "text": "Refuser la directive",
+        "code": "ParseError → G02\nduplicate / invalid optimize line",
+        "kind": "error"
+      }
+    ],
+    "edges": [
+      {
+        "from": "start",
+        "to": "D38",
+        "label": "",
+        "loop": false
+      },
+      {
+        "from": "D38",
+        "to": "error",
+        "label": "Oui",
+        "loop": false
+      },
+      {
+        "from": "D38",
+        "to": "match",
+        "label": "Non",
+        "loop": false
+      },
+      {
+        "from": "match",
+        "to": "D39",
+        "label": "",
+        "loop": false
+      },
+      {
+        "from": "D39",
+        "to": "error",
+        "label": "Oui",
+        "loop": false
+      },
+      {
+        "from": "D39",
+        "to": "filter",
+        "label": "Non",
+        "loop": false
+      },
+      {
+        "from": "filter",
+        "to": "dedup",
+        "label": "",
+        "loop": false
+      },
+      {
+        "from": "dedup",
+        "to": "end",
+        "label": "",
+        "loop": false
+      }
+    ]
+  },
+  {
+    "id": "G21",
+    "title": "Conserver des objectifs uniques et ordonnés",
+    "function": "Fin de _parse_optimize",
+    "source": "src/krpsim/parser.py:280-294",
+    "note": "seen sert uniquement à détecter les doublons ; result garde les objectifs dans l’ordre d’origine.",
+    "calls": [
+      "G20",
+      "G02"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Recevoir les éléments non vides",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "init",
+        "text": "Préparer les noms déjà vus et la liste résultat",
+        "code": "seen = set(); result = []",
+        "kind": "action"
+      },
+      {
+        "id": "more",
+        "text": "Reste-t-il un objectif à examiner ?",
+        "code": "for item in items",
+        "kind": "decision"
+      },
+      {
+        "id": "D42",
+        "text": "D42 · Cet objectif a-t-il déjà été rencontré ?",
+        "code": "item in seen",
+        "kind": "decision"
+      },
+      {
+        "id": "store",
+        "text": "Mémoriser le nom et l’ajouter dans l’ordre",
+        "code": "seen.add(item)\nresult.append(item)",
+        "kind": "action"
+      },
+      {
+        "id": "end",
+        "text": "Renvoyer la liste à G20",
+        "code": "return result",
+        "kind": "end"
+      },
+      {
+        "id": "error",
+        "text": "Refuser : objectif répété",
+        "code": "ParseError(\"duplicate optimize target …\") → G02",
+        "kind": "error"
+      }
+    ],
+    "edges": [
+      {
+        "to": "init",
+        "label": "",
+        "loop": false,
+        "from": "start"
+      },
+      {
+        "to": "more",
+        "label": "",
+        "loop": false,
+        "from": "init"
+      },
+      {
+        "to": "D42",
+        "label": "Oui",
+        "loop": false,
+        "from": "more"
+      },
+      {
+        "to": "end",
+        "label": "Non",
+        "loop": false,
+        "from": "more"
+      },
+      {
+        "to": "error",
+        "label": "Oui",
+        "loop": false,
+        "from": "D42"
+      },
+      {
+        "to": "store",
+        "label": "Non",
+        "loop": false,
+        "from": "D42"
+      },
+      {
+        "to": "more",
+        "label": "Objectif suivant",
+        "loop": true,
+        "from": "store"
+      }
+    ]
+  },
+  {
+    "id": "G22",
+    "title": "Vérifier que les objectifs existent",
+    "function": "_validate_optimize",
+    "source": "src/krpsim/parser.py:380-418",
+    "note": "known réunit les stocks initiaux, les besoins et les résultats. Le mot time est accepté comme objectif spécial.",
+    "calls": [
+      "G10",
+      "G02"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Entrer dans la fonction",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "init",
+        "text": "Partir des noms de stocks initiaux",
+        "code": "known = set(stocks)",
+        "kind": "action"
+      },
+      {
+        "id": "proc",
+        "text": "Reste-t-il une opération configurée ?",
+        "code": "for proc in processes.values()",
+        "kind": "decision"
+      },
+      {
+        "id": "gather",
+        "text": "Ajouter les noms de ses besoins et résultats",
+        "code": "known.update(proc.needs)\nknown.update(proc.results)",
+        "kind": "action"
+      },
+      {
+        "id": "target",
+        "text": "Reste-t-il un objectif à vérifier ?",
+        "code": "for item in optimize",
+        "kind": "decision"
+      },
+      {
+        "id": "D45",
+        "text": "D45 · Cet objectif est-il inconnu et différent de « time » ?",
+        "code": "item != \"time\" and item not in known",
+        "kind": "decision"
+      },
+      {
+        "id": "end",
+        "text": "Objectifs connus ; revenir dans G10",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "error",
+        "text": "Refuser : objectif inconnu",
+        "code": "ParseError(\"unknown stock … in optimize line\") → G02",
+        "kind": "error"
+      }
+    ],
+    "edges": [
+      {
+        "to": "init",
+        "label": "",
+        "loop": false,
+        "from": "start"
+      },
+      {
+        "to": "proc",
+        "label": "",
+        "loop": false,
+        "from": "init"
+      },
+      {
+        "to": "gather",
+        "label": "Oui",
+        "loop": false,
+        "from": "proc"
+      },
+      {
+        "to": "target",
+        "label": "Non",
+        "loop": false,
+        "from": "proc"
+      },
+      {
+        "to": "proc",
+        "label": "Opération suivante",
+        "loop": true,
+        "from": "gather"
+      },
+      {
+        "to": "D45",
+        "label": "Oui",
+        "loop": false,
+        "from": "target"
+      },
+      {
+        "to": "end",
+        "label": "Non",
+        "loop": false,
+        "from": "target"
+      },
+      {
+        "to": "error",
+        "label": "Oui",
+        "loop": false,
+        "from": "D45"
+      },
+      {
+        "to": "target",
+        "label": "Non",
+        "loop": true,
+        "from": "D45"
+      }
+    ]
+  },
+  {
+    "id": "G23",
+    "title": "Vérifier une source pour chaque ressource nécessaire",
+    "function": "_validate_process_resources",
+    "source": "src/krpsim/parser.py:422-463",
+    "note": "Ce contrôle ne garantit pas que la ressource soit déjà disponible ni que le graphe soit sans cycle. Chaque départ sera contrôlé plus tard dans G08.",
+    "calls": [
+      "G10",
+      "G02"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Entrer dans la fonction",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "init",
+        "text": "Partir des noms de stocks initiaux",
+        "code": "defined = set(stocks)",
+        "kind": "action"
+      },
+      {
+        "id": "producers",
+        "text": "Reste-t-il une opération dont on doit lire les résultats ?",
+        "code": "for proc in processes.values()",
+        "kind": "decision"
+      },
+      {
+        "id": "gather",
+        "text": "Ajouter les ressources qu’elle peut produire",
+        "code": "defined.update(proc.results)",
+        "kind": "action"
+      },
+      {
+        "id": "processes",
+        "text": "Reste-t-il une opération dont on doit vérifier les besoins ?",
+        "code": "for proc in processes.values()",
+        "kind": "decision"
+      },
+      {
+        "id": "needs",
+        "text": "Reste-t-il une ressource nécessaire à cette opération ?",
+        "code": "for res in proc.needs",
+        "kind": "decision"
+      },
+      {
+        "id": "D46",
+        "text": "D46 · Cette ressource est-elle absente des stocks déclarés et de tous les résultats ?",
+        "code": "res not in defined",
+        "kind": "decision"
+      },
+      {
+        "id": "end",
+        "text": "Ressources définies ; revenir dans G10",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "error",
+        "text": "Refuser : ressource sans source connue",
+        "code": "ParseError(\"unknown resource …\") → G02",
+        "kind": "error"
+      }
+    ],
+    "edges": [
+      {
+        "to": "init",
+        "label": "",
+        "loop": false,
+        "from": "start"
+      },
+      {
+        "to": "producers",
+        "label": "",
+        "loop": false,
+        "from": "init"
+      },
+      {
+        "to": "gather",
+        "label": "Oui",
+        "loop": false,
+        "from": "producers"
+      },
+      {
+        "to": "processes",
+        "label": "Non",
+        "loop": false,
+        "from": "producers"
+      },
+      {
+        "to": "producers",
+        "label": "Opération suivante",
+        "loop": true,
+        "from": "gather"
+      },
+      {
+        "to": "needs",
+        "label": "Oui",
+        "loop": false,
+        "from": "processes"
+      },
+      {
+        "to": "end",
+        "label": "Non",
+        "loop": false,
+        "from": "processes"
+      },
+      {
+        "to": "D46",
+        "label": "Oui",
+        "loop": false,
+        "from": "needs"
+      },
+      {
+        "to": "processes",
+        "label": "Non",
+        "loop": true,
+        "from": "needs"
+      },
+      {
+        "to": "error",
+        "label": "Oui",
+        "loop": false,
+        "from": "D46"
+      },
+      {
+        "to": "needs",
+        "label": "Non",
+        "loop": true,
+        "from": "D46"
+      }
+    ]
+  },
+  {
+    "id": "G24",
+    "title": "Préparer l’objet qui portera les stocks finaux",
+    "function": "Simulator.__init__",
+    "source": "src/krpsim/simulator.py:61-104",
+    "note": "Ce constructeur ne lance pas Simulator.run. Après son retour, G11 remplace les stocks et le temps ; G07 conserve l’état initial.",
+    "calls": [
+      "G25",
+      "G07",
+      "G11"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Construire Simulator(config)",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "copy",
+        "text": "Conserver la configuration et copier ses stocks",
+        "code": "self.config = config\nself.stocks = config.stocks.copy()",
+        "kind": "action"
+      },
+      {
+        "id": "init",
+        "text": "Initialiser le temps, les listes et les indicateurs",
+        "code": "self.time = self._max_time = 0\nself._running = []; self.trace = []",
+        "kind": "action"
+      },
+      {
+        "id": "planner",
+        "text": "Préparer les informations du planificateur\nDétail : G25",
+        "code": "self._planner = ProductionPlanner(config)",
+        "kind": "call"
+      },
+      {
+        "id": "plan",
+        "text": "Préparer les comptes du plan, sans le rechercher",
+        "code": "self._plan_counts = {}\nself._planning_finished = False",
+        "kind": "action"
+      },
+      {
+        "id": "end",
+        "text": "Objet construit ; revenir à G07 ou G11",
+        "code": "",
+        "kind": "end"
+      }
+    ],
+    "edges": [
+      {
+        "to": "copy",
+        "label": "",
+        "loop": false,
+        "from": "start"
+      },
+      {
+        "to": "init",
+        "label": "",
+        "loop": false,
+        "from": "copy"
+      },
+      {
+        "to": "planner",
+        "label": "",
+        "loop": false,
+        "from": "init"
+      },
+      {
+        "to": "plan",
+        "label": "",
+        "loop": false,
+        "from": "planner"
+      },
+      {
+        "to": "end",
+        "label": "",
+        "loop": false,
+        "from": "plan"
+      }
+    ]
+  },
+  {
+    "id": "G25",
+    "title": "Préparer les objectifs et les producteurs",
+    "function": "ProductionPlanner.__init__",
+    "source": "src/krpsim/optimizer.py:59-73",
+    "note": "Cette initialisation s’exécute lors de la construction du résultat. Elle ne recherche pas un meilleur ordonnancement et ne lance aucune opération.",
+    "calls": [
+      "G29",
+      "G26",
+      "G30",
+      "G24"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Entrer dans la fonction",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "init",
+        "text": "Préparer la liste des objectifs ressources",
+        "code": "self.targets : liste en construction",
+        "kind": "action"
+      },
+      {
+        "id": "targets",
+        "text": "Reste-t-il un objectif déclaré ?",
+        "code": "for t in (config.optimize or [])",
+        "kind": "decision"
+      },
+      {
+        "id": "D52",
+        "text": "D52 · Cet objectif est-il différent de « time » ?",
+        "code": "t != \"time\"",
+        "kind": "decision"
+      },
+      {
+        "id": "keep",
+        "text": "Conserver cet objectif ressource",
+        "code": "self.targets contient t",
+        "kind": "action"
+      },
+      {
+        "id": "producers",
+        "text": "Répertorier les producteurs\nSuite : G29",
+        "code": "Boucles de ProductionPlanner.__init__",
+        "kind": "call"
+      },
+      {
+        "id": "terminal",
+        "text": "Chercher une conversion finale simple\nDétail : G26",
+        "code": "self.terminal = self._terminal_converter()",
+        "kind": "call"
+      },
+      {
+        "id": "goal",
+        "text": "Choisir le but interne\nSuite : G30",
+        "code": "self.goal = ...",
+        "kind": "call"
+      },
+      {
+        "id": "end",
+        "text": "Revenir au constructeur G24",
+        "code": "",
+        "kind": "end"
+      }
+    ],
+    "edges": [
+      {
+        "from": "start",
+        "to": "init",
+        "label": "",
+        "loop": false
+      },
+      {
+        "from": "init",
+        "to": "targets",
+        "label": "",
+        "loop": false
+      },
+      {
+        "from": "targets",
+        "to": "D52",
+        "label": "Oui",
+        "loop": false
+      },
+      {
+        "from": "targets",
+        "to": "producers",
+        "label": "Non",
+        "loop": false
+      },
+      {
+        "from": "D52",
+        "to": "keep",
+        "label": "Oui",
+        "loop": false
+      },
+      {
+        "from": "D52",
+        "to": "targets",
+        "label": "Non",
+        "loop": true
+      },
+      {
+        "from": "keep",
+        "to": "targets",
+        "label": "Objectif suivant",
+        "loop": true
+      },
+      {
+        "from": "producers",
+        "to": "terminal",
+        "label": "",
+        "loop": false
+      },
+      {
+        "from": "terminal",
+        "to": "goal",
+        "label": "",
+        "loop": false
+      },
+      {
+        "from": "goal",
+        "to": "end",
+        "label": "",
+        "loop": false
+      }
+    ]
+  },
+  {
+    "id": "G26",
+    "title": "Reconnaître une conversion finale simple",
+    "function": "ProductionPlanner._terminal_converter",
+    "source": "src/krpsim/optimizer.py:81-98",
+    "note": "Une reconnaissance impossible renvoie None : ce n’est pas une erreur de trace. Les durées issues d’une configuration valide sont toujours positives ou nulles.",
+    "calls": [
+      "G25"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Entrer dans la fonction",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "D54",
+        "text": "D54 · Le nombre d’objectifs ressources est-il différent de un ?",
+        "code": "len(self.targets) != 1",
+        "kind": "decision"
+      },
+      {
+        "id": "find",
+        "text": "Chercher les producteurs de cette seule cible",
+        "code": "target = self.targets[0]\ncandidates = self._producers.get(target, [])",
+        "kind": "action"
+      },
+      {
+        "id": "D55",
+        "text": "D55 · Le nombre de producteurs est-il différent de un ?",
+        "code": "len(candidates) != 1",
+        "kind": "decision"
+      },
+      {
+        "id": "select",
+        "text": "Prendre cet unique producteur",
+        "code": "process = candidates[0]",
+        "kind": "action"
+      },
+      {
+        "id": "D56",
+        "text": "D56 · La durée est-elle non nulle ou le nombre de besoins différent de un ?",
+        "code": "process.delay != 0 or len(process.needs) != 1",
+        "kind": "decision"
+      },
+      {
+        "id": "source",
+        "text": "Lire son unique ressource consommée",
+        "code": "source = next(iter(process.needs))",
+        "kind": "action"
+      },
+      {
+        "id": "D57",
+        "text": "D57 · La ressource consommée est-elle la cible ou est-elle reproduite ?",
+        "code": "source == target or process.results.get(source, 0) > 0",
+        "kind": "decision"
+      },
+      {
+        "id": "D58",
+        "text": "D58 · Cette ressource consommée n’a-t-elle aucun producteur ?",
+        "code": "not self._producers.get(source)",
+        "kind": "decision"
+      },
+      {
+        "id": "end",
+        "text": "Conversion finale reconnue ; revenir dans G25",
+        "code": "return process",
+        "kind": "end"
+      },
+      {
+        "id": "notfound",
+        "text": "Aucune conversion reconnue ; revenir dans G25",
+        "code": "return None",
+        "kind": "end"
+      }
+    ],
+    "edges": [
+      {
+        "to": "D54",
+        "label": "",
+        "loop": false,
+        "from": "start"
+      },
+      {
+        "to": "notfound",
+        "label": "Oui",
+        "loop": false,
+        "from": "D54"
+      },
+      {
+        "to": "find",
+        "label": "Non",
+        "loop": false,
+        "from": "D54"
+      },
+      {
+        "to": "D55",
+        "label": "",
+        "loop": false,
+        "from": "find"
+      },
+      {
+        "to": "notfound",
+        "label": "Oui",
+        "loop": false,
+        "from": "D55"
+      },
+      {
+        "to": "select",
+        "label": "Non",
+        "loop": false,
+        "from": "D55"
+      },
+      {
+        "to": "D56",
+        "label": "",
+        "loop": false,
+        "from": "select"
+      },
+      {
+        "to": "notfound",
+        "label": "Oui",
+        "loop": false,
+        "from": "D56"
+      },
+      {
+        "to": "source",
+        "label": "Non",
+        "loop": false,
+        "from": "D56"
+      },
+      {
+        "to": "D57",
+        "label": "",
+        "loop": false,
+        "from": "source"
+      },
+      {
+        "to": "notfound",
+        "label": "Oui",
+        "loop": false,
+        "from": "D57"
+      },
+      {
+        "to": "D58",
+        "label": "Non",
+        "loop": false,
+        "from": "D57"
+      },
+      {
+        "to": "notfound",
+        "label": "Oui",
+        "loop": false,
+        "from": "D58"
+      },
+      {
+        "to": "end",
+        "label": "Non",
+        "loop": false,
+        "from": "D58"
+      }
+    ]
+  },
+  {
+    "id": "G27",
+    "title": "Mesurer chaque ligne avant de la lire",
+    "function": "Suite de _read_lines",
+    "source": "src/krpsim/parser.py:505-513",
+    "note": "Le contrôle se fait sur chaque ligne brute, avant de retirer les espaces ou les commentaires.",
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Texte décodé et fins de ligne acceptées",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "split",
+        "text": "Séparer les lignes",
+        "code": "lines = text.splitlines()",
+        "kind": "action"
+      },
+      {
+        "id": "more",
+        "text": "Reste-t-il une ligne à mesurer ?",
+        "code": "for raw_line in lines",
+        "kind": "decision"
+      },
+      {
+        "id": "D22",
+        "text": "D22 · Cette ligne dépasse-t-elle 255 caractères ?",
+        "code": "len(raw_line) > 255",
+        "kind": "decision"
+      },
+      {
+        "id": "end",
+        "text": "Renvoyer les lignes à G15, puis G10",
+        "code": "return lines",
+        "kind": "end"
+      },
+      {
+        "id": "error",
+        "text": "Refuser le texte de configuration",
+        "code": "ParseError → G02",
+        "kind": "error"
+      }
+    ],
+    "edges": [
+      {
+        "from": "start",
+        "to": "split",
+        "label": "",
+        "loop": false
+      },
+      {
+        "from": "split",
+        "to": "more",
+        "label": "",
+        "loop": false
+      },
+      {
+        "from": "more",
+        "to": "D22",
+        "label": "Oui",
+        "loop": false
+      },
+      {
+        "from": "more",
+        "to": "end",
+        "label": "Non",
+        "loop": false
+      },
+      {
+        "from": "D22",
+        "to": "error",
+        "label": "Oui",
+        "loop": false
+      },
+      {
+        "from": "D22",
+        "to": "more",
+        "label": "Non",
+        "loop": true
+      }
+    ],
+    "calls": [
+      "G15",
+      "G10",
+      "G02"
+    ]
+  },
+  {
+    "id": "G28",
+    "title": "Écarter les objectifs vides",
+    "function": "Milieu de _parse_optimize",
+    "source": "src/krpsim/parser.py:272-278",
+    "note": "Une directive présente doit conserver au moins un objectif. Les séparateurs supplémentaires sont tolérés.",
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Directive reconnue ; recevoir son bloc",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "init",
+        "text": "Extraire le bloc ; préparer une liste vide",
+        "code": "block = match.group(1)\nitems = [] (forme développée)",
+        "kind": "action"
+      },
+      {
+        "id": "more",
+        "text": "Reste-t-il un élément entre les « ; » ?",
+        "code": "for item in block.split(\";\")",
+        "kind": "decision"
+      },
+      {
+        "id": "D40",
+        "text": "D40 · Cet élément contient-il du texte ?",
+        "code": "[item for item in block.split(\";\") if item]",
+        "kind": "decision"
+      },
+      {
+        "id": "keep",
+        "text": "Conserver cet élément",
+        "code": "items.append(item)",
+        "kind": "action"
+      },
+      {
+        "id": "D41",
+        "text": "D41 · La liste conservée est-elle vide ?",
+        "code": "not items",
+        "kind": "decision"
+      },
+      {
+        "id": "end",
+        "text": "Revenir dans G20 avec items",
+        "code": "Liste non vide",
+        "kind": "end"
+      },
+      {
+        "id": "error",
+        "text": "Refuser la directive",
+        "code": "ParseError → G02\nduplicate / invalid optimize line",
+        "kind": "error"
+      }
+    ],
+    "edges": [
+      {
+        "from": "start",
+        "to": "init",
+        "label": "",
+        "loop": false
+      },
+      {
+        "from": "init",
+        "to": "more",
+        "label": "",
+        "loop": false
+      },
+      {
+        "from": "more",
+        "to": "D40",
+        "label": "Oui",
+        "loop": false
+      },
+      {
+        "from": "more",
+        "to": "D41",
+        "label": "Non",
+        "loop": false
+      },
+      {
+        "from": "D40",
+        "to": "keep",
+        "label": "Oui",
+        "loop": false
+      },
+      {
+        "from": "D40",
+        "to": "more",
+        "label": "Non",
+        "loop": true
+      },
+      {
+        "from": "keep",
+        "to": "more",
+        "label": "Élément suivant",
+        "loop": true
+      },
+      {
+        "from": "D41",
+        "to": "error",
+        "label": "Oui",
+        "loop": false
+      },
+      {
+        "from": "D41",
+        "to": "end",
+        "label": "Non",
+        "loop": false
+      }
+    ],
+    "calls": [
+      "G20",
+      "G02"
+    ]
+  },
+  {
+    "id": "G29",
+    "title": "Répertorier les producteurs de chaque ressource",
+    "function": "Boucles de ProductionPlanner.__init__",
+    "source": "src/krpsim/optimizer.py:63-67",
+    "note": "Le dictionnaire associe chaque ressource à la liste des opérations qui en produisent une quantité positive.",
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Préparer le répertoire vide",
+        "code": "self._producers = defaultdict(list)",
+        "kind": "end"
+      },
+      {
+        "id": "procs",
+        "text": "Reste-t-il une opération à examiner ?",
+        "code": "for process in config.processes.values()",
+        "kind": "decision"
+      },
+      {
+        "id": "results",
+        "text": "Reste-t-il un résultat de cette opération ?",
+        "code": "for resource, quantity in process.results.items()",
+        "kind": "decision"
+      },
+      {
+        "id": "D53",
+        "text": "D53 · La quantité produite est-elle positive ?",
+        "code": "quantity > 0",
+        "kind": "decision"
+      },
+      {
+        "id": "add",
+        "text": "Enregistrer cette opération comme producteur",
+        "code": "self._producers[resource].append(process)",
+        "kind": "action"
+      },
+      {
+        "id": "end",
+        "text": "Répertoire prêt ; revenir dans G25",
+        "code": "",
+        "kind": "end"
+      }
+    ],
+    "edges": [
+      {
+        "from": "start",
+        "to": "procs",
+        "label": "",
+        "loop": false
+      },
+      {
+        "from": "procs",
+        "to": "results",
+        "label": "Oui",
+        "loop": false
+      },
+      {
+        "from": "procs",
+        "to": "end",
+        "label": "Non",
+        "loop": false
+      },
+      {
+        "from": "results",
+        "to": "D53",
+        "label": "Oui",
+        "loop": false
+      },
+      {
+        "from": "results",
+        "to": "procs",
+        "label": "Non",
+        "loop": true
+      },
+      {
+        "from": "D53",
+        "to": "add",
+        "label": "Oui",
+        "loop": false
+      },
+      {
+        "from": "D53",
+        "to": "results",
+        "label": "Non",
+        "loop": true
+      },
+      {
+        "from": "add",
+        "to": "results",
+        "label": "Résultat suivant",
+        "loop": true
+      }
+    ],
+    "calls": [
+      "G25"
+    ]
+  },
+  {
+    "id": "G30",
+    "title": "Choisir le but interne du planificateur",
+    "function": "Fin de ProductionPlanner.__init__",
+    "source": "src/krpsim/optimizer.py:68-73",
+    "note": "Ces champs sont préparés sans lancer de recherche de plan. Le vérificateur n’utilise pas ce but pour imposer l’atteinte d’un objectif.",
+    "nodes": [
+      {
+        "id": "start",
+        "text": "La recherche de conversion finale est terminée",
+        "code": "self.terminal : Process ou None",
+        "kind": "end"
+      },
+      {
+        "id": "D59",
+        "text": "D59 · Une conversion finale a-t-elle été reconnue ?",
+        "code": "self.terminal is not None",
+        "kind": "decision"
+      },
+      {
+        "id": "D60",
+        "text": "D60 · Reste-t-il au moins un objectif ressource ?",
+        "code": "self.targets",
+        "kind": "decision"
+      },
+      {
+        "id": "source",
+        "text": "Choisir sa seule ressource consommée comme but",
+        "code": "self.goal = next(iter(self.terminal.needs))",
+        "kind": "action"
+      },
+      {
+        "id": "first",
+        "text": "Choisir le premier objectif ressource",
+        "code": "self.goal = self.targets[0]",
+        "kind": "action"
+      },
+      {
+        "id": "none",
+        "text": "Ne choisir aucun but",
+        "code": "self.goal = None",
+        "kind": "action"
+      },
+      {
+        "id": "end",
+        "text": "Revenir dans G25 puis G24",
+        "code": "",
+        "kind": "end"
+      }
+    ],
+    "edges": [
+      {
+        "from": "start",
+        "to": "D59",
+        "label": "",
+        "loop": false
+      },
+      {
+        "from": "D59",
+        "to": "source",
+        "label": "Oui",
+        "loop": false
+      },
+      {
+        "from": "D59",
+        "to": "D60",
+        "label": "Non",
+        "loop": false
+      },
+      {
+        "from": "D60",
+        "to": "first",
+        "label": "Oui",
+        "loop": false
+      },
+      {
+        "from": "D60",
+        "to": "none",
+        "label": "Non",
+        "loop": false
+      },
+      {
+        "from": "source",
+        "to": "end",
+        "label": "",
+        "loop": false
+      },
+      {
+        "from": "first",
+        "to": "end",
+        "label": "",
+        "loop": false
+      },
+      {
+        "from": "none",
+        "to": "end",
+        "label": "",
+        "loop": false
+      }
+    ],
+    "calls": [
+      "G25",
+      "G24"
+    ]
+  },
+  {
+    "id": "G31",
+    "title": "Valider le cycle et mémoriser le départ",
+    "function": "Fin de _parse_trace_line",
+    "source": "src/krpsim_verif/verifier.py:107-110",
+    "note": "isdigit accepte certains chiffres Unicode que int ne convertit pas. Exemple : ² passe isdigit, puis int lève ValueError ; le nom est conservé sans normalisation.",
+    "calls": [
+      "G05",
+      "G02"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "Le cycle et le nom ont été séparés",
+        "code": "cycle_str, name",
+        "kind": "end"
+      },
+      {
+        "id": "D50",
+        "text": "D50 · Le cycle est-il mal écrit ou le nom vide ?",
+        "code": "not cycle_str.isdigit() or not name",
+        "kind": "decision"
+      },
+      {
+        "id": "D51",
+        "text": "D51 · La conversion en entier a-t-elle échoué ?",
+        "code": "ValueError lors de int(cycle_str)",
+        "kind": "decision"
+      },
+      {
+        "id": "append",
+        "text": "Créer le départ et l’ajouter à la liste",
+        "code": "TraceEntry(..., sys.intern(name)) ; entries.append(entry)",
+        "kind": "action"
+      },
+      {
+        "id": "end",
+        "text": "Départ ajouté ; revenir dans G05",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "error",
+        "text": "Refuser cette ligne et remonter à G02",
+        "code": "TraceError : empty / invalid trace line idx",
+        "kind": "error"
+      },
+      {
+        "id": "valueerror",
+        "text": "Arrêt technique : exception non interceptée",
+        "code": "ValueError → G02",
+        "kind": "error"
+      }
+    ],
+    "edges": [
+      {
+        "from": "start",
+        "to": "D50",
+        "label": ""
+      },
+      {
+        "from": "D50",
+        "to": "error",
+        "label": "Oui"
+      },
+      {
+        "from": "D50",
+        "to": "D51",
+        "label": "Non"
+      },
+      {
+        "from": "D51",
+        "to": "valueerror",
+        "label": "Oui"
+      },
+      {
+        "from": "D51",
+        "to": "append",
+        "label": "Non"
+      },
+      {
+        "from": "append",
+        "to": "end",
+        "label": ""
+      }
+    ]
+  },
+  {
+    "id": "G32",
+    "title": "Afficher tous les stocks et le dernier cycle",
+    "function": "_print_final_stocks → Config.all_stock_names",
+    "source": "src/krpsim_verif/cli.py:63-71 ; src/krpsim/parser.py:75-100",
+    "note": "Tous les noms connus sont affichés, même si leur stock final vaut zéro. Les colonnes sont alignées sur le nom le plus long ; si aucun nom, la largeur vaut 0.",
+    "calls": [
+      "G01"
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "text": "La vérification a renvoyé un état final",
+        "code": "",
+        "kind": "end"
+      },
+      {
+        "id": "init",
+        "text": "Recenser les noms des stocks initiaux",
+        "code": "names = set(sim.config.stocks)",
+        "kind": "action"
+      },
+      {
+        "id": "proc",
+        "text": "Reste-t-il une opération configurée ?",
+        "code": "for process in sim.config.processes.values()",
+        "kind": "decision"
+      },
+      {
+        "id": "gather",
+        "text": "Ajouter les noms de ses besoins et résultats",
+        "code": "names.update(process.needs)\nnames.update(process.results)",
+        "kind": "action"
+      },
+      {
+        "id": "sort",
+        "text": "Trier les noms et calculer la largeur des colonnes",
+        "code": "stock_names = sorted(sim.config.all_stock_names())\nmax_len = max((len(name) for name in stock_names), default=0)",
+        "kind": "action"
+      },
+      {
+        "id": "header",
+        "text": "Afficher le titre des stocks",
+        "code": "print(\"Final Stocks:\")",
+        "kind": "action"
+      },
+      {
+        "id": "stock",
+        "text": "Reste-t-il un nom de ressource à afficher ?",
+        "code": "for name in stock_names",
+        "kind": "decision"
+      },
+      {
+        "id": "line",
+        "text": "Afficher son nom aligné et sa quantité",
+        "code": "sim.stocks.get(name, 0)",
+        "kind": "action"
+      },
+      {
+        "id": "time",
+        "text": "Afficher le dernier cycle pris en compte",
+        "code": "print(f\"Last cycle: {sim.time}\")",
+        "kind": "action"
+      },
+      {
+        "id": "end",
+        "text": "Revenir dans G01 et terminer",
+        "code": "",
+        "kind": "end"
+      }
+    ],
+    "edges": [
+      {
+        "from": "start",
+        "to": "init",
+        "label": "",
+        "loop": false
+      },
+      {
+        "from": "init",
+        "to": "proc",
+        "label": "",
+        "loop": false
+      },
+      {
+        "from": "proc",
+        "to": "gather",
+        "label": "Oui",
+        "loop": false
+      },
+      {
+        "from": "proc",
+        "to": "sort",
+        "label": "Non",
+        "loop": false
+      },
+      {
+        "from": "gather",
+        "to": "proc",
+        "label": "Opération suivante",
+        "loop": true
+      },
+      {
+        "from": "sort",
+        "to": "header",
+        "label": "",
+        "loop": false
+      },
+      {
+        "from": "header",
+        "to": "stock",
+        "label": "",
+        "loop": false
+      },
+      {
+        "from": "stock",
+        "to": "line",
+        "label": "Oui",
+        "loop": false
+      },
+      {
+        "from": "stock",
+        "to": "time",
+        "label": "Non",
+        "loop": false
+      },
+      {
+        "from": "line",
+        "to": "stock",
+        "label": "Ressource suivante",
+        "loop": true
+      },
+      {
+        "from": "time",
+        "to": "end",
+        "label": "",
+        "loop": false
+      }
+    ]
+  }
+]

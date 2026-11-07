@@ -1,0 +1,22 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Recevoir une ligne et son numéro idx</FONT>>];
+D47 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D47 · La ligne est-elle vide ?</FONT><BR/><FONT POINT-SIZE="10.5">not line</FONT>>];
+D48 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D48 · La ligne commence-t-elle<BR/>directement par « # » ?</FONT><BR/><FONT POINT-SIZE="10.5">line.startswith(&quot;#&quot;)</FONT>>];
+D49 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D49 · Le séparateur « : » est-il<BR/>absent ?</FONT><BR/><FONT POINT-SIZE="10.5">&quot;:&quot; not in line</FONT>>];
+split [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Séparer au premier deux-points</FONT><BR/><FONT POINT-SIZE="10.5">cycle_str, name = line.split(&quot;:&quot;, 1)</FONT>>];
+format [shape=box, style="filled,rounded", fillcolor="#e3f1f3", peripheries=2, label=<<FONT POINT-SIZE="13">Vérifier le cycle et mémoriser le départ<BR/>Suite : G31</FONT><BR/><FONT POINT-SIZE="10.5">Fin de _parse_trace_line</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Revenir lire la ligne suivante dans G04</FONT>>];
+error [shape=ellipse, style="filled", fillcolor="#fbe7e2", peripheries=1, label=<<FONT POINT-SIZE="13">Refuser cette ligne et remonter à G02</FONT><BR/><FONT POINT-SIZE="10.5">TraceError : empty / invalid trace line idx</FONT>>];
+start -> D47 [label=""];
+D47 -> error [label="Oui"];
+D47 -> D48 [label="Non"];
+D48 -> end [label="Oui"];
+D48 -> D49 [label="Non"];
+D49 -> error [label="Oui"];
+D49 -> split [label="Non"];
+split -> format [label=""];
+format -> end [label="Retour normal"];
+}

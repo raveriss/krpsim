@@ -1,0 +1,24 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Entrer dans la fonction</FONT>>];
+init [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Préparer la liste des objectifs ressources</FONT><BR/><FONT POINT-SIZE="10.5">self.targets : liste en construction</FONT>>];
+targets [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">Reste-t-il un objectif déclaré ?</FONT><BR/><FONT POINT-SIZE="10.5">for t in (config.optimize or [])</FONT>>];
+D52 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D52 · Cet objectif est-il différent<BR/>de « time » ?</FONT><BR/><FONT POINT-SIZE="10.5">t != &quot;time&quot;</FONT>>];
+keep [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Conserver cet objectif ressource</FONT><BR/><FONT POINT-SIZE="10.5">self.targets contient t</FONT>>];
+producers [shape=box, style="filled,rounded", fillcolor="#e3f1f3", peripheries=2, label=<<FONT POINT-SIZE="13">Répertorier les producteurs<BR/>Suite : G29</FONT><BR/><FONT POINT-SIZE="10.5">Boucles de ProductionPlanner.__init__</FONT>>];
+terminal [shape=box, style="filled,rounded", fillcolor="#e3f1f3", peripheries=2, label=<<FONT POINT-SIZE="13">Chercher une conversion finale simple<BR/>Détail : G26</FONT><BR/><FONT POINT-SIZE="10.5">self.terminal = self._terminal_converter()</FONT>>];
+goal [shape=box, style="filled,rounded", fillcolor="#e3f1f3", peripheries=2, label=<<FONT POINT-SIZE="13">Choisir le but interne<BR/>Suite : G30</FONT><BR/><FONT POINT-SIZE="10.5">self.goal = ...</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Revenir au constructeur G24</FONT>>];
+start -> init [label=""];
+init -> targets [label=""];
+targets -> D52 [label="Oui"];
+targets -> producers [label="Non"];
+D52 -> keep [label="Oui"];
+D52 -> targets [xlabel="Non", constraint=false, tailport=w, headport=w];
+keep -> targets [xlabel="Objectif suivant", constraint=false];
+producers -> terminal [label=""];
+terminal -> goal [label=""];
+goal -> end [label=""];
+}

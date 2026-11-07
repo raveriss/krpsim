@@ -1,0 +1,34 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Entrer dans la fonction</FONT>>];
+init [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Préparer les stocks, opérations et<BR/>objectifs</FONT><BR/><FONT POINT-SIZE="10.5">stocks = {}; processes = {}; optimize = None</FONT>>];
+more [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">Reste-t-il une ligne de<BR/>configuration ?</FONT><BR/><FONT POINT-SIZE="10.5">for line in lines</FONT>>];
+strip [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Retirer les espaces aux bords</FONT><BR/><FONT POINT-SIZE="10.5">line = line.strip()</FONT>>];
+D23 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D23 · La ligne est-elle vide ou<BR/>commence-t-elle par « # » ?</FONT><BR/><FONT POINT-SIZE="10.5">not line or line.startswith(&quot;#&quot;)</FONT>>];
+D24 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D24 · La ligne commence-t-elle par «<BR/>optimize: » ?</FONT><BR/><FONT POINT-SIZE="10.5">line.startswith(&quot;optimize:&quot;)</FONT>>];
+D25 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D25 · La ligne contient-elle « :( »<BR/>?</FONT><BR/><FONT POINT-SIZE="10.5">&quot;:(&quot; in line</FONT>>];
+D26 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D26 · La ligne contient-elle « : » ?</FONT><BR/><FONT POINT-SIZE="10.5">&quot;:&quot; in line</FONT>>];
+opt [shape=box, style="filled,rounded", fillcolor="#e3f1f3", peripheries=2, label=<<FONT POINT-SIZE="13">Lire la directive d’optimisation<BR/>Détail : G20</FONT><BR/><FONT POINT-SIZE="10.5">optimize = _handle_optimize(line, optimize)</FONT>>];
+process [shape=box, style="filled,rounded", fillcolor="#e3f1f3", peripheries=2, label=<<FONT POINT-SIZE="13">Lire une opération<BR/>Détail : G18</FONT><BR/><FONT POINT-SIZE="10.5">_handle_process(line, processes)</FONT>>];
+stock [shape=box, style="filled,rounded", fillcolor="#e3f1f3", peripheries=2, label=<<FONT POINT-SIZE="13">Lire un stock initial<BR/>Détail : G17</FONT><BR/><FONT POINT-SIZE="10.5">_handle_stock(line, stocks)</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Renvoyer les trois éléments à G10</FONT><BR/><FONT POINT-SIZE="10.5">return stocks, processes, optimize</FONT>>];
+error [shape=ellipse, style="filled", fillcolor="#fbe7e2", peripheries=1, label=<<FONT POINT-SIZE="13">Refuser : ligne non reconnue</FONT><BR/><FONT POINT-SIZE="10.5">ParseError(&quot;unrecognized line …&quot;) → G02</FONT>>];
+start -> init [label=""];
+init -> more [label=""];
+more -> strip [label="Oui"];
+more -> end [label="Non"];
+strip -> D23 [label=""];
+D23 -> more [xlabel="Oui", constraint=false];
+D23 -> D24 [label="Non"];
+D24 -> opt [label="Oui"];
+D24 -> D25 [label="Non"];
+D25 -> process [label="Oui"];
+D25 -> D26 [label="Non"];
+D26 -> stock [label="Oui"];
+D26 -> error [label="Non"];
+opt -> more [xlabel="Ligne suivante", constraint=false];
+process -> more [xlabel="Ligne suivante", constraint=false];
+stock -> more [xlabel="Ligne suivante", constraint=false];
+}

@@ -1,0 +1,30 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Entrer dans la fonction</FONT>>];
+D54 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D54 · Le nombre d’objectifs<BR/>ressources est-il différent de un ?</FONT><BR/><FONT POINT-SIZE="10.5">len(self.targets) != 1</FONT>>];
+find [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Chercher les producteurs de cette seule<BR/>cible</FONT><BR/><FONT POINT-SIZE="10.5">target = self.targets[0]<BR/>candidates = self._producers.get(target, [])</FONT>>];
+D55 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D55 · Le nombre de producteurs est-<BR/>il différent de un ?</FONT><BR/><FONT POINT-SIZE="10.5">len(candidates) != 1</FONT>>];
+select [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Prendre cet unique producteur</FONT><BR/><FONT POINT-SIZE="10.5">process = candidates[0]</FONT>>];
+D56 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D56 · La durée est-elle non nulle ou<BR/>le nombre de besoins différent de un<BR/>?</FONT><BR/><FONT POINT-SIZE="10.5">process.delay != 0 or len(process.needs) != 1</FONT>>];
+source [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Lire son unique ressource consommée</FONT><BR/><FONT POINT-SIZE="10.5">source = next(iter(process.needs))</FONT>>];
+D57 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D57 · La ressource consommée est-<BR/>elle la cible ou est-elle reproduite<BR/>?</FONT><BR/><FONT POINT-SIZE="10.5">source == target or<BR/>process.results.get(source, 0) &gt; 0</FONT>>];
+D58 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D58 · Cette ressource consommée<BR/>n’a-t-elle aucun producteur ?</FONT><BR/><FONT POINT-SIZE="10.5">not self._producers.get(source)</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Conversion finale reconnue ; revenir dans<BR/>G25</FONT><BR/><FONT POINT-SIZE="10.5">return process</FONT>>];
+notfound [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Aucune conversion reconnue ; revenir dans<BR/>G25</FONT><BR/><FONT POINT-SIZE="10.5">return None</FONT>>];
+start -> D54 [label=""];
+D54 -> notfound [label="Oui"];
+D54 -> find [label="Non"];
+find -> D55 [label=""];
+D55 -> notfound [label="Oui"];
+D55 -> select [label="Non"];
+select -> D56 [label=""];
+D56 -> notfound [label="Oui"];
+D56 -> source [label="Non"];
+source -> D57 [label=""];
+D57 -> notfound [label="Oui"];
+D57 -> D58 [label="Non"];
+D58 -> notfound [label="Oui"];
+D58 -> end [label="Non"];
+}

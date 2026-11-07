@@ -1,0 +1,23 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Lancer krpsim_verif</FONT>>];
+D01 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D01 · La commande demande-t-elle<BR/>l’aide ?</FONT><BR/><FONT POINT-SIZE="10.5">parse_args(argv) : option -h / --help</FONT>>];
+help [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Afficher l’aide et terminer</FONT><BR/><FONT POINT-SIZE="10.5">SystemExit(0)</FONT>>];
+D02 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D02 · Les arguments de la commande<BR/>sont-ils incorrects ?</FONT><BR/><FONT POINT-SIZE="10.5">parse_args(argv) : erreur d’arguments</FONT>>];
+usage [shape=ellipse, style="filled", fillcolor="#fbe7e2", peripheries=1, label=<<FONT POINT-SIZE="13">Afficher usage et erreur ; terminer</FONT><BR/><FONT POINT-SIZE="10.5">SystemExit(2)</FONT>>];
+verify [shape=box, style="filled,rounded", fillcolor="#e3f1f3", peripheries=2, label=<<FONT POINT-SIZE="13">Vérifier les fichiers et obtenir un<BR/>résultat<BR/>Détail : G02</FONT><BR/><FONT POINT-SIZE="10.5">sim, exit_code = _verify_inputs(args)</FONT>>];
+D05 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D05 · Dispose-t-on d’un état final<BR/>après la vérification ?</FONT><BR/><FONT POINT-SIZE="10.5">sim is not None</FONT>>];
+print [shape=box, style="filled,rounded", fillcolor="#e3f1f3", peripheries=2, label=<<FONT POINT-SIZE="13">Afficher les stocks et le dernier cycle<BR/>Détail : G32</FONT><BR/><FONT POINT-SIZE="10.5">_print_final_stocks(sim)</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Terminer la commande</FONT><BR/><FONT POINT-SIZE="10.5">return exit_code</FONT>>];
+start -> D01 [label=""];
+D01 -> help [label="Oui"];
+D01 -> D02 [label="Non"];
+D02 -> usage [label="Oui"];
+D02 -> verify [label="Non"];
+verify -> D05 [label=""];
+D05 -> print [label="Oui"];
+D05 -> end [label="Non"];
+print -> end [label=""];
+}

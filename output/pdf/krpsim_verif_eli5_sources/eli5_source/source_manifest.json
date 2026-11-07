@@ -1,0 +1,11 @@
+{
+  "git_revision": "268075eabc4c742b7d9d2b055e10d8cdbf9e217e",
+  "sha256": {
+    "src/krpsim_verif/cli.py": "f40715a16b9f89fd2b73abcadfa58e01f731bc3d3dcc22118cfee11ac48b49d8",
+    "src/krpsim_verif/verifier.py": "b85b1032ef086f236ec2c3d38d0a43892365cd798fd5db1313232c90629c34e7",
+    "src/krpsim/parser.py": "c2f56a15c955822e2aa9b0c8e4f35ea282ccbbab7a4a51c25312998ee01448de",
+    "src/krpsim/simulator.py": "452534f6782fe1b2f019858d98dbe279bf6e8a19c14bdef338b156e5cbbc02e1",
+    "src/krpsim/optimizer.py": "f3034c5c65e77bc175c7d0298725f0312dfebec88de1e6897b88606fbd1e43c7",
+    "output/pdf/krpsim_verif_arbre_de_decision.pdf": "157310272a2cf1bdcf9f5dba6af755cda875e039aaf309b3db1d6d3e5ce56158"
+  }
+}

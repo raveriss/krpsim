@@ -1,0 +1,27 @@
+digraph parcours {
+graph [rankdir=TB, bgcolor="white", pad="0.35", nodesep="0.35", ranksep="0.48", fontname="DejaVu Sans", fontsize=20, labelloc=t, label="6. cli.py : décider du code de sortie métier"];
+node [shape=box, style="rounded,filled", fillcolor="#EEF4FB", color="#56718C", fontname="DejaVu Sans", fontsize=12, margin="0.18,0.12"];
+edge [color="#61758A", fontname="DejaVu Sans", fontsize=11, arrowsize=0.7];
+outcome [label="Afficher le bilan de planification\n_print_planning_outcome", shape=box, fillcolor="#EEF4FB"];
+limited [label="Budget de trace atteint ?\nsearch_limited", shape=diamond, fillcolor="#FFF1CF"];
+successLimited [label="Code 0\nSolution bornée, optimalité non garantie", shape=box, fillcolor="#DEF3E5"];
+limit [label="Limite utilisateur active ET\nsim.time ≥ requested_delay ?", shape=diamond, fillcolor="#FFF1CF"];
+failTime [label="Code 1\nMax time reached", shape=box, fillcolor="#FDE4E1"];
+blocked [label="Blocage signalé ?\ndeadlock", shape=diamond, fillcolor="#FFF1CF"];
+failBlock [label="Code 1\nDeadlock detected", shape=box, fillcolor="#FDE4E1"];
+success [label="Code 0\nFin normale, repli ou absence d’amélioration", shape=box, fillcolor="#DEF3E5"];
+stocks [label="main affiche les stocks finaux\net retourne le code", shape=box, fillcolor="#EEF4FB"];
+make [label="Make : 0 en cas de succès\nMake : 2 si la recette échoue", shape=box, fillcolor="#EEF4FB"];
+outcome -> limited [label=""];
+limited -> successLimited [label="Oui"];
+limited -> limit [label="Non"];
+limit -> failTime [label="Oui"];
+limit -> blocked [label="Non"];
+blocked -> failBlock [label="Oui"];
+blocked -> success [label="Non"];
+successLimited -> stocks [label=""];
+failTime -> stocks [label=""];
+failBlock -> stocks [label=""];
+success -> stocks [label=""];
+stocks -> make [label=""];
+}

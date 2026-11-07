@@ -1,0 +1,3562 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="98" skipped="0" tests="207" time="5.123" timestamp="2026-11-07T14:06:03.663048+01:00" hostname="f2r8s3.paris.42.school"><properties><property name="hypothesis-statistics-tests/test_parser_hypothesis.py::test_parse_random_utf8_does_not_crash" value="dGVzdHMvdGVzdF9wYXJzZXJfaHlwb3RoZXNpcy5weTo6dGVzdF9wYXJzZV9yYW5kb21fdXRmOF9kb2VzX25vdF9jcmFzaDoKCiAgLSBkdXJpbmcgZ2VuZXJhdGUgcGhhc2UgKDAuMDQgc2Vjb25kcyk6CiAgICAtIFR5cGljYWwgcnVudGltZXM6IDwgMW1zLCBvZiB3aGljaCA8IDFtcyBpbiBkYXRhIGdlbmVyYXRpb24KICAgIC0gNTAgcGFzc2luZywgMCBmYWlsaW5nLCBhbmQgMCBpbnZhbGlkIHRlc3QgY2FzZXMKCiAgLSBTdG9wcGVkIGJlY2F1c2Ugc2V0dGluZ3MubWF4X2V4YW1wbGVzPTUw" /><property name="hypothesis-statistics-tests/test_parser_hypothesis.py::test_parse_random_binary_does_not_crash" value="dGVzdHMvdGVzdF9wYXJzZXJfaHlwb3RoZXNpcy5weTo6dGVzdF9wYXJzZV9yYW5kb21fYmluYXJ5X2RvZXNfbm90X2NyYXNoOgoKICAtIGR1cmluZyBnZW5lcmF0ZSBwaGFzZSAoMC4wMyBzZWNvbmRzKToKICAgIC0gVHlwaWNhbCBydW50aW1lczogPCAxbXMsIG9mIHdoaWNoIDwgMW1zIGluIGRhdGEgZ2VuZXJhdGlvbgogICAgLSA1MCBwYXNzaW5nLCAwIGZhaWxpbmcsIGFuZCAwIGludmFsaWQgdGVzdCBjYXNlcwoKICAtIFN0b3BwZWQgYmVjYXVzZSBzZXR0aW5ncy5tYXhfZXhhbXBsZXM9NTA=" /><property name="hypothesis-statistics-tests/test_parser_hypothesis.py::test_parse_long_line_always_rejected" value="dGVzdHMvdGVzdF9wYXJzZXJfaHlwb3RoZXNpcy5weTo6dGVzdF9wYXJzZV9sb25nX2xpbmVfYWx3YXlzX3JlamVjdGVkOgoKICAtIGR1cmluZyBnZW5lcmF0ZSBwaGFzZSAoMC4xMCBzZWNvbmRzKToKICAgIC0gVHlwaWNhbCBydW50aW1lczogfiAwLTEgbXMsIG9mIHdoaWNoIDwgMW1zIGluIGRhdGEgZ2VuZXJhdGlvbgogICAgLSAyNSBwYXNzaW5nLCAwIGZhaWxpbmcsIGFuZCAwIGludmFsaWQgdGVzdCBjYXNlcwoKICAtIFN0b3BwZWQgYmVjYXVzZSBzZXR0aW5ncy5tYXhfZXhhbXBsZXM9MjU=" /></properties><testcase classname="tests.test_cli" name="test_cli_help" file="tests/test_cli.py" line="12" time="0.002" /><testcase classname="tests.test_cli" name="test_cli_invalid_path" file="tests/test_cli.py" line="21" time="0.001" /><testcase classname="tests.test_cli" name="test_cli_invalid_delay" file="tests/test_cli.py" line="27" time="0.005" /><testcase classname="tests.test_cli" name="test_cli_delay_help_text" file="tests/test_cli.py" line="35" time="0.001" /><testcase classname="tests.test_cli" name="test_verifier_cli_help" file="tests/test_cli.py" line="40" time="0.001" /><testcase classname="tests.test_cli" name="test_verifier_cli_valid" file="tests/test_cli.py" line="48" time="0.001" /><testcase classname="tests.test_cli" name="test_verifier_cli_error" file="tests/test_cli.py" line="58" time="0.001" /><testcase classname="tests.test_cli" name="test_verifier_cli_invalid_config" file="tests/test_cli.py" line="68" time="0.001" /><testcase classname="tests.test_cli" name="test_verifier_cli_invalid_config_runtime" file="tests/test_cli.py" line="80" time="0.001" /><testcase classname="tests.test_cli" name="test_cli_valid" file="tests/test_cli.py" line="97" time="0.001" /><testcase classname="tests.test_cli" name="test_cli_lists_all_stocks" file="tests/test_cli.py" line="110" time="0.001"><failure message="SystemExit: 2">capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f2403d3e590&gt;
+
+    def test_cli_lists_all_stocks(capsys: CaptureFixture[str]) -&gt; None:
+&gt;       exit_code = cli.main([str(Path("resources/simple")), "100"])
+
+tests/test_cli.py:112: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/krpsim/cli.py:242: in main
+    _validate_args(args, parser)
+src/krpsim/cli.py:117: in _validate_args
+    parser.error(f"invalid config path: '{args.config}'")
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2594: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='krpsim', usage=None, description=None, formatter_class=&lt;class 'argparse.HelpFormatter'&gt;, conflict_handler='error', add_help=True)
+status = 2, message = "krpsim: error: invalid config path: 'resources/simple'\n"
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+&gt;       _sys.exit(status)
+E       SystemExit: 2
+
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2581: SystemExit</failure></testcase><testcase classname="tests.test_cli" name="test_cli_header_stock_count" file="tests/test_cli.py" line="124" time="0.001"><failure message="SystemExit: 2">capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f24044ab550&gt;
+
+    def test_cli_header_stock_count(capsys: CaptureFixture[str]) -&gt; None:
+&gt;       exit_code = cli.main([str(Path("resources/simple")), "100"])
+
+tests/test_cli.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/krpsim/cli.py:242: in main
+    _validate_args(args, parser)
+src/krpsim/cli.py:117: in _validate_args
+    parser.error(f"invalid config path: '{args.config}'")
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2594: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='krpsim', usage=None, description=None, formatter_class=&lt;class 'argparse.HelpFormatter'&gt;, conflict_handler='error', add_help=True)
+status = 2, message = "krpsim: error: invalid config path: 'resources/simple'\n"
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+&gt;       _sys.exit(status)
+E       SystemExit: 2
+
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2581: SystemExit</failure></testcase><testcase classname="tests.test_cli" name="test_cli_stock_alignment" file="tests/test_cli.py" line="131" time="0.001"><failure message="SystemExit: 2">capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f2403c50b80&gt;
+
+    def test_cli_stock_alignment(capsys: CaptureFixture[str]) -&gt; None:
+&gt;       exit_code = cli.main([str(Path("resources/simple")), "100"])
+
+tests/test_cli.py:133: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/krpsim/cli.py:242: in main
+    _validate_args(args, parser)
+src/krpsim/cli.py:117: in _validate_args
+    parser.error(f"invalid config path: '{args.config}'")
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2594: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='krpsim', usage=None, description=None, formatter_class=&lt;class 'argparse.HelpFormatter'&gt;, conflict_handler='error', add_help=True)
+status = 2, message = "krpsim: error: invalid config path: 'resources/simple'\n"
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+&gt;       _sys.exit(status)
+E       SystemExit: 2
+
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2581: SystemExit</failure></testcase><testcase classname="tests.test_cli" name="test_cli_max_time" file="tests/test_cli.py" line="145" time="0.001" /><testcase classname="tests.test_cli" name="test_cli_self_production_trace" file="tests/test_cli.py" line="156" time="0.002"><failure message="SystemExit: 2">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_cli_self_production_trace0')
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f2403b83160&gt;
+
+    def test_cli_self_production_trace(tmp_path: Path, capsys: CaptureFixture[str]) -&gt; None:
+        trace_path = tmp_path / "self.trace"
+&gt;       assert cli.main(["resources/self", "3", "--trace", str(trace_path)]) == 1
+
+tests/test_cli.py:159: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/krpsim/cli.py:242: in main
+    _validate_args(args, parser)
+src/krpsim/cli.py:117: in _validate_args
+    parser.error(f"invalid config path: '{args.config}'")
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2594: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='krpsim', usage=None, description=None, formatter_class=&lt;class 'argparse.HelpFormatter'&gt;, conflict_handler='error', add_help=True)
+status = 2, message = "krpsim: error: invalid config path: 'resources/self'\n"
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+&gt;       _sys.exit(status)
+E       SystemExit: 2
+
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2581: SystemExit</failure></testcase><testcase classname="tests.test_cli" name="test_cli_self_50_saves_a_valid_bounded_solution[False]" file="tests/test_cli.py" line="173" time="0.001"><failure message="SystemExit: 2">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_cli_self_50_saves_a_valid0')
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f2403cdcd30&gt;
+existing_trace = False
+
+    @pytest.mark.parametrize("existing_trace", [False, True])
+    def test_cli_self_50_saves_a_valid_bounded_solution(
+        tmp_path: Path,
+        capsys: CaptureFixture[str],
+        existing_trace: bool,
+    ) -&gt; None:
+        trace_path = tmp_path / "self.trace"
+        if existing_trace:
+            trace_path.write_text("previous trace\n")
+&gt;       assert cli.main(["resources/self", "50", "--trace", str(trace_path)]) == 0
+
+tests/test_cli.py:183: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/krpsim/cli.py:242: in main
+    _validate_args(args, parser)
+src/krpsim/cli.py:117: in _validate_args
+    parser.error(f"invalid config path: '{args.config}'")
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2594: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='krpsim', usage=None, description=None, formatter_class=&lt;class 'argparse.HelpFormatter'&gt;, conflict_handler='error', add_help=True)
+status = 2, message = "krpsim: error: invalid config path: 'resources/self'\n"
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+&gt;       _sys.exit(status)
+E       SystemExit: 2
+
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2581: SystemExit</failure></testcase><testcase classname="tests.test_cli" name="test_cli_self_50_saves_a_valid_bounded_solution[True]" file="tests/test_cli.py" line="173" time="0.001"><failure message="SystemExit: 2">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_cli_self_50_saves_a_valid1')
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f2403b833a0&gt;
+existing_trace = True
+
+    @pytest.mark.parametrize("existing_trace", [False, True])
+    def test_cli_self_50_saves_a_valid_bounded_solution(
+        tmp_path: Path,
+        capsys: CaptureFixture[str],
+        existing_trace: bool,
+    ) -&gt; None:
+        trace_path = tmp_path / "self.trace"
+        if existing_trace:
+            trace_path.write_text("previous trace\n")
+&gt;       assert cli.main(["resources/self", "50", "--trace", str(trace_path)]) == 0
+
+tests/test_cli.py:183: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/krpsim/cli.py:242: in main
+    _validate_args(args, parser)
+src/krpsim/cli.py:117: in _validate_args
+    parser.error(f"invalid config path: '{args.config}'")
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2594: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='krpsim', usage=None, description=None, formatter_class=&lt;class 'argparse.HelpFormatter'&gt;, conflict_handler='error', add_help=True)
+status = 2, message = "krpsim: error: invalid config path: 'resources/self'\n"
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+&gt;       _sys.exit(status)
+E       SystemExit: 2
+
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2581: SystemExit</failure></testcase><testcase classname="tests.test_cli" name="test_cli_deadlock[]" file="tests/test_cli.py" line="200" time="0.001" /><testcase classname="tests.test_cli" name="test_cli_deadlock[optimize:(a)\n]" file="tests/test_cli.py" line="200" time="0.001" /><testcase classname="tests.test_cli" name="test_cli_loop_with_and_without_objective[False]" file="tests/test_cli.py" line="212" time="0.002" /><testcase classname="tests.test_cli" name="test_cli_loop_with_and_without_objective[True]" file="tests/test_cli.py" line="212" time="0.002" /><testcase classname="tests.test_cli" name="test_cli_path_traversal" file="tests/test_cli.py" line="241" time="0.001" /><testcase classname="tests.test_cli" name="test_cli_unreadable_file" file="tests/test_cli.py" line="250" time="0.001" /><testcase classname="tests.test_cli" name="test_cli_invalid_config[file0]" file="tests/test_cli.py" line="266" time="0.002"><failure message="assert 2 == 1&#10; +  where 2 = SystemExit(2).code&#10; +    where SystemExit(2) = &lt;ExceptionInfo SystemExit(2) tblen=5&gt;.value">file = PosixPath('resources/bad_stock')
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f2403cddde0&gt;
+
+    @pytest.mark.parametrize(
+        "file",
+        [
+            Path("resources/bad_stock"),
+            Path("resources/bad_proc"),
+        ],
+    )
+    def test_cli_invalid_config(file: Path, capsys: CaptureFixture[str]) -&gt; None:
+        with pytest.raises(SystemExit) as exc:
+            cli.main([str(file), "10"])
+&gt;       assert exc.value.code == 1
+E       assert 2 == 1
+E        +  where 2 = SystemExit(2).code
+E        +    where SystemExit(2) = &lt;ExceptionInfo SystemExit(2) tblen=5&gt;.value
+
+tests/test_cli.py:277: AssertionError</failure></testcase><testcase classname="tests.test_cli" name="test_cli_invalid_config[file1]" file="tests/test_cli.py" line="266" time="0.002"><failure message="assert 2 == 1&#10; +  where 2 = SystemExit(2).code&#10; +    where SystemExit(2) = &lt;ExceptionInfo SystemExit(2) tblen=5&gt;.value">file = PosixPath('resources/bad_proc')
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f2403cc3730&gt;
+
+    @pytest.mark.parametrize(
+        "file",
+        [
+            Path("resources/bad_stock"),
+            Path("resources/bad_proc"),
+        ],
+    )
+    def test_cli_invalid_config(file: Path, capsys: CaptureFixture[str]) -&gt; None:
+        with pytest.raises(SystemExit) as exc:
+            cli.main([str(file), "10"])
+&gt;       assert exc.value.code == 1
+E       assert 2 == 1
+E        +  where 2 = SystemExit(2).code
+E        +    where SystemExit(2) = &lt;ExceptionInfo SystemExit(2) tblen=5&gt;.value
+
+tests/test_cli.py:277: AssertionError</failure></testcase><testcase classname="tests.test_cli" name="test_cli_run_resources[ikea-100]" file="tests/test_cli.py" line="281" time="0.001"><failure message="SystemExit: 2">resource = 'ikea', delay = 100
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f2403ad75e0&gt;
+
+    @pytest.mark.parametrize(
+        "resource,delay",
+        [
+            ("ikea", 100),
+            ("steak", 100),
+            ("pomme", 100),
+            ("recre", 100),
+            ("time", 100),
+            ("finite", 100),
+        ],
+    )
+    def test_cli_run_resources(
+        resource: str, delay: int, capsys: CaptureFixture[str]
+    ) -&gt; None:
+        res = Path("resources") / resource
+&gt;       exit_code = cli.main([str(res), str(delay)])
+
+tests/test_cli.py:297: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/krpsim/cli.py:242: in main
+    _validate_args(args, parser)
+src/krpsim/cli.py:117: in _validate_args
+    parser.error(f"invalid config path: '{args.config}'")
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2594: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='krpsim', usage=None, description=None, formatter_class=&lt;class 'argparse.HelpFormatter'&gt;, conflict_handler='error', add_help=True)
+status = 2, message = "krpsim: error: invalid config path: 'resources/ikea'\n"
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+&gt;       _sys.exit(status)
+E       SystemExit: 2
+
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2581: SystemExit</failure></testcase><testcase classname="tests.test_cli" name="test_cli_run_resources[steak-100]" file="tests/test_cli.py" line="281" time="0.023"><failure message="SystemExit: 2">resource = 'steak', delay = 100
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f2403b81870&gt;
+
+    @pytest.mark.parametrize(
+        "resource,delay",
+        [
+            ("ikea", 100),
+            ("steak", 100),
+            ("pomme", 100),
+            ("recre", 100),
+            ("time", 100),
+            ("finite", 100),
+        ],
+    )
+    def test_cli_run_resources(
+        resource: str, delay: int, capsys: CaptureFixture[str]
+    ) -&gt; None:
+        res = Path("resources") / resource
+&gt;       exit_code = cli.main([str(res), str(delay)])
+
+tests/test_cli.py:297: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/krpsim/cli.py:242: in main
+    _validate_args(args, parser)
+src/krpsim/cli.py:117: in _validate_args
+    parser.error(f"invalid config path: '{args.config}'")
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2594: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='krpsim', usage=None, description=None, formatter_class=&lt;class 'argparse.HelpFormatter'&gt;, conflict_handler='error', add_help=True)
+status = 2, message = "krpsim: error: invalid config path: 'resources/steak'\n"
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+&gt;       _sys.exit(status)
+E       SystemExit: 2
+
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2581: SystemExit</failure></testcase><testcase classname="tests.test_cli" name="test_cli_run_resources[pomme-100]" file="tests/test_cli.py" line="281" time="0.001"><failure message="SystemExit: 2">resource = 'pomme', delay = 100
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f24047865f0&gt;
+
+    @pytest.mark.parametrize(
+        "resource,delay",
+        [
+            ("ikea", 100),
+            ("steak", 100),
+            ("pomme", 100),
+            ("recre", 100),
+            ("time", 100),
+            ("finite", 100),
+        ],
+    )
+    def test_cli_run_resources(
+        resource: str, delay: int, capsys: CaptureFixture[str]
+    ) -&gt; None:
+        res = Path("resources") / resource
+&gt;       exit_code = cli.main([str(res), str(delay)])
+
+tests/test_cli.py:297: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/krpsim/cli.py:242: in main
+    _validate_args(args, parser)
+src/krpsim/cli.py:117: in _validate_args
+    parser.error(f"invalid config path: '{args.config}'")
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2594: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='krpsim', usage=None, description=None, formatter_class=&lt;class 'argparse.HelpFormatter'&gt;, conflict_handler='error', add_help=True)
+status = 2, message = "krpsim: error: invalid config path: 'resources/pomme'\n"
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+&gt;       _sys.exit(status)
+E       SystemExit: 2
+
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2581: SystemExit</failure></testcase><testcase classname="tests.test_cli" name="test_cli_run_resources[recre-100]" file="tests/test_cli.py" line="281" time="0.002"><failure message="SystemExit: 2">resource = 'recre', delay = 100
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f2403b807f0&gt;
+
+    @pytest.mark.parametrize(
+        "resource,delay",
+        [
+            ("ikea", 100),
+            ("steak", 100),
+            ("pomme", 100),
+            ("recre", 100),
+            ("time", 100),
+            ("finite", 100),
+        ],
+    )
+    def test_cli_run_resources(
+        resource: str, delay: int, capsys: CaptureFixture[str]
+    ) -&gt; None:
+        res = Path("resources") / resource
+&gt;       exit_code = cli.main([str(res), str(delay)])
+
+tests/test_cli.py:297: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/krpsim/cli.py:242: in main
+    _validate_args(args, parser)
+src/krpsim/cli.py:117: in _validate_args
+    parser.error(f"invalid config path: '{args.config}'")
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2594: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='krpsim', usage=None, description=None, formatter_class=&lt;class 'argparse.HelpFormatter'&gt;, conflict_handler='error', add_help=True)
+status = 2, message = "krpsim: error: invalid config path: 'resources/recre'\n"
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+&gt;       _sys.exit(status)
+E       SystemExit: 2
+
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2581: SystemExit</failure></testcase><testcase classname="tests.test_cli" name="test_cli_run_resources[time-100]" file="tests/test_cli.py" line="281" time="0.002"><failure message="SystemExit: 2">resource = 'time', delay = 100
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f2403cec280&gt;
+
+    @pytest.mark.parametrize(
+        "resource,delay",
+        [
+            ("ikea", 100),
+            ("steak", 100),
+            ("pomme", 100),
+            ("recre", 100),
+            ("time", 100),
+            ("finite", 100),
+        ],
+    )
+    def test_cli_run_resources(
+        resource: str, delay: int, capsys: CaptureFixture[str]
+    ) -&gt; None:
+        res = Path("resources") / resource
+&gt;       exit_code = cli.main([str(res), str(delay)])
+
+tests/test_cli.py:297: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/krpsim/cli.py:242: in main
+    _validate_args(args, parser)
+src/krpsim/cli.py:117: in _validate_args
+    parser.error(f"invalid config path: '{args.config}'")
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2594: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='krpsim', usage=None, description=None, formatter_class=&lt;class 'argparse.HelpFormatter'&gt;, conflict_handler='error', add_help=True)
+status = 2, message = "krpsim: error: invalid config path: 'resources/time'\n"
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+&gt;       _sys.exit(status)
+E       SystemExit: 2
+
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2581: SystemExit</failure></testcase><testcase classname="tests.test_cli" name="test_cli_run_resources[finite-100]" file="tests/test_cli.py" line="281" time="0.002"><failure message="SystemExit: 2">resource = 'finite', delay = 100
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f2403587a90&gt;
+
+    @pytest.mark.parametrize(
+        "resource,delay",
+        [
+            ("ikea", 100),
+            ("steak", 100),
+            ("pomme", 100),
+            ("recre", 100),
+            ("time", 100),
+            ("finite", 100),
+        ],
+    )
+    def test_cli_run_resources(
+        resource: str, delay: int, capsys: CaptureFixture[str]
+    ) -&gt; None:
+        res = Path("resources") / resource
+&gt;       exit_code = cli.main([str(res), str(delay)])
+
+tests/test_cli.py:297: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/krpsim/cli.py:242: in main
+    _validate_args(args, parser)
+src/krpsim/cli.py:117: in _validate_args
+    parser.error(f"invalid config path: '{args.config}'")
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2594: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='krpsim', usage=None, description=None, formatter_class=&lt;class 'argparse.HelpFormatter'&gt;, conflict_handler='error', add_help=True)
+status = 2, message = "krpsim: error: invalid config path: 'resources/finite'\n"
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+&gt;       _sys.exit(status)
+E       SystemExit: 2
+
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2581: SystemExit</failure></testcase><testcase classname="tests.test_cli" name="test_cli_accepts_zero_delay_process_resource" file="tests/test_cli.py" line="302" time="0.002"><failure message="SystemExit: 2">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_cli_accepts_zero_delay_pr0')
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f2404841e70&gt;
+
+    def test_cli_accepts_zero_delay_process_resource(
+        tmp_path: Path,
+        capsys: CaptureFixture[str],
+    ) -&gt; None:
+        trace_path = tmp_path / "trace.txt"
+&gt;       exit_code = cli.main(
+            [
+                str(Path("resources/delay0")),
+                "10",
+                "--trace",
+                str(trace_path),
+            ]
+        )
+
+tests/test_cli.py:308: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/krpsim/cli.py:242: in main
+    _validate_args(args, parser)
+src/krpsim/cli.py:117: in _validate_args
+    parser.error(f"invalid config path: '{args.config}'")
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2594: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='krpsim', usage=None, description=None, formatter_class=&lt;class 'argparse.HelpFormatter'&gt;, conflict_handler='error', add_help=True)
+status = 2, message = "krpsim: error: invalid config path: 'resources/delay0'\n"
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+&gt;       _sys.exit(status)
+E       SystemExit: 2
+
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2581: SystemExit</failure></testcase><testcase classname="tests.test_cli" name="test_cli_partial_execution_small_delay" file="tests/test_cli.py" line="322" time="0.001"><failure message="SystemExit: 2">capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f24035863e0&gt;
+
+    def test_cli_partial_execution_small_delay(
+        capsys: CaptureFixture[str],
+    ) -&gt; None:
+        # Delay must allow the delivery process at cycle 40 so client_content equals 1
+        delay = 60
+&gt;       exit_code = cli.main([str(Path("resources/simple")), str(delay)])
+
+tests/test_cli.py:328: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/krpsim/cli.py:242: in main
+    _validate_args(args, parser)
+src/krpsim/cli.py:117: in _validate_args
+    parser.error(f"invalid config path: '{args.config}'")
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2594: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='krpsim', usage=None, description=None, formatter_class=&lt;class 'argparse.HelpFormatter'&gt;, conflict_handler='error', add_help=True)
+status = 2, message = "krpsim: error: invalid config path: 'resources/simple'\n"
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+&gt;       _sys.exit(status)
+E       SystemExit: 2
+
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2581: SystemExit</failure></testcase><testcase classname="tests.test_cli" name="test_cli_ignore_delay_when_optimize_time_first" file="tests/test_cli.py" line="336" time="0.001"><failure message="SystemExit: 2">capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f2403c213f0&gt;
+
+    def test_cli_ignore_delay_when_optimize_time_first(
+        capsys: CaptureFixture[str],
+    ) -&gt; None:
+&gt;       exit_code = cli.main([str(Path("resources/simple")), "10"])
+
+tests/test_cli.py:340: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/krpsim/cli.py:242: in main
+    _validate_args(args, parser)
+src/krpsim/cli.py:117: in _validate_args
+    parser.error(f"invalid config path: '{args.config}'")
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2594: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='krpsim', usage=None, description=None, formatter_class=&lt;class 'argparse.HelpFormatter'&gt;, conflict_handler='error', add_help=True)
+status = 2, message = "krpsim: error: invalid config path: 'resources/simple'\n"
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+&gt;       _sys.exit(status)
+E       SystemExit: 2
+
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2581: SystemExit</failure></testcase><testcase classname="tests.test_cli" name="test_cli_rejects_removed_logging_options[krpsim.cli---analysis-log]" file="tests/test_cli.py" line="347" time="0.001" /><testcase classname="tests.test_cli" name="test_cli_rejects_removed_logging_options[krpsim.cli---log]" file="tests/test_cli.py" line="347" time="0.001" /><testcase classname="tests.test_cli" name="test_cli_rejects_removed_logging_options[krpsim.cli---verbose]" file="tests/test_cli.py" line="347" time="0.001" /><testcase classname="tests.test_cli" name="test_cli_rejects_removed_logging_options[krpsim.cli--v]" file="tests/test_cli.py" line="347" time="0.001" /><testcase classname="tests.test_cli" name="test_cli_rejects_removed_logging_options[krpsim_verif.cli---analysis-log]" file="tests/test_cli.py" line="347" time="0.001" /><testcase classname="tests.test_cli" name="test_cli_rejects_removed_logging_options[krpsim_verif.cli---log]" file="tests/test_cli.py" line="347" time="0.001" /><testcase classname="tests.test_cli" name="test_cli_rejects_removed_logging_options[krpsim_verif.cli---verbose]" file="tests/test_cli.py" line="347" time="0.001" /><testcase classname="tests.test_cli" name="test_cli_rejects_removed_logging_options[krpsim_verif.cli--v]" file="tests/test_cli.py" line="347" time="0.001" /><testcase classname="tests.test_display" name="test_format_trace" file="tests/test_display.py" line="5" time="0.000" /><testcase classname="tests.test_display" name="test_save_trace" file="tests/test_display.py" line="10" time="0.001" /><testcase classname="tests.test_display" name="test_save_empty_trace" file="tests/test_display.py" line="17" time="0.000" /><testcase classname="tests.test_evaluation" name="test_finite_evaluation_examples[simple-client_content-1-60]" file="tests/test_evaluation.py" line="24" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/simple'">resource = 'simple', target = 'client_content', quantity = 1, duration = 60
+
+    @pytest.mark.parametrize(
+        "resource,target,quantity,duration",
+        [
+            ("simple", "client_content", 1, 60),
+            ("ikea", "armoire", 1, 50),
+            ("steak", "steak_cuit", 3, 30),
+        ],
+    )
+    def test_finite_evaluation_examples(resource, target, quantity, duration):
+&gt;       config = parser.parse_file(Path("resources") / resource)
+
+tests/test_evaluation.py:34: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/simple')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/simple'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_evaluation" name="test_finite_evaluation_examples[ikea-armoire-1-50]" file="tests/test_evaluation.py" line="24" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/ikea'">resource = 'ikea', target = 'armoire', quantity = 1, duration = 50
+
+    @pytest.mark.parametrize(
+        "resource,target,quantity,duration",
+        [
+            ("simple", "client_content", 1, 60),
+            ("ikea", "armoire", 1, 50),
+            ("steak", "steak_cuit", 3, 30),
+        ],
+    )
+    def test_finite_evaluation_examples(resource, target, quantity, duration):
+&gt;       config = parser.parse_file(Path("resources") / resource)
+
+tests/test_evaluation.py:34: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/ikea')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/ikea'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_evaluation" name="test_finite_evaluation_examples[steak-steak_cuit-3-30]" file="tests/test_evaluation.py" line="24" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/steak'">resource = 'steak', target = 'steak_cuit', quantity = 3, duration = 30
+
+    @pytest.mark.parametrize(
+        "resource,target,quantity,duration",
+        [
+            ("simple", "client_content", 1, 60),
+            ("ikea", "armoire", 1, 50),
+            ("steak", "steak_cuit", 3, 30),
+        ],
+    )
+    def test_finite_evaluation_examples(resource, target, quantity, duration):
+&gt;       config = parser.parse_file(Path("resources") / resource)
+
+tests/test_evaluation.py:34: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/steak')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/steak'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_evaluation" name="test_steak_cli_completes_all_three" file="tests/test_evaluation.py" line="40" time="0.001"><failure message="SystemExit: 2">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_steak_cli_completes_all_t0')
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f24038aa8f0&gt;
+
+    def test_steak_cli_completes_all_three(tmp_path, capsys):
+        trace_path = tmp_path / "steak.trace"
+&gt;       assert cli.main(["resources/steak", "100", "--trace", str(trace_path)]) == 0
+
+tests/test_evaluation.py:43: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/krpsim/cli.py:242: in main
+    _validate_args(args, parser)
+src/krpsim/cli.py:117: in _validate_args
+    parser.error(f"invalid config path: '{args.config}'")
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2594: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='krpsim', usage=None, description=None, formatter_class=&lt;class 'argparse.HelpFormatter'&gt;, conflict_handler='error', add_help=True)
+status = 2, message = "krpsim: error: invalid config path: 'resources/steak'\n"
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+&gt;       _sys.exit(status)
+E       SystemExit: 2
+
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2581: SystemExit</failure></testcase><testcase classname="tests.test_evaluation" name="test_pomme_cli_reaches_bonus_with_a_valid_saved_trace[10000-10000]" file="tests/test_evaluation.py" line="59" time="0.001"><failure message="SystemExit: 2">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_pomme_cli_reaches_bonus_w0')
+limit = 10000, minimum_benefit = 10000
+
+    @pytest.mark.parametrize(
+        "limit,minimum_benefit", [(10_000, 10_000), (50_000, 1_000_000)]
+    )
+    def test_pomme_cli_reaches_bonus_with_a_valid_saved_trace(
+        tmp_path, limit, minimum_benefit
+    ):
+        """Check the public command and its saved trace, including final conversion."""
+        trace_path = tmp_path / "pomme.trace"
+        with (tmp_path / "pomme.out").open("w") as output, redirect_stdout(output):
+            assert (
+&gt;               cli.main(["resources/pomme", str(limit), "--trace", str(trace_path)]) == 0
+            )
+
+tests/test_evaluation.py:70: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/krpsim/cli.py:242: in main
+    _validate_args(args, parser)
+src/krpsim/cli.py:117: in _validate_args
+    parser.error(f"invalid config path: '{args.config}'")
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2594: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='krpsim', usage=None, description=None, formatter_class=&lt;class 'argparse.HelpFormatter'&gt;, conflict_handler='error', add_help=True)
+status = 2, message = "krpsim: error: invalid config path: 'resources/pomme'\n"
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+&gt;       _sys.exit(status)
+E       SystemExit: 2
+
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2581: SystemExit</failure></testcase><testcase classname="tests.test_evaluation" name="test_pomme_cli_reaches_bonus_with_a_valid_saved_trace[50000-1000000]" file="tests/test_evaluation.py" line="59" time="0.001"><failure message="SystemExit: 2">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_pomme_cli_reaches_bonus_w1')
+limit = 50000, minimum_benefit = 1000000
+
+    @pytest.mark.parametrize(
+        "limit,minimum_benefit", [(10_000, 10_000), (50_000, 1_000_000)]
+    )
+    def test_pomme_cli_reaches_bonus_with_a_valid_saved_trace(
+        tmp_path, limit, minimum_benefit
+    ):
+        """Check the public command and its saved trace, including final conversion."""
+        trace_path = tmp_path / "pomme.trace"
+        with (tmp_path / "pomme.out").open("w") as output, redirect_stdout(output):
+            assert (
+&gt;               cli.main(["resources/pomme", str(limit), "--trace", str(trace_path)]) == 0
+            )
+
+tests/test_evaluation.py:70: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/krpsim/cli.py:242: in main
+    _validate_args(args, parser)
+src/krpsim/cli.py:117: in _validate_args
+    parser.error(f"invalid config path: '{args.config}'")
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2594: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='krpsim', usage=None, description=None, formatter_class=&lt;class 'argparse.HelpFormatter'&gt;, conflict_handler='error', add_help=True)
+status = 2, message = "krpsim: error: invalid config path: 'resources/pomme'\n"
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+&gt;       _sys.exit(status)
+E       SystemExit: 2
+
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2581: SystemExit</failure></testcase><testcase classname="tests.test_evaluation" name="test_pomme_short_horizon_only_converts_initial_capital" file="tests/test_evaluation.py" line="82" time="0.001"><failure message="SystemExit: 2">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_pomme_short_horizon_only_0')
+
+    def test_pomme_short_horizon_only_converts_initial_capital(tmp_path):
+        """Ten cycles cannot accommodate an ingredient purchase lasting 200 cycles."""
+        trace_path = tmp_path / "pomme.trace"
+        with (tmp_path / "pomme.out").open("w") as output, redirect_stdout(output):
+&gt;           assert cli.main(["resources/pomme", "10", "--trace", str(trace_path)]) == 0
+
+tests/test_evaluation.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/krpsim/cli.py:242: in main
+    _validate_args(args, parser)
+src/krpsim/cli.py:117: in _validate_args
+    parser.error(f"invalid config path: '{args.config}'")
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2594: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = ArgumentParser(prog='krpsim', usage=None, description=None, formatter_class=&lt;class 'argparse.HelpFormatter'&gt;, conflict_handler='error', add_help=True)
+status = 2, message = "krpsim: error: invalid config path: 'resources/pomme'\n"
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+&gt;       _sys.exit(status)
+E       SystemExit: 2
+
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/argparse.py:2581: SystemExit</failure></testcase><testcase classname="tests.test_evaluation" name="test_steak_with_only_one_raw_remaining" file="tests/test_evaluation.py" line="95" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/steak'">def test_steak_with_only_one_raw_remaining():
+&gt;       config = parser.parse_file(Path("resources/steak"))
+
+tests/test_evaluation.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/steak')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/steak'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_evaluation" name="test_steak_with_insufficient_time[9-0]" file="tests/test_evaluation.py" line="104" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/steak'">limit = 9, cooked = 0
+
+    @pytest.mark.parametrize("limit,cooked", [(9, 0), (10, 0), (19, 0), (20, 2), (29, 2)])
+    def test_steak_with_insufficient_time(limit, cooked):
+&gt;       config = parser.parse_file(Path("resources/steak"))
+
+tests/test_evaluation.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/steak')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/steak'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_evaluation" name="test_steak_with_insufficient_time[10-0]" file="tests/test_evaluation.py" line="104" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/steak'">limit = 10, cooked = 0
+
+    @pytest.mark.parametrize("limit,cooked", [(9, 0), (10, 0), (19, 0), (20, 2), (29, 2)])
+    def test_steak_with_insufficient_time(limit, cooked):
+&gt;       config = parser.parse_file(Path("resources/steak"))
+
+tests/test_evaluation.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/steak')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/steak'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_evaluation" name="test_steak_with_insufficient_time[19-0]" file="tests/test_evaluation.py" line="104" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/steak'">limit = 19, cooked = 0
+
+    @pytest.mark.parametrize("limit,cooked", [(9, 0), (10, 0), (19, 0), (20, 2), (29, 2)])
+    def test_steak_with_insufficient_time(limit, cooked):
+&gt;       config = parser.parse_file(Path("resources/steak"))
+
+tests/test_evaluation.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/steak')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/steak'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_evaluation" name="test_steak_with_insufficient_time[20-2]" file="tests/test_evaluation.py" line="104" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/steak'">limit = 20, cooked = 2
+
+    @pytest.mark.parametrize("limit,cooked", [(9, 0), (10, 0), (19, 0), (20, 2), (29, 2)])
+    def test_steak_with_insufficient_time(limit, cooked):
+&gt;       config = parser.parse_file(Path("resources/steak"))
+
+tests/test_evaluation.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/steak')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/steak'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_evaluation" name="test_steak_with_insufficient_time[29-2]" file="tests/test_evaluation.py" line="104" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/steak'">limit = 29, cooked = 2
+
+    @pytest.mark.parametrize("limit,cooked", [(9, 0), (10, 0), (19, 0), (20, 2), (29, 2)])
+    def test_steak_with_insufficient_time(limit, cooked):
+&gt;       config = parser.parse_file(Path("resources/steak"))
+
+tests/test_evaluation.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/steak')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/steak'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_evaluation" name="test_steak_finishes_all_available_resources[1]" file="tests/test_evaluation.py" line="111" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/steak'">quantity = 1
+
+    @pytest.mark.parametrize("quantity", range(1, 10))
+    def test_steak_finishes_all_available_resources(quantity):
+&gt;       config = parser.parse_file(Path("resources/steak"))
+
+tests/test_evaluation.py:114: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/steak')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/steak'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_evaluation" name="test_steak_finishes_all_available_resources[2]" file="tests/test_evaluation.py" line="111" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/steak'">quantity = 2
+
+    @pytest.mark.parametrize("quantity", range(1, 10))
+    def test_steak_finishes_all_available_resources(quantity):
+&gt;       config = parser.parse_file(Path("resources/steak"))
+
+tests/test_evaluation.py:114: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/steak')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/steak'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_evaluation" name="test_steak_finishes_all_available_resources[3]" file="tests/test_evaluation.py" line="111" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/steak'">quantity = 3
+
+    @pytest.mark.parametrize("quantity", range(1, 10))
+    def test_steak_finishes_all_available_resources(quantity):
+&gt;       config = parser.parse_file(Path("resources/steak"))
+
+tests/test_evaluation.py:114: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/steak')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/steak'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_evaluation" name="test_steak_finishes_all_available_resources[4]" file="tests/test_evaluation.py" line="111" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/steak'">quantity = 4
+
+    @pytest.mark.parametrize("quantity", range(1, 10))
+    def test_steak_finishes_all_available_resources(quantity):
+&gt;       config = parser.parse_file(Path("resources/steak"))
+
+tests/test_evaluation.py:114: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/steak')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/steak'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_evaluation" name="test_steak_finishes_all_available_resources[5]" file="tests/test_evaluation.py" line="111" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/steak'">quantity = 5
+
+    @pytest.mark.parametrize("quantity", range(1, 10))
+    def test_steak_finishes_all_available_resources(quantity):
+&gt;       config = parser.parse_file(Path("resources/steak"))
+
+tests/test_evaluation.py:114: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/steak')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/steak'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_evaluation" name="test_steak_finishes_all_available_resources[6]" file="tests/test_evaluation.py" line="111" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/steak'">quantity = 6
+
+    @pytest.mark.parametrize("quantity", range(1, 10))
+    def test_steak_finishes_all_available_resources(quantity):
+&gt;       config = parser.parse_file(Path("resources/steak"))
+
+tests/test_evaluation.py:114: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/steak')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/steak'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_evaluation" name="test_steak_finishes_all_available_resources[7]" file="tests/test_evaluation.py" line="111" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/steak'">quantity = 7
+
+    @pytest.mark.parametrize("quantity", range(1, 10))
+    def test_steak_finishes_all_available_resources(quantity):
+&gt;       config = parser.parse_file(Path("resources/steak"))
+
+tests/test_evaluation.py:114: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/steak')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/steak'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_evaluation" name="test_steak_finishes_all_available_resources[8]" file="tests/test_evaluation.py" line="111" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/steak'">quantity = 8
+
+    @pytest.mark.parametrize("quantity", range(1, 10))
+    def test_steak_finishes_all_available_resources(quantity):
+&gt;       config = parser.parse_file(Path("resources/steak"))
+
+tests/test_evaluation.py:114: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/steak')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/steak'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_evaluation" name="test_steak_finishes_all_available_resources[9]" file="tests/test_evaluation.py" line="111" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/steak'">quantity = 9
+
+    @pytest.mark.parametrize("quantity", range(1, 10))
+    def test_steak_finishes_all_available_resources(quantity):
+&gt;       config = parser.parse_file(Path("resources/steak"))
+
+tests/test_evaluation.py:114: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/steak')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/steak'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_evaluation" name="test_planning_does_not_depend_on_example_names_or_need_order" file="tests/test_evaluation.py" line="120" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/steak'">def test_planning_does_not_depend_on_example_names_or_need_order():
+&gt;       original = parser.parse_file(Path("resources/steak"))
+
+tests/test_evaluation.py:122: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/steak')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/steak'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_evaluation" name="test_dead_branch_does_not_consume_chain_input" file="tests/test_evaluation.py" line="145" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/simple'">def test_dead_branch_does_not_consume_chain_input():
+&gt;       config = parser.parse_file(Path("resources/simple"))
+
+tests/test_evaluation.py:147: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/simple')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/simple'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_evaluation" name="test_open_processes_improve_with_more_time[recre-marelle-limits0]" file="tests/test_evaluation.py" line="156" time="0.001"><failure message="krpsim.parser.ParseError: invalid path: 'resources/recre'">resource = 'recre', target = 'marelle', limits = (40, 110, 500)
+
+    @pytest.mark.parametrize(
+        "resource,target,limits",
+        [
+            ("recre", "marelle", (40, 110, 500)),
+            ("pomme", "benefice", (1000, 10000, 50000)),
+        ],
+    )
+    def test_open_processes_improve_with_more_time(resource, target, limits):
+&gt;       config = parser.parse_file(Path("resources") / resource)
+
+tests/test_evaluation.py:165: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/recre')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/recre'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_evaluation" name="test_open_processes_improve_with_more_time[pomme-benefice-limits1]" file="tests/test_evaluation.py" line="156" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/pomme'">resource = 'pomme', target = 'benefice', limits = (1000, 10000, 50000)
+
+    @pytest.mark.parametrize(
+        "resource,target,limits",
+        [
+            ("recre", "marelle", (40, 110, 500)),
+            ("pomme", "benefice", (1000, 10000, 50000)),
+        ],
+    )
+    def test_open_processes_improve_with_more_time(resource, target, limits):
+&gt;       config = parser.parse_file(Path("resources") / resource)
+
+tests/test_evaluation.py:165: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/pomme')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/pomme'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_evaluation" name="test_invalid_or_missing_sections_are_reported_by_cli[]" file="tests/test_evaluation.py" line="171" time="0.001" /><testcase classname="tests.test_evaluation" name="test_invalid_or_missing_sections_are_reported_by_cli[# comments only\n]" file="tests/test_evaluation.py" line="171" time="0.001" /><testcase classname="tests.test_evaluation" name="test_invalid_or_missing_sections_are_reported_by_cli[a:1\n]" file="tests/test_evaluation.py" line="171" time="0.001" /><testcase classname="tests.test_evaluation" name="test_invalid_or_missing_sections_are_reported_by_cli[p:(a:1):(a:1):1\n]" file="tests/test_evaluation.py" line="171" time="0.001" /><testcase classname="tests.test_evaluation" name="test_invalid_or_missing_sections_are_reported_by_cli[a:-1\np:(a:1):(b:1):1\n]" file="tests/test_evaluation.py" line="171" time="0.001" /><testcase classname="tests.test_evaluation" name="test_invalid_or_missing_sections_are_reported_by_cli[a:1\np:(a:1):(b:1)\n]" file="tests/test_evaluation.py" line="171" time="0.001" /><testcase classname="tests.test_evaluation" name="test_invalid_or_missing_sections_are_reported_by_cli[a:1\np:(a):(b:1):1\n]" file="tests/test_evaluation.py" line="171" time="0.001" /><testcase classname="tests.test_evaluation" name="test_invalid_or_missing_sections_are_reported_by_cli[a:1\np:(:1):(b:1):1\n]" file="tests/test_evaluation.py" line="171" time="0.001" /><testcase classname="tests.test_evaluation" name="test_invalid_or_missing_sections_are_reported_by_cli[a:1\np:(a:1):(:1):1\n]" file="tests/test_evaluation.py" line="171" time="0.001" /><testcase classname="tests.test_evaluation" name="test_invalid_or_missing_sections_are_reported_by_cli[a:1\np:(a:0):(b:1):1\n]" file="tests/test_evaluation.py" line="171" time="0.001" /><testcase classname="tests.test_evaluation" name="test_invalid_or_missing_sections_are_reported_by_cli[a:1\np:(a:1):(b:1):-1\n]" file="tests/test_evaluation.py" line="171" time="0.001" /><testcase classname="tests.test_evaluation" name="test_invalid_or_missing_sections_are_reported_by_cli[a:1\np:(a:1):(b:1):1\noptimize:()\n]" file="tests/test_evaluation.py" line="171" time="0.001" /><testcase classname="tests.test_evaluation" name="test_invalid_or_missing_sections_are_reported_by_cli[a:1\np:(a:1):(b:1):1\noptimize:(unknown)\n]" file="tests/test_evaluation.py" line="171" time="0.001" /><testcase classname="tests.test_evaluation" name="test_invalid_or_missing_sections_are_reported_by_cli[a:1\np:(a:1):(b:1):1\noptimize:(b\n]" file="tests/test_evaluation.py" line="171" time="0.001" /><testcase classname="tests.test_evaluation" name="test_verifier_rejects_invalid_format_or_unavailable_stocks[bad format\n]" file="tests/test_evaluation.py" line="199" time="0.001"><failure message="assert 'invalid trace' in &quot;invalid config: invalid path: 'resources/steak'\n&quot;&#10; +  where &quot;invalid config: invalid path: 'resources/steak'\n&quot; = CaptureResult(out=&quot;invalid config: invalid path: 'resources/steak'\n&quot;, err='').out&#10; +    where CaptureResult(out=&quot;invalid config: invalid path: 'resources/steak'\n&quot;, err='') = readouterr()&#10; +      where readouterr = &lt;_pytest.capture.CaptureFixture object at 0x7f2403b39900&gt;.readouterr">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_verifier_rejects_invalid_0')
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f2403b39900&gt;
+trace = 'bad format\n'
+
+    @pytest.mark.parametrize(
+        "trace",
+        [
+            "bad format\n",
+            "-1:cuisson_1\n",
+            "0:unknown\n",
+            "0:cuisson_2\n",
+            "0:cuisson_1\n9:cuisson_3\n",
+            "0:cuisson_1\n0:cuisson_4\n",
+        ],
+    )
+    def test_verifier_rejects_invalid_format_or_unavailable_stocks(tmp_path, capsys, trace):
+        trace_path = tmp_path / "invalid.trace"
+        trace_path.write_text(trace)
+        assert verifier_cli.main(["resources/steak", str(trace_path)]) == 1
+&gt;       assert "invalid trace" in capsys.readouterr().out
+E       assert 'invalid trace' in "invalid config: invalid path: 'resources/steak'\n"
+E        +  where "invalid config: invalid path: 'resources/steak'\n" = CaptureResult(out="invalid config: invalid path: 'resources/steak'\n", err='').out
+E        +    where CaptureResult(out="invalid config: invalid path: 'resources/steak'\n", err='') = readouterr()
+E        +      where readouterr = &lt;_pytest.capture.CaptureFixture object at 0x7f2403b39900&gt;.readouterr
+
+tests/test_evaluation.py:215: AssertionError</failure></testcase><testcase classname="tests.test_evaluation" name="test_verifier_rejects_invalid_format_or_unavailable_stocks[-1:cuisson_1\n]" file="tests/test_evaluation.py" line="199" time="0.001"><failure message="assert 'invalid trace' in &quot;invalid config: invalid path: 'resources/steak'\n&quot;&#10; +  where &quot;invalid config: invalid path: 'resources/steak'\n&quot; = CaptureResult(out=&quot;invalid config: invalid path: 'resources/steak'\n&quot;, err='').out&#10; +    where CaptureResult(out=&quot;invalid config: invalid path: 'resources/steak'\n&quot;, err='') = readouterr()&#10; +      where readouterr = &lt;_pytest.capture.CaptureFixture object at 0x7f2404843df0&gt;.readouterr">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_verifier_rejects_invalid_1')
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f2404843df0&gt;
+trace = '-1:cuisson_1\n'
+
+    @pytest.mark.parametrize(
+        "trace",
+        [
+            "bad format\n",
+            "-1:cuisson_1\n",
+            "0:unknown\n",
+            "0:cuisson_2\n",
+            "0:cuisson_1\n9:cuisson_3\n",
+            "0:cuisson_1\n0:cuisson_4\n",
+        ],
+    )
+    def test_verifier_rejects_invalid_format_or_unavailable_stocks(tmp_path, capsys, trace):
+        trace_path = tmp_path / "invalid.trace"
+        trace_path.write_text(trace)
+        assert verifier_cli.main(["resources/steak", str(trace_path)]) == 1
+&gt;       assert "invalid trace" in capsys.readouterr().out
+E       assert 'invalid trace' in "invalid config: invalid path: 'resources/steak'\n"
+E        +  where "invalid config: invalid path: 'resources/steak'\n" = CaptureResult(out="invalid config: invalid path: 'resources/steak'\n", err='').out
+E        +    where CaptureResult(out="invalid config: invalid path: 'resources/steak'\n", err='') = readouterr()
+E        +      where readouterr = &lt;_pytest.capture.CaptureFixture object at 0x7f2404843df0&gt;.readouterr
+
+tests/test_evaluation.py:215: AssertionError</failure></testcase><testcase classname="tests.test_evaluation" name="test_verifier_rejects_invalid_format_or_unavailable_stocks[0:unknown\n]" file="tests/test_evaluation.py" line="199" time="0.001"><failure message="assert 'invalid trace' in &quot;invalid config: invalid path: 'resources/steak'\n&quot;&#10; +  where &quot;invalid config: invalid path: 'resources/steak'\n&quot; = CaptureResult(out=&quot;invalid config: invalid path: 'resources/steak'\n&quot;, err='').out&#10; +    where CaptureResult(out=&quot;invalid config: invalid path: 'resources/steak'\n&quot;, err='') = readouterr()&#10; +      where readouterr = &lt;_pytest.capture.CaptureFixture object at 0x7f2403e122f0&gt;.readouterr">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_verifier_rejects_invalid_2')
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f2403e122f0&gt;
+trace = '0:unknown\n'
+
+    @pytest.mark.parametrize(
+        "trace",
+        [
+            "bad format\n",
+            "-1:cuisson_1\n",
+            "0:unknown\n",
+            "0:cuisson_2\n",
+            "0:cuisson_1\n9:cuisson_3\n",
+            "0:cuisson_1\n0:cuisson_4\n",
+        ],
+    )
+    def test_verifier_rejects_invalid_format_or_unavailable_stocks(tmp_path, capsys, trace):
+        trace_path = tmp_path / "invalid.trace"
+        trace_path.write_text(trace)
+        assert verifier_cli.main(["resources/steak", str(trace_path)]) == 1
+&gt;       assert "invalid trace" in capsys.readouterr().out
+E       assert 'invalid trace' in "invalid config: invalid path: 'resources/steak'\n"
+E        +  where "invalid config: invalid path: 'resources/steak'\n" = CaptureResult(out="invalid config: invalid path: 'resources/steak'\n", err='').out
+E        +    where CaptureResult(out="invalid config: invalid path: 'resources/steak'\n", err='') = readouterr()
+E        +      where readouterr = &lt;_pytest.capture.CaptureFixture object at 0x7f2403e122f0&gt;.readouterr
+
+tests/test_evaluation.py:215: AssertionError</failure></testcase><testcase classname="tests.test_evaluation" name="test_verifier_rejects_invalid_format_or_unavailable_stocks[0:cuisson_2\n]" file="tests/test_evaluation.py" line="199" time="0.001"><failure message="assert 'invalid trace' in &quot;invalid config: invalid path: 'resources/steak'\n&quot;&#10; +  where &quot;invalid config: invalid path: 'resources/steak'\n&quot; = CaptureResult(out=&quot;invalid config: invalid path: 'resources/steak'\n&quot;, err='').out&#10; +    where CaptureResult(out=&quot;invalid config: invalid path: 'resources/steak'\n&quot;, err='') = readouterr()&#10; +      where readouterr = &lt;_pytest.capture.CaptureFixture object at 0x7f2403c20b50&gt;.readouterr">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_verifier_rejects_invalid_3')
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f2403c20b50&gt;
+trace = '0:cuisson_2\n'
+
+    @pytest.mark.parametrize(
+        "trace",
+        [
+            "bad format\n",
+            "-1:cuisson_1\n",
+            "0:unknown\n",
+            "0:cuisson_2\n",
+            "0:cuisson_1\n9:cuisson_3\n",
+            "0:cuisson_1\n0:cuisson_4\n",
+        ],
+    )
+    def test_verifier_rejects_invalid_format_or_unavailable_stocks(tmp_path, capsys, trace):
+        trace_path = tmp_path / "invalid.trace"
+        trace_path.write_text(trace)
+        assert verifier_cli.main(["resources/steak", str(trace_path)]) == 1
+&gt;       assert "invalid trace" in capsys.readouterr().out
+E       assert 'invalid trace' in "invalid config: invalid path: 'resources/steak'\n"
+E        +  where "invalid config: invalid path: 'resources/steak'\n" = CaptureResult(out="invalid config: invalid path: 'resources/steak'\n", err='').out
+E        +    where CaptureResult(out="invalid config: invalid path: 'resources/steak'\n", err='') = readouterr()
+E        +      where readouterr = &lt;_pytest.capture.CaptureFixture object at 0x7f2403c20b50&gt;.readouterr
+
+tests/test_evaluation.py:215: AssertionError</failure></testcase><testcase classname="tests.test_evaluation" name="test_verifier_rejects_invalid_format_or_unavailable_stocks[0:cuisson_1\n9:cuisson_3\n]" file="tests/test_evaluation.py" line="199" time="0.001"><failure message="assert 'invalid trace' in &quot;invalid config: invalid path: 'resources/steak'\n&quot;&#10; +  where &quot;invalid config: invalid path: 'resources/steak'\n&quot; = CaptureResult(out=&quot;invalid config: invalid path: 'resources/steak'\n&quot;, err='').out&#10; +    where CaptureResult(out=&quot;invalid config: invalid path: 'resources/steak'\n&quot;, err='') = readouterr()&#10; +      where readouterr = &lt;_pytest.capture.CaptureFixture object at 0x7f2404843400&gt;.readouterr">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_verifier_rejects_invalid_4')
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f2404843400&gt;
+trace = '0:cuisson_1\n9:cuisson_3\n'
+
+    @pytest.mark.parametrize(
+        "trace",
+        [
+            "bad format\n",
+            "-1:cuisson_1\n",
+            "0:unknown\n",
+            "0:cuisson_2\n",
+            "0:cuisson_1\n9:cuisson_3\n",
+            "0:cuisson_1\n0:cuisson_4\n",
+        ],
+    )
+    def test_verifier_rejects_invalid_format_or_unavailable_stocks(tmp_path, capsys, trace):
+        trace_path = tmp_path / "invalid.trace"
+        trace_path.write_text(trace)
+        assert verifier_cli.main(["resources/steak", str(trace_path)]) == 1
+&gt;       assert "invalid trace" in capsys.readouterr().out
+E       assert 'invalid trace' in "invalid config: invalid path: 'resources/steak'\n"
+E        +  where "invalid config: invalid path: 'resources/steak'\n" = CaptureResult(out="invalid config: invalid path: 'resources/steak'\n", err='').out
+E        +    where CaptureResult(out="invalid config: invalid path: 'resources/steak'\n", err='') = readouterr()
+E        +      where readouterr = &lt;_pytest.capture.CaptureFixture object at 0x7f2404843400&gt;.readouterr
+
+tests/test_evaluation.py:215: AssertionError</failure></testcase><testcase classname="tests.test_evaluation" name="test_verifier_rejects_invalid_format_or_unavailable_stocks[0:cuisson_1\n0:cuisson_4\n]" file="tests/test_evaluation.py" line="199" time="0.001"><failure message="assert 'invalid trace' in &quot;invalid config: invalid path: 'resources/steak'\n&quot;&#10; +  where &quot;invalid config: invalid path: 'resources/steak'\n&quot; = CaptureResult(out=&quot;invalid config: invalid path: 'resources/steak'\n&quot;, err='').out&#10; +    where CaptureResult(out=&quot;invalid config: invalid path: 'resources/steak'\n&quot;, err='') = readouterr()&#10; +      where readouterr = &lt;_pytest.capture.CaptureFixture object at 0x7f2403a42410&gt;.readouterr">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_verifier_rejects_invalid_5')
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f2403a42410&gt;
+trace = '0:cuisson_1\n0:cuisson_4\n'
+
+    @pytest.mark.parametrize(
+        "trace",
+        [
+            "bad format\n",
+            "-1:cuisson_1\n",
+            "0:unknown\n",
+            "0:cuisson_2\n",
+            "0:cuisson_1\n9:cuisson_3\n",
+            "0:cuisson_1\n0:cuisson_4\n",
+        ],
+    )
+    def test_verifier_rejects_invalid_format_or_unavailable_stocks(tmp_path, capsys, trace):
+        trace_path = tmp_path / "invalid.trace"
+        trace_path.write_text(trace)
+        assert verifier_cli.main(["resources/steak", str(trace_path)]) == 1
+&gt;       assert "invalid trace" in capsys.readouterr().out
+E       assert 'invalid trace' in "invalid config: invalid path: 'resources/steak'\n"
+E        +  where "invalid config: invalid path: 'resources/steak'\n" = CaptureResult(out="invalid config: invalid path: 'resources/steak'\n", err='').out
+E        +    where CaptureResult(out="invalid config: invalid path: 'resources/steak'\n", err='') = readouterr()
+E        +      where readouterr = &lt;_pytest.capture.CaptureFixture object at 0x7f2403a42410&gt;.readouterr
+
+tests/test_evaluation.py:215: AssertionError</failure></testcase><testcase classname="tests.test_parser" name="test_parse_valid_simple" file="tests/test_parser.py" line="8" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/simple'">def test_parse_valid_simple():
+&gt;       cfg = parser.parse_file(Path("resources/simple"))
+
+tests/test_parser.py:10: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/simple')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/simple'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_parser" name="test_config_all_stock_names" file="tests/test_parser.py" line="15" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/simple'">def test_config_all_stock_names() -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources/simple"))
+
+tests/test_parser.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/simple')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/simple'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_parser" name="test_parse_invalid_files[bad_stock]" file="tests/test_parser.py" line="25" time="0.000" /><testcase classname="tests.test_parser" name="test_parse_invalid_files[bad_proc]" file="tests/test_parser.py" line="25" time="0.000" /><testcase classname="tests.test_parser" name="test_parse_nonexistent_path" file="tests/test_parser.py" line="31" time="0.001" /><testcase classname="tests.test_parser" name="test_parse_duplicate_entries" file="tests/test_parser.py" line="36" time="0.001" /><testcase classname="tests.test_parser" name="test_parse_unrecognized_line" file="tests/test_parser.py" line="49" time="0.001" /><testcase classname="tests.test_parser" name="test_parse_resources_edge_cases" file="tests/test_parser.py" line="56" time="0.000" /><testcase classname="tests.test_parser" name="test_parse_optimize" file="tests/test_parser.py" line="67" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/simple'">def test_parse_optimize():
+&gt;       cfg = parser.parse_file(Path("resources/simple"))
+
+tests/test_parser.py:69: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/simple')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/simple'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_parser" name="test_parse_optimize_errors" file="tests/test_parser.py" line="72" time="0.001" /><testcase classname="tests.test_parser" name="test_internal_parser_functions" file="tests/test_parser.py" line="87" time="0.001" /><testcase classname="tests.test_parser" name="test_parse_non_utf8_file" file="tests/test_parser.py" line="114" time="0.001" /><testcase classname="tests.test_parser" name="test_parse_bom_rejected" file="tests/test_parser.py" line="121" time="0.001" /><testcase classname="tests.test_parser" name="test_parse_crlf_rejected" file="tests/test_parser.py" line="129" time="0.001" /><testcase classname="tests.test_parser" name="test_parse_long_line_rejected" file="tests/test_parser.py" line="137" time="0.001" /><testcase classname="tests.test_parser" name="test_parse_stock_negative" file="tests/test_parser.py" line="155" time="0.000" /><testcase classname="tests.test_parser" name="test_parse_resources_edge_cases_continued" file="tests/test_parser.py" line="160" time="0.000" /><testcase classname="tests.test_parser" name="test_parse_optimize_empty" file="tests/test_parser.py" line="166" time="0.000" /><testcase classname="tests.test_parser" name="test_parse_path_traversal" file="tests/test_parser.py" line="171" time="0.001" /><testcase classname="tests.test_parser" name="test_parse_unreadable_file" file="tests/test_parser.py" line="179" time="0.001" /><testcase classname="tests.test_parser" name="test_parse_unknown_resource" file="tests/test_parser.py" line="195" time="0.001" /><testcase classname="tests.test_parser" name="test_parse_accepts_zero_delay_processes[delay0]" file="tests/test_parser.py" line="205" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/delay0'">resource_file = 'delay0'
+
+    @pytest.mark.parametrize("resource_file", ["delay0", "pomme"])
+    def test_parse_accepts_zero_delay_processes(resource_file: str) -&gt; None:
+&gt;       config = parser.parse_file(Path("resources") / resource_file)
+
+tests/test_parser.py:208: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/delay0')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/delay0'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_parser" name="test_parse_accepts_zero_delay_processes[pomme]" file="tests/test_parser.py" line="205" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/pomme'">resource_file = 'pomme'
+
+    @pytest.mark.parametrize("resource_file", ["delay0", "pomme"])
+    def test_parse_accepts_zero_delay_processes(resource_file: str) -&gt; None:
+&gt;       config = parser.parse_file(Path("resources") / resource_file)
+
+tests/test_parser.py:208: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/pomme')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/pomme'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_parser_hypothesis" name="test_parse_random_utf8_does_not_crash" file="tests/test_parser_hypothesis.py" line="9" time="0.115" /><testcase classname="tests.test_parser_hypothesis" name="test_parse_random_binary_does_not_crash" file="tests/test_parser_hypothesis.py" line="20" time="0.031" /><testcase classname="tests.test_parser_hypothesis" name="test_parse_long_line_always_rejected" file="tests/test_parser_hypothesis.py" line="31" time="0.105" /><testcase classname="tests.test_partial" name="test_time_fallback_is_feasible_and_searches_only_once[50-0-50-False]" file="tests/test_partial.py" line="10" time="0.001"><failure message="krpsim.parser.ParseError: invalid path: 'resources/time'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f24044af4c0&gt;
+renamed = False, horizon = 50, minutes = 0, seconds = 50
+
+    @pytest.mark.parametrize("renamed", [False, True])
+    @pytest.mark.parametrize("horizon,minutes,seconds", [(50, 0, 50), (500, 7, 38)])
+    def test_time_fallback_is_feasible_and_searches_only_once(
+        monkeypatch: pytest.MonkeyPatch,
+        renamed: bool,
+        horizon: int,
+        minutes: int,
+        seconds: int,
+    ) -&gt; None:
+&gt;       original = parser.parse_file(Path("resources/time"))
+
+tests/test_partial.py:20: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/time')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/time'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_partial" name="test_time_fallback_is_feasible_and_searches_only_once[50-0-50-True]" file="tests/test_partial.py" line="10" time="0.001"><failure message="krpsim.parser.ParseError: invalid path: 'resources/time'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f2403b818d0&gt;
+renamed = True, horizon = 50, minutes = 0, seconds = 50
+
+    @pytest.mark.parametrize("renamed", [False, True])
+    @pytest.mark.parametrize("horizon,minutes,seconds", [(50, 0, 50), (500, 7, 38)])
+    def test_time_fallback_is_feasible_and_searches_only_once(
+        monkeypatch: pytest.MonkeyPatch,
+        renamed: bool,
+        horizon: int,
+        minutes: int,
+        seconds: int,
+    ) -&gt; None:
+&gt;       original = parser.parse_file(Path("resources/time"))
+
+tests/test_partial.py:20: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/time')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/time'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_partial" name="test_time_fallback_is_feasible_and_searches_only_once[500-7-38-False]" file="tests/test_partial.py" line="10" time="0.001"><failure message="krpsim.parser.ParseError: invalid path: 'resources/time'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f2403c5f8b0&gt;
+renamed = False, horizon = 500, minutes = 7, seconds = 38
+
+    @pytest.mark.parametrize("renamed", [False, True])
+    @pytest.mark.parametrize("horizon,minutes,seconds", [(50, 0, 50), (500, 7, 38)])
+    def test_time_fallback_is_feasible_and_searches_only_once(
+        monkeypatch: pytest.MonkeyPatch,
+        renamed: bool,
+        horizon: int,
+        minutes: int,
+        seconds: int,
+    ) -&gt; None:
+&gt;       original = parser.parse_file(Path("resources/time"))
+
+tests/test_partial.py:20: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/time')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/time'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_partial" name="test_time_fallback_is_feasible_and_searches_only_once[500-7-38-True]" file="tests/test_partial.py" line="10" time="0.001"><failure message="krpsim.parser.ParseError: invalid path: 'resources/time'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f2403d3c8e0&gt;
+renamed = True, horizon = 500, minutes = 7, seconds = 38
+
+    @pytest.mark.parametrize("renamed", [False, True])
+    @pytest.mark.parametrize("horizon,minutes,seconds", [(50, 0, 50), (500, 7, 38)])
+    def test_time_fallback_is_feasible_and_searches_only_once(
+        monkeypatch: pytest.MonkeyPatch,
+        renamed: bool,
+        horizon: int,
+        minutes: int,
+        seconds: int,
+    ) -&gt; None:
+&gt;       original = parser.parse_file(Path("resources/time"))
+
+tests/test_partial.py:20: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/time')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/time'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_partial" name="test_time_cli_saves_and_explains_partial_production[year-50-1]" file="tests/test_partial.py" line="62" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'resources/time'">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_time_cli_saves_and_explai0')
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f24035879d0&gt;
+objective = 'year', expected_time = 50, exit_code = 1
+
+    @pytest.mark.parametrize(
+        "objective,expected_time,exit_code", [("year", 50, 1), ("time;year", 500, 0)]
+    )
+    def test_time_cli_saves_and_explains_partial_production(
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+        objective: str,
+        expected_time: int,
+        exit_code: int,
+    ) -&gt; None:
+&gt;       source = Path("resources/time").read_text()
+
+tests/test_partial.py:73: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/pathlib.py:1134: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('resources/time'), mode = 'r', buffering = -1
+encoding = 'locale', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+&gt;       return self._accessor.open(self, mode, buffering, encoding, errors,
+                                   newline)
+E       FileNotFoundError: [Errno 2] No such file or directory: 'resources/time'
+
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/pathlib.py:1119: FileNotFoundError</failure></testcase><testcase classname="tests.test_partial" name="test_time_cli_saves_and_explains_partial_production[time;year-500-0]" file="tests/test_partial.py" line="62" time="0.001"><failure message="FileNotFoundError: [Errno 2] No such file or directory: 'resources/time'">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_time_cli_saves_and_explai1')
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f2403a422f0&gt;
+objective = 'time;year', expected_time = 500, exit_code = 0
+
+    @pytest.mark.parametrize(
+        "objective,expected_time,exit_code", [("year", 50, 1), ("time;year", 500, 0)]
+    )
+    def test_time_cli_saves_and_explains_partial_production(
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+        objective: str,
+        expected_time: int,
+        exit_code: int,
+    ) -&gt; None:
+&gt;       source = Path("resources/time").read_text()
+
+tests/test_partial.py:73: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/pathlib.py:1134: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('resources/time'), mode = 'r', buffering = -1
+encoding = 'locale', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+&gt;       return self._accessor.open(self, mode, buffering, encoding, errors,
+                                   newline)
+E       FileNotFoundError: [Errno 2] No such file or directory: 'resources/time'
+
+../.uv-python-ci/cpython-3.10-linux-x86_64-gnu/lib/python3.10/pathlib.py:1119: FileNotFoundError</failure></testcase><testcase classname="tests.test_partial" name="test_search_distinguishes_exhaustion_and_resets_its_diagnostic" file="tests/test_partial.py" line="96" time="0.000" /><testcase classname="tests.test_partial" name="test_partial_instant_production_ignores_unrelated_processes" file="tests/test_partial.py" line="123" time="0.000" /><testcase classname="tests.test_partial" name="test_partial_instant_cycle_stops_when_stocks_repeat" file="tests/test_partial.py" line="141" time="0.000" /><testcase classname="tests.test_partial" name="test_partial_production_obeys_trace_budget_and_finishes_running_work[0]" file="tests/test_partial.py" line="157" time="0.001" /><testcase classname="tests.test_partial" name="test_partial_production_obeys_trace_budget_and_finishes_running_work[2]" file="tests/test_partial.py" line="157" time="0.001" /><testcase classname="tests.test_partial" name="test_partial_production_preserves_stock_reserved_for_terminal_conversion" file="tests/test_partial.py" line="184" time="0.000" /><testcase classname="tests.test_simulator" name="test_run_simple" file="tests/test_simulator.py" line="10" time="0.001"><failure message="krpsim.parser.ParseError: invalid path: 'resources/simple'">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_run_simple0')
+
+    def test_run_simple(tmp_path):
+&gt;       cfg = parser.parse_file(Path("resources/simple"))
+
+tests/test_simulator.py:12: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/simple')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/simple'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_simple_full_run" file="tests/test_simulator.py" line="23" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/simple'">def test_simple_full_run() -&gt; None:
+&gt;       sim = Simulator(parser.parse_file(Path("resources/simple")))
+
+tests/test_simulator.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/simple')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/simple'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_parallel_processes" file="tests/test_simulator.py" line="37" time="0.000" /><testcase classname="tests.test_simulator" name="test_no_process_possible" file="tests/test_simulator.py" line="53" time="0.000" /><testcase classname="tests.test_simulator" name="test_deadlock_flag[None]" file="tests/test_simulator.py" line="61" time="0.000" /><testcase classname="tests.test_simulator" name="test_deadlock_flag[optimize1]" file="tests/test_simulator.py" line="61" time="0.000" /><testcase classname="tests.test_simulator" name="test_unprofitable_objective_stops_normally[1]" file="tests/test_simulator.py" line="75" time="0.000" /><testcase classname="tests.test_simulator" name="test_unprofitable_objective_stops_normally[2]" file="tests/test_simulator.py" line="75" time="0.000" /><testcase classname="tests.test_simulator" name="test_unprofitable_objective_exceeding_horizon_is_not_normal_stop" file="tests/test_simulator.py" line="91" time="0.000" /><testcase classname="tests.test_simulator" name="test_zero_delay_process_applies_results_immediately" file="tests/test_simulator.py" line="104" time="0.000" /><testcase classname="tests.test_simulator" name="test_same_process_can_start_multiple_times_in_one_cycle" file="tests/test_simulator.py" line="117" time="0.000" /><testcase classname="tests.test_simulator" name="test_generic_investment_chain_prefers_profitable_final_product" file="tests/test_simulator.py" line="130" time="0.002" /><testcase classname="tests.test_simulator" name="test_reverse_loop_is_not_scheduled_when_it_destroys_progress" file="tests/test_simulator.py" line="155" time="0.000" /><testcase classname="tests.test_simulator" name="test_optimize_time_priority" file="tests/test_simulator.py" line="172" time="0.000" /><testcase classname="tests.test_simulator" name="test_optimize_stock_priority" file="tests/test_simulator.py" line="186" time="0.000" /><testcase classname="tests.test_simulator" name="test_optimize_stock_prefers_lower_needs_when_target_output_ties" file="tests/test_simulator.py" line="200" time="0.000" /><testcase classname="tests.test_simulator" name="test_ikea_prioritizes_components_for_target" file="tests/test_simulator.py" line="227" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/ikea'">def test_ikea_prioritizes_components_for_target() -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources/ikea"))
+
+tests/test_simulator.py:229: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/ikea')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/ikea'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_ikea_limited_delay_does_not_overproduce_target_components" file="tests/test_simulator.py" line="248" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/ikea'">def test_ikea_limited_delay_does_not_overproduce_target_components() -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources/ikea"))
+
+tests/test_simulator.py:250: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/ikea')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/ikea'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_run_resources[ikea]" file="tests/test_simulator.py" line="267" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/ikea'">resource = 'ikea'
+
+    @pytest.mark.parametrize(
+        "resource",
+        ["ikea", "steak", "pomme", "recre", "time"],
+    )
+    def test_run_resources(resource: str) -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources") / resource)
+
+tests/test_simulator.py:273: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/ikea')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/ikea'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_run_resources[steak]" file="tests/test_simulator.py" line="267" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/steak'">resource = 'steak'
+
+    @pytest.mark.parametrize(
+        "resource",
+        ["ikea", "steak", "pomme", "recre", "time"],
+    )
+    def test_run_resources(resource: str) -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources") / resource)
+
+tests/test_simulator.py:273: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/steak')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/steak'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_run_resources[pomme]" file="tests/test_simulator.py" line="267" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/pomme'">resource = 'pomme'
+
+    @pytest.mark.parametrize(
+        "resource",
+        ["ikea", "steak", "pomme", "recre", "time"],
+    )
+    def test_run_resources(resource: str) -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources") / resource)
+
+tests/test_simulator.py:273: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/pomme')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/pomme'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_run_resources[recre]" file="tests/test_simulator.py" line="267" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/recre'">resource = 'recre'
+
+    @pytest.mark.parametrize(
+        "resource",
+        ["ikea", "steak", "pomme", "recre", "time"],
+    )
+    def test_run_resources(resource: str) -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources") / resource)
+
+tests/test_simulator.py:273: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/recre')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/recre'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_run_resources[time]" file="tests/test_simulator.py" line="267" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/time'">resource = 'time'
+
+    @pytest.mark.parametrize(
+        "resource",
+        ["ikea", "steak", "pomme", "recre", "time"],
+    )
+    def test_run_resources(resource: str) -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources") / resource)
+
+tests/test_simulator.py:273: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/time')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/time'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_finite_resource" file="tests/test_simulator.py" line="278" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/finite'">def test_finite_resource() -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources/finite"))
+
+tests/test_simulator.py:280: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/finite')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/finite'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_loop_without_objective" file="tests/test_simulator.py" line="287" time="0.001" /><testcase classname="tests.test_simulator" name="test_recre_optimal" file="tests/test_simulator.py" line="300" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/recre'">def test_recre_optimal() -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources/recre"))
+
+tests/test_simulator.py:302: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/recre')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/recre'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_zero_delay_process_from_file" file="tests/test_simulator.py" line="317" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/delay0'">def test_zero_delay_process_from_file() -&gt; None:
+&gt;       sim = Simulator(parser.parse_file(Path("resources/delay0")))
+
+tests/test_simulator.py:319: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/delay0')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/delay0'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_zero_delay_self_loop_without_objective_is_bounded" file="tests/test_simulator.py" line="325" time="0.000" /><testcase classname="tests.test_simulator" name="test_planner_without_target_has_no_batch" file="tests/test_simulator.py" line="335" time="0.000" /><testcase classname="tests.test_simulator" name="test_planner_ignores_non_positive_results" file="tests/test_simulator.py" line="346" time="0.000" /><testcase classname="tests.test_simulator" name="test_planner_expansion_limit_stops_finite_batch_extension" file="tests/test_simulator.py" line="358" time="0.000" /><testcase classname="tests.test_simulator" name="test_instant_self_producer_is_not_a_terminal_converter" file="tests/test_simulator.py" line="375" time="0.000" /><testcase classname="tests.test_simulator" name="test_renewable_input_is_not_expanded_into_an_unbounded_batch" file="tests/test_simulator.py" line="385" time="0.000" /><testcase classname="tests.test_simulator" name="test_self_production_doubles_each_completed_generation[1-4]" file="tests/test_simulator.py" line="399" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/self'">delay = 1, horizon = 4
+
+    @pytest.mark.parametrize("delay,horizon", [(1, 4), (2, 5), (3, 2), (1, 0)])
+    def test_self_production_doubles_each_completed_generation(
+        delay: int, horizon: int
+    ) -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources/self"))
+
+tests/test_simulator.py:404: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/self')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/self'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_self_production_doubles_each_completed_generation[2-5]" file="tests/test_simulator.py" line="399" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/self'">delay = 2, horizon = 5
+
+    @pytest.mark.parametrize("delay,horizon", [(1, 4), (2, 5), (3, 2), (1, 0)])
+    def test_self_production_doubles_each_completed_generation(
+        delay: int, horizon: int
+    ) -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources/self"))
+
+tests/test_simulator.py:404: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/self')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/self'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_self_production_doubles_each_completed_generation[3-2]" file="tests/test_simulator.py" line="399" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/self'">delay = 3, horizon = 2
+
+    @pytest.mark.parametrize("delay,horizon", [(1, 4), (2, 5), (3, 2), (1, 0)])
+    def test_self_production_doubles_each_completed_generation(
+        delay: int, horizon: int
+    ) -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources/self"))
+
+tests/test_simulator.py:404: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/self')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/self'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_self_production_doubles_each_completed_generation[1-0]" file="tests/test_simulator.py" line="399" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/self'">delay = 1, horizon = 0
+
+    @pytest.mark.parametrize("delay,horizon", [(1, 4), (2, 5), (3, 2), (1, 0)])
+    def test_self_production_doubles_each_completed_generation(
+        delay: int, horizon: int
+    ) -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources/self"))
+
+tests/test_simulator.py:404: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/self')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/self'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_parallel_self_production_respects_all_inputs_and_remainders[1-1]" file="tests/test_simulator.py" line="421" time="0.001" /><testcase classname="tests.test_simulator" name="test_parallel_self_production_respects_all_inputs_and_remainders[3-2]" file="tests/test_simulator.py" line="421" time="0.001" /><testcase classname="tests.test_simulator" name="test_self_production_with_dependencies_keeps_its_plan" file="tests/test_simulator.py" line="448" time="0.001" /><testcase classname="tests.test_simulator" name="test_instant_self_production_keeps_a_single_instance_batch" file="tests/test_simulator.py" line="467" time="0.000" /><testcase classname="tests.test_simulator" name="test_self_production_budget_returns_a_valid_bounded_solution[3-7]" file="tests/test_simulator.py" line="479" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/self'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f2403cdd7e0&gt;
+budget = 7, horizon = 3
+
+    @pytest.mark.parametrize("budget", [7, 10, 15])
+    @pytest.mark.parametrize("horizon", [3, 50])
+    def test_self_production_budget_returns_a_valid_bounded_solution(
+        monkeypatch: pytest.MonkeyPatch, budget: int, horizon: int
+    ) -&gt; None:
+        monkeypatch.setattr(Simulator, "_SELF_PRODUCTION_TRACE_BUDGET", budget)
+&gt;       cfg = parser.parse_file(Path("resources/self"))
+
+tests/test_simulator.py:486: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/self')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/self'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_self_production_budget_returns_a_valid_bounded_solution[3-10]" file="tests/test_simulator.py" line="479" time="0.001"><failure message="krpsim.parser.ParseError: invalid path: 'resources/self'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f24044b9b70&gt;
+budget = 10, horizon = 3
+
+    @pytest.mark.parametrize("budget", [7, 10, 15])
+    @pytest.mark.parametrize("horizon", [3, 50])
+    def test_self_production_budget_returns_a_valid_bounded_solution(
+        monkeypatch: pytest.MonkeyPatch, budget: int, horizon: int
+    ) -&gt; None:
+        monkeypatch.setattr(Simulator, "_SELF_PRODUCTION_TRACE_BUDGET", budget)
+&gt;       cfg = parser.parse_file(Path("resources/self"))
+
+tests/test_simulator.py:486: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/self')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/self'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_self_production_budget_returns_a_valid_bounded_solution[3-15]" file="tests/test_simulator.py" line="479" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/self'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f24044f8a30&gt;
+budget = 15, horizon = 3
+
+    @pytest.mark.parametrize("budget", [7, 10, 15])
+    @pytest.mark.parametrize("horizon", [3, 50])
+    def test_self_production_budget_returns_a_valid_bounded_solution(
+        monkeypatch: pytest.MonkeyPatch, budget: int, horizon: int
+    ) -&gt; None:
+        monkeypatch.setattr(Simulator, "_SELF_PRODUCTION_TRACE_BUDGET", budget)
+&gt;       cfg = parser.parse_file(Path("resources/self"))
+
+tests/test_simulator.py:486: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/self')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/self'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_self_production_budget_returns_a_valid_bounded_solution[50-7]" file="tests/test_simulator.py" line="479" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/self'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f2403e13130&gt;
+budget = 7, horizon = 50
+
+    @pytest.mark.parametrize("budget", [7, 10, 15])
+    @pytest.mark.parametrize("horizon", [3, 50])
+    def test_self_production_budget_returns_a_valid_bounded_solution(
+        monkeypatch: pytest.MonkeyPatch, budget: int, horizon: int
+    ) -&gt; None:
+        monkeypatch.setattr(Simulator, "_SELF_PRODUCTION_TRACE_BUDGET", budget)
+&gt;       cfg = parser.parse_file(Path("resources/self"))
+
+tests/test_simulator.py:486: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/self')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/self'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_self_production_budget_returns_a_valid_bounded_solution[50-10]" file="tests/test_simulator.py" line="479" time="0.001"><failure message="krpsim.parser.ParseError: invalid path: 'resources/self'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f24044af1f0&gt;
+budget = 10, horizon = 50
+
+    @pytest.mark.parametrize("budget", [7, 10, 15])
+    @pytest.mark.parametrize("horizon", [3, 50])
+    def test_self_production_budget_returns_a_valid_bounded_solution(
+        monkeypatch: pytest.MonkeyPatch, budget: int, horizon: int
+    ) -&gt; None:
+        monkeypatch.setattr(Simulator, "_SELF_PRODUCTION_TRACE_BUDGET", budget)
+&gt;       cfg = parser.parse_file(Path("resources/self"))
+
+tests/test_simulator.py:486: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/self')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/self'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_self_production_budget_returns_a_valid_bounded_solution[50-15]" file="tests/test_simulator.py" line="479" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/self'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f2404a48400&gt;
+budget = 15, horizon = 50
+
+    @pytest.mark.parametrize("budget", [7, 10, 15])
+    @pytest.mark.parametrize("horizon", [3, 50])
+    def test_self_production_budget_returns_a_valid_bounded_solution(
+        monkeypatch: pytest.MonkeyPatch, budget: int, horizon: int
+    ) -&gt; None:
+        monkeypatch.setattr(Simulator, "_SELF_PRODUCTION_TRACE_BUDGET", budget)
+&gt;       cfg = parser.parse_file(Path("resources/self"))
+
+tests/test_simulator.py:486: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/self')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/self'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_parallel_plan_gain_matches_budgeted_instances[0]" file="tests/test_simulator.py" line="501" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/self'">budget = 0
+
+    @pytest.mark.parametrize("budget", [0, 2, 5, 10])
+    def test_parallel_plan_gain_matches_budgeted_instances(budget: int) -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources/self"))
+
+tests/test_simulator.py:504: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/self')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/self'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_parallel_plan_gain_matches_budgeted_instances[2]" file="tests/test_simulator.py" line="501" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/self'">budget = 2
+
+    @pytest.mark.parametrize("budget", [0, 2, 5, 10])
+    def test_parallel_plan_gain_matches_budgeted_instances(budget: int) -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources/self"))
+
+tests/test_simulator.py:504: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/self')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/self'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_parallel_plan_gain_matches_budgeted_instances[5]" file="tests/test_simulator.py" line="501" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/self'">budget = 5
+
+    @pytest.mark.parametrize("budget", [0, 2, 5, 10])
+    def test_parallel_plan_gain_matches_budgeted_instances(budget: int) -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources/self"))
+
+tests/test_simulator.py:504: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/self')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/self'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_parallel_plan_gain_matches_budgeted_instances[10]" file="tests/test_simulator.py" line="501" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/self'">budget = 10
+
+    @pytest.mark.parametrize("budget", [0, 2, 5, 10])
+    def test_parallel_plan_gain_matches_budgeted_instances(budget: int) -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources/self"))
+
+tests/test_simulator.py:504: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/self')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/self'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_bounded_self_production_still_converts_final_stock" file="tests/test_simulator.py" line="513" time="0.001" /><testcase classname="tests.test_simulator" name="test_parallel_batch_limit_ignores_production_beyond_horizon" file="tests/test_simulator.py" line="535" time="0.000" /><testcase classname="tests.test_simulator" name="test_order_processes_covers_time_and_component_priorities" file="tests/test_simulator.py" line="547" time="0.000" /><testcase classname="tests.test_simulator" name="test_order_processes_skips_target_without_unique_producer" file="tests/test_simulator.py" line="560" time="0.000" /><testcase classname="tests.test_simulator" name="test_time_lookahead_budget_preserves_executable_plans" file="tests/test_simulator.py" line="572" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/steak'">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f24038a6860&gt;
+
+    def test_time_lookahead_budget_preserves_executable_plans(
+        monkeypatch: pytest.MonkeyPatch,
+    ) -&gt; None:
+        monkeypatch.setattr(ProductionPlanner, "_LOOKAHEAD_BUDGET", 1)
+&gt;       cfg = parser.parse_file(Path("resources/steak"))
+
+tests/test_simulator.py:577: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/steak')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/steak'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_time_lookahead_on_renewable_production_is_bounded" file="tests/test_simulator.py" line="584" time="0.001"><failure message="krpsim.parser.ParseError: invalid path: 'resources/best'">def test_time_lookahead_on_renewable_production_is_bounded() -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources/best"))
+
+tests/test_simulator.py:586: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/best')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/best'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_simulator" name="test_time_planner_without_explicit_horizon_anticipates_remaining_stock" file="tests/test_simulator.py" line="593" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/steak'">def test_time_planner_without_explicit_horizon_anticipates_remaining_stock() -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources/steak"))
+
+tests/test_simulator.py:595: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/steak')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/steak'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_verifier" name="test_verify_trace_valid" file="tests/test_verifier.py" line="9" time="0.001"><failure message="krpsim.parser.ParseError: invalid path: 'resources/simple'">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_verify_trace_valid0')
+
+    def test_verify_trace_valid(tmp_path: Path) -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources/simple"))
+
+tests/test_verifier.py:11: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/simple')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/simple'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_verifier" name="test_verify_trace_error" file="tests/test_verifier.py" line="19" time="0.001"><failure message="krpsim.parser.ParseError: invalid path: 'resources/simple'">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_verify_trace_error0')
+
+    def test_verify_trace_error(tmp_path: Path) -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources/simple"))
+
+tests/test_verifier.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/simple')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/simple'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_verifier" name="test_verify_trace_mismatch" file="tests/test_verifier.py" line="28" time="0.001"><failure message="krpsim.parser.ParseError: invalid path: 'resources/simple'">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_verify_trace_mismatch0')
+
+    def test_verify_trace_mismatch(tmp_path: Path) -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources/simple"))
+
+tests/test_verifier.py:30: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/simple')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/simple'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_verifier" name="test_verify_trace_accepts_alternative_start_cycle" file="tests/test_verifier.py" line="38" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/simple'">def test_verify_trace_accepts_alternative_start_cycle() -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources/simple"))
+
+tests/test_verifier.py:40: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/simple')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/simple'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_verifier" name="test_verify_trace_accepts_repeated_process_in_same_cycle" file="tests/test_verifier.py" line="46" time="0.000" /><testcase classname="tests.test_verifier" name="test_verify_trace_empty" file="tests/test_verifier.py" line="56" time="0.000"><failure message="krpsim.parser.ParseError: invalid path: 'resources/simple'">cfg_path = PosixPath('resources/simple')
+
+    def test_verify_trace_empty(cfg_path: Path = Path("resources/simple")) -&gt; None:
+&gt;       cfg = parser.parse_file(cfg_path)
+
+tests/test_verifier.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/simple')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/simple'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_verifier" name="test_verify_empty_trace_valid" file="tests/test_verifier.py" line="61" time="0.001" /><testcase classname="tests.test_verifier" name="test_parse_trace_comment" file="tests/test_verifier.py" line="71" time="0.001" /><testcase classname="tests.test_verifier" name="test_parse_trace_accepts_crlf" file="tests/test_verifier.py" line="77" time="0.001" /><testcase classname="tests.test_verifier" name="test_verify_trace_rejects_decreasing_cycles" file="tests/test_verifier.py" line="84" time="0.000" /><testcase classname="tests.test_verifier" name="test_verify_empty_trace_with_optimize" file="tests/test_verifier.py" line="94" time="0.001" /><testcase classname="tests.test_verifier" name="test_verify_trace_empty_no_optimize_error" file="tests/test_verifier.py" line="104" time="0.001" /><testcase classname="tests.test_verifier" name="test_parse_trace_errors[]" file="tests/test_verifier.py" line="112" time="0.001" /><testcase classname="tests.test_verifier" name="test_parse_trace_errors[0proc]" file="tests/test_verifier.py" line="112" time="0.001" /><testcase classname="tests.test_verifier" name="test_parse_trace_errors[x:proc]" file="tests/test_verifier.py" line="112" time="0.001" /><testcase classname="tests.test_verifier" name="test_verify_trace_short_and_extra" file="tests/test_verifier.py" line="123" time="0.001"><failure message="krpsim.parser.ParseError: invalid path: 'resources/simple'">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_verify_trace_short_and_ex0')
+
+    def test_verify_trace_short_and_extra(tmp_path: Path) -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources/simple"))
+
+tests/test_verifier.py:125: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/simple')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/simple'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_verifier" name="test_verify_finite_resource" file="tests/test_verifier.py" line="140" time="0.001"><failure message="krpsim.parser.ParseError: invalid path: 'resources/finite'">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_verify_finite_resource0')
+
+    def test_verify_finite_resource(tmp_path: Path) -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources/finite"))
+
+tests/test_verifier.py:142: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/finite')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/finite'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_verifier" name="test_verify_loop_resource" file="tests/test_verifier.py" line="149" time="0.001"><failure message="krpsim.parser.ParseError: invalid path: 'resources/loop'">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_verify_loop_resource0')
+
+    def test_verify_loop_resource(tmp_path: Path) -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources/loop"))
+
+tests/test_verifier.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/loop')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/loop'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_verifier" name="test_verify_recre_same_cycle_mixed_delays" file="tests/test_verifier.py" line="158" time="0.001"><failure message="krpsim.parser.ParseError: invalid path: 'resources/recre'">tmp_path = PosixPath('/tmp/pytest-of-raveriss/pytest-0/test_verify_recre_same_cycle_m0')
+
+    def test_verify_recre_same_cycle_mixed_delays(tmp_path: Path) -&gt; None:
+&gt;       cfg = parser.parse_file(Path("resources/recre"))
+
+tests/test_verifier.py:160: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('resources/recre')
+
+    def parse_file(path: Path) -&gt; Config:
+        """Parse un fichier de configuration complet.
+    
+        Parameters:
+            path: Chemin du fichier de configuration a parser.
+    
+        Returns:
+            Une instance ``Config`` prete a etre simulee.
+    
+        Raises:
+            ParseError:
+                Si le chemin ou le contenu viole le contrat attendu.
+    
+        Contrat:
+            La configuration finale doit contenir au moins un stock et un
+            processus, sans reference de ressources inconnues.
+        """
+        # Pour bloquer la traversal de chemin hors perimetre attendu.
+        if ".." in path.parts:
+            # Pour signaler sans delai une violation explicite du contrat.
+            raise ParseError("path traversal detected")
+        # Pour echouer tot quand la cible n'est pas un fichier valide.
+        if not path.is_file():
+            # Pour signaler sans delai une violation explicite du contrat.
+&gt;           raise ParseError(f"invalid path: '{path}'")
+E           krpsim.parser.ParseError: invalid path: 'resources/recre'
+
+src/krpsim/parser.py:598: ParseError</failure></testcase><testcase classname="tests.test_version" name="test_version" file="tests/test_version.py" line="5" time="0.002" /></testsuite></testsuites>

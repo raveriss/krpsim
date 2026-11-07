@@ -1,0 +1,22 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Entrer dans la fonction</FONT>>];
+init [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Partir des noms de stocks initiaux</FONT><BR/><FONT POINT-SIZE="10.5">known = set(stocks)</FONT>>];
+proc [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">Reste-t-il une opération configurée<BR/>?</FONT><BR/><FONT POINT-SIZE="10.5">for proc in processes.values()</FONT>>];
+gather [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Ajouter les noms de ses besoins et<BR/>résultats</FONT><BR/><FONT POINT-SIZE="10.5">known.update(proc.needs)<BR/>known.update(proc.results)</FONT>>];
+target [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">Reste-t-il un objectif à vérifier ?</FONT><BR/><FONT POINT-SIZE="10.5">for item in optimize</FONT>>];
+D45 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D45 · Cet objectif est-il inconnu et<BR/>différent de « time » ?</FONT><BR/><FONT POINT-SIZE="10.5">item != &quot;time&quot; and item not in known</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Objectifs connus ; revenir dans G10</FONT>>];
+error [shape=ellipse, style="filled", fillcolor="#fbe7e2", peripheries=1, label=<<FONT POINT-SIZE="13">Refuser : objectif inconnu</FONT><BR/><FONT POINT-SIZE="10.5">ParseError(&quot;unknown stock … in optimize line&quot;)<BR/>→ G02</FONT>>];
+start -> init [label=""];
+init -> proc [label=""];
+proc -> gather [label="Oui"];
+proc -> target [label="Non"];
+gather -> proc [xlabel="Opération suivante", constraint=false, tailport=w, headport=w];
+target -> D45 [label="Oui"];
+target -> end [label="Non"];
+D45 -> error [label="Oui"];
+D45 -> target [xlabel="Non", constraint=false, tailport=w, headport=w];
+}

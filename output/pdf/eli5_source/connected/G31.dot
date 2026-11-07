@@ -1,0 +1,18 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Le cycle et le nom ont été séparés</FONT><BR/><FONT POINT-SIZE="10.5">cycle_str, name</FONT>>];
+D50 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D50 · Le cycle est-il mal écrit ou<BR/>le nom vide ?</FONT><BR/><FONT POINT-SIZE="10.5">not cycle_str.isdigit() or not name</FONT>>];
+D51 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D51 · La conversion en entier a-t-<BR/>elle échoué ?</FONT><BR/><FONT POINT-SIZE="10.5">ValueError lors de int(cycle_str)</FONT>>];
+append [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Créer le départ et l’ajouter à la liste</FONT><BR/><FONT POINT-SIZE="10.5">TraceEntry(..., sys.intern(name)) ;<BR/>entries.append(entry)</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Départ ajouté ; revenir dans G05</FONT>>];
+error [shape=ellipse, style="filled", fillcolor="#fbe7e2", peripheries=1, label=<<FONT POINT-SIZE="13">Refuser cette ligne et remonter à G02</FONT><BR/><FONT POINT-SIZE="10.5">TraceError : empty / invalid trace line idx</FONT>>];
+valueerror [shape=ellipse, style="filled", fillcolor="#fbe7e2", peripheries=1, label=<<FONT POINT-SIZE="13">Arrêt technique : exception non<BR/>interceptée</FONT><BR/><FONT POINT-SIZE="10.5">ValueError → G02</FONT>>];
+start -> D50 [label=""];
+D50 -> error [label="Oui"];
+D50 -> D51 [label="Non"];
+D51 -> valueerror [label="Oui"];
+D51 -> append [label="Non"];
+append -> end [label=""];
+}

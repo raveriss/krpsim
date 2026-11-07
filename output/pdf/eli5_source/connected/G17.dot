@@ -1,0 +1,29 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Recevoir la déclaration de stock</FONT>>];
+split [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Séparer le nom et la quantité</FONT><BR/><FONT POINT-SIZE="10.5">name, qty = line.split(&quot;:&quot;, 1)</FONT>>];
+D27 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D27 · La séparation a-t-elle échoué<BR/>?</FONT><BR/><FONT POINT-SIZE="10.5">except ValueError : line.split(&quot;:&quot;, 1)</FONT>>];
+D28 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D28 · Le nom est-il vide ou la<BR/>quantité mal écrite ?</FONT><BR/><FONT POINT-SIZE="10.5">not name or not qty.isdigit()</FONT>>];
+int [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Convertir la quantité en entier</FONT><BR/><FONT POINT-SIZE="10.5">quantity = int(qty)</FONT>>];
+D29 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D29 · La quantité obtenue est-elle<BR/>négative ?</FONT><BR/><FONT POINT-SIZE="10.5">quantity &lt; 0</FONT>>];
+D30 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D30 · Ce nom de stock a-t-il déjà<BR/>été déclaré ?</FONT><BR/><FONT POINT-SIZE="10.5">name in stocks</FONT>>];
+returnpair [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Renvoyer le nom et la quantité à<BR/>_handle_stock</FONT><BR/><FONT POINT-SIZE="10.5">return name, quantity<BR/>réception dans name, qty</FONT>>];
+store [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Mémoriser cette quantité initiale</FONT><BR/><FONT POINT-SIZE="10.5">stocks[name] = qty</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Revenir à la ligne suivante dans G16</FONT>>];
+error [shape=ellipse, style="filled", fillcolor="#fbe7e2", peripheries=1, label=<<FONT POINT-SIZE="13">Refuser le stock initial</FONT><BR/><FONT POINT-SIZE="10.5">ParseError → G02<BR/>invalid stock line / quantity / duplicate<BR/>stock</FONT>>];
+start -> split [label=""];
+split -> D27 [label=""];
+D27 -> error [label="Oui"];
+D27 -> D28 [label="Non"];
+D28 -> error [label="Oui"];
+D28 -> int [label="Non"];
+int -> D29 [label=""];
+D29 -> error [label="Oui"];
+D29 -> returnpair [label="Non"];
+D30 -> error [label="Oui"];
+D30 -> store [label="Non"];
+store -> end [label=""];
+returnpair -> D30 [label=""];
+}

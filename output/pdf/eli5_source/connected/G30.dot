@@ -1,0 +1,20 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">La recherche de conversion finale est<BR/>terminée</FONT><BR/><FONT POINT-SIZE="10.5">self.terminal : Process ou None</FONT>>];
+D59 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D59 · Une conversion finale a-t-elle<BR/>été reconnue ?</FONT><BR/><FONT POINT-SIZE="10.5">self.terminal is not None</FONT>>];
+D60 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D60 · Reste-t-il au moins un<BR/>objectif ressource ?</FONT><BR/><FONT POINT-SIZE="10.5">self.targets</FONT>>];
+source [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Choisir sa seule ressource consommée comme<BR/>but</FONT><BR/><FONT POINT-SIZE="10.5">self.goal = next(iter(self.terminal.needs))</FONT>>];
+first [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Choisir le premier objectif ressource</FONT><BR/><FONT POINT-SIZE="10.5">self.goal = self.targets[0]</FONT>>];
+none [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Ne choisir aucun but</FONT><BR/><FONT POINT-SIZE="10.5">self.goal = None</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Revenir dans G25 puis G24</FONT>>];
+start -> D59 [label=""];
+D59 -> source [label="Oui"];
+D59 -> D60 [label="Non"];
+D60 -> first [label="Oui"];
+D60 -> none [label="Non"];
+source -> end [label=""];
+first -> end [label=""];
+none -> end [label=""];
+}

@@ -1,0 +1,18 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Chemin de configuration reçu</FONT>>];
+D16 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D16 · Le chemin de configuration<BR/>contient-il un élément « .. » ?</FONT><BR/><FONT POINT-SIZE="10.5">&quot;..&quot; in path.parts</FONT>>];
+D17 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D17 · Le chemin ne désigne-t-il pas<BR/>un fichier existant ?</FONT><BR/><FONT POINT-SIZE="10.5">not path.is_file()</FONT>>];
+D18 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D18 · Le système refuse-t-il la<BR/>lecture de la configuration ?</FONT><BR/><FONT POINT-SIZE="10.5">not os.access(path, os.R_OK)</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Chemin accepté ; continuer dans G10</FONT>>];
+error [shape=ellipse, style="filled", fillcolor="#fbe7e2", peripheries=1, label=<<FONT POINT-SIZE="13">Refuser ce chemin ou ses droits</FONT><BR/><FONT POINT-SIZE="10.5">ParseError → G02<BR/>path traversal / invalid path / not readable</FONT>>];
+start -> D16 [label=""];
+D16 -> error [label="Oui"];
+D16 -> D17 [label="Non"];
+D17 -> error [label="Oui"];
+D17 -> D18 [label="Non"];
+D18 -> error [label="Oui"];
+D18 -> end [label="Non"];
+}

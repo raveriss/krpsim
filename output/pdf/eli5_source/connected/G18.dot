@@ -1,0 +1,27 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Entrer dans la fonction</FONT>>];
+match [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Reconnaître le format de la déclaration</FONT><BR/><FONT POINT-SIZE="10.5">match = re.match(..., line)</FONT>>];
+D31 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D31 · La déclaration ne respecte-t-<BR/>elle pas le format ?</FONT><BR/><FONT POINT-SIZE="10.5">not match</FONT>>];
+fields [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Extraire le nom et convertir la durée</FONT><BR/><FONT POINT-SIZE="10.5">name, needs_block, results_block, delay_str =<BR/>match.groups()<BR/>delay = int(delay_str)</FONT>>];
+needs [shape=box, style="filled,rounded", fillcolor="#e3f1f3", peripheries=2, label=<<FONT POINT-SIZE="13">Lire les ressources consommées au départ<BR/>Détail : G19</FONT><BR/><FONT POINT-SIZE="10.5">needs = _parse_resources(needs_block)</FONT>>];
+results [shape=box, style="filled,rounded", fillcolor="#e3f1f3", peripheries=2, label=<<FONT POINT-SIZE="13">Lire les ressources produites à la fin<BR/>Détail : G19</FONT><BR/><FONT POINT-SIZE="10.5">results = _parse_resources(results_block or<BR/>&quot;&quot;)</FONT>>];
+create [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Construire la recette</FONT><BR/><FONT POINT-SIZE="10.5">process = Process(name, needs, results, delay)</FONT>>];
+D32 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D32 · Une opération porte-t-elle<BR/>déjà ce nom ?</FONT><BR/><FONT POINT-SIZE="10.5">process.name in processes</FONT>>];
+store [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Enregistrer cette opération</FONT><BR/><FONT POINT-SIZE="10.5">processes[process.name] = process</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Revenir lire la ligne suivante dans G16</FONT>>];
+error [shape=ellipse, style="filled", fillcolor="#fbe7e2", peripheries=1, label=<<FONT POINT-SIZE="13">Refuser la déclaration</FONT><BR/><FONT POINT-SIZE="10.5">ParseError → G02<BR/>invalid process line / duplicate process</FONT>>];
+start -> match [label=""];
+match -> D31 [label=""];
+D31 -> error [label="Oui"];
+D31 -> fields [label="Non"];
+fields -> needs [label=""];
+needs -> results [label=""];
+results -> create [label=""];
+create -> D32 [label=""];
+D32 -> error [label="Oui"];
+D32 -> store [label="Non"];
+store -> end [label=""];
+}

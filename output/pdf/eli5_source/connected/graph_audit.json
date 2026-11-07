@@ -1,0 +1,290 @@
+[
+  {
+    "id": "G01",
+    "width": 1053.0,
+    "height": 696.0,
+    "scale": 0.8908045977011494,
+    "question_pt": 11.580459770114942,
+    "nodes": 9,
+    "edges": 9
+  },
+  {
+    "id": "G02",
+    "width": 1036.0,
+    "height": 606.0,
+    "scale": 1,
+    "question_pt": 13,
+    "nodes": 10,
+    "edges": 10
+  },
+  {
+    "id": "G03",
+    "width": 585.0,
+    "height": 404.0,
+    "scale": 1,
+    "question_pt": 13,
+    "nodes": 6,
+    "edges": 7
+  },
+  {
+    "id": "G04",
+    "width": 752.0,
+    "height": 651.0,
+    "scale": 1,
+    "question_pt": 13,
+    "nodes": 9,
+    "edges": 11
+  },
+  {
+    "id": "G05",
+    "width": 840.0,
+    "height": 655.0,
+    "scale": 0.9465648854961832,
+    "question_pt": 12.305343511450381,
+    "nodes": 8,
+    "edges": 9
+  },
+  {
+    "id": "G06",
+    "width": 878.0,
+    "height": 613.0,
+    "scale": 1,
+    "question_pt": 13,
+    "nodes": 9,
+    "edges": 11
+  },
+  {
+    "id": "G07",
+    "width": 749.0,
+    "height": 566.0,
+    "scale": 1,
+    "question_pt": 13,
+    "nodes": 7,
+    "edges": 8
+  },
+  {
+    "id": "G08",
+    "width": 715.0,
+    "height": 1010.0,
+    "scale": 0.9603960396039604,
+    "question_pt": 12.485148514851485,
+    "nodes": 11,
+    "edges": 12
+  },
+  {
+    "id": "G09",
+    "width": 716.0,
+    "height": 629.0,
+    "scale": 1,
+    "question_pt": 13,
+    "nodes": 8,
+    "edges": 9
+  },
+  {
+    "id": "G10",
+    "width": 865.0,
+    "height": 831.0,
+    "scale": 0.8786127167630058,
+    "question_pt": 11.421965317919074,
+    "nodes": 10,
+    "edges": 10
+  },
+  {
+    "id": "G11",
+    "width": 340.0,
+    "height": 452.0,
+    "scale": 1,
+    "question_pt": 13,
+    "nodes": 6,
+    "edges": 5
+  },
+  {
+    "id": "G12",
+    "width": 771.0,
+    "height": 501.0,
+    "scale": 1,
+    "question_pt": 13,
+    "nodes": 6,
+    "edges": 7
+  },
+  {
+    "id": "G13",
+    "width": 771.0,
+    "height": 658.0,
+    "scale": 0.9857328145265889,
+    "question_pt": 12.814526588845656,
+    "nodes": 9,
+    "edges": 11
+  },
+  {
+    "id": "G14",
+    "width": 769.0,
+    "height": 541.0,
+    "scale": 1,
+    "question_pt": 13,
+    "nodes": 6,
+    "edges": 7
+  },
+  {
+    "id": "G15",
+    "width": 745.0,
+    "height": 682.0,
+    "scale": 1,
+    "question_pt": 13,
+    "nodes": 8,
+    "edges": 9
+  },
+  {
+    "id": "G16",
+    "width": 816.0,
+    "height": 914.0,
+    "scale": 0.9313725490196079,
+    "question_pt": 12.107843137254902,
+    "nodes": 13,
+    "edges": 16
+  },
+  {
+    "id": "G17",
+    "width": 793.0,
+    "height": 958.0,
+    "scale": 0.9583858764186634,
+    "question_pt": 12.459016393442624,
+    "nodes": 11,
+    "edges": 13
+  },
+  {
+    "id": "G18",
+    "width": 693.0,
+    "height": 829.0,
+    "scale": 1,
+    "question_pt": 13,
+    "nodes": 11,
+    "edges": 11
+  },
+  {
+    "id": "G19",
+    "width": 872.0,
+    "height": 1083.0,
+    "scale": 0.8715596330275229,
+    "question_pt": 11.330275229357799,
+    "nodes": 13,
+    "edges": 17
+  },
+  {
+    "id": "G20",
+    "width": 657.0,
+    "height": 629.0,
+    "scale": 1,
+    "question_pt": 13,
+    "nodes": 8,
+    "edges": 8
+  },
+  {
+    "id": "G21",
+    "width": 694.0,
+    "height": 453.0,
+    "scale": 1,
+    "question_pt": 13,
+    "nodes": 7,
+    "edges": 7
+  },
+  {
+    "id": "G22",
+    "width": 829.0,
+    "height": 572.0,
+    "scale": 1,
+    "question_pt": 13,
+    "nodes": 8,
+    "edges": 9
+  },
+  {
+    "id": "G23",
+    "width": 871.0,
+    "height": 742.0,
+    "scale": 0.8725602755453502,
+    "question_pt": 11.343283582089553,
+    "nodes": 9,
+    "edges": 11
+  },
+  {
+    "id": "G24",
+    "width": 364.0,
+    "height": 434.0,
+    "scale": 1,
+    "question_pt": 13,
+    "nodes": 6,
+    "edges": 5
+  },
+  {
+    "id": "G25",
+    "width": 709.0,
+    "height": 573.0,
+    "scale": 1,
+    "question_pt": 13,
+    "nodes": 9,
+    "edges": 10
+  },
+  {
+    "id": "G26",
+    "width": 895.0,
+    "height": 1076.0,
+    "scale": 0.8491620111731844,
+    "question_pt": 11.039106145251397,
+    "nodes": 11,
+    "edges": 14
+  },
+  {
+    "id": "G27",
+    "width": 855.0,
+    "height": 426.0,
+    "scale": 1,
+    "question_pt": 13,
+    "nodes": 6,
+    "edges": 6
+  },
+  {
+    "id": "G28",
+    "width": 904.0,
+    "height": 476.0,
+    "scale": 1,
+    "question_pt": 13,
+    "nodes": 8,
+    "edges": 9
+  },
+  {
+    "id": "G29",
+    "width": 787.0,
+    "height": 555.0,
+    "scale": 1,
+    "question_pt": 13,
+    "nodes": 6,
+    "edges": 8
+  },
+  {
+    "id": "G30",
+    "width": 662.0,
+    "height": 505.0,
+    "scale": 1,
+    "question_pt": 13,
+    "nodes": 7,
+    "edges": 8
+  },
+  {
+    "id": "G31",
+    "width": 986.0,
+    "height": 485.0,
+    "scale": 1,
+    "question_pt": 13,
+    "nodes": 7,
+    "edges": 6
+  },
+  {
+    "id": "G32",
+    "width": 642.0,
+    "height": 657.0,
+    "scale": 1,
+    "question_pt": 13,
+    "nodes": 10,
+    "edges": 11
+  }
+]

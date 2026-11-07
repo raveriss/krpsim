@@ -1,0 +1,1247 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Comprendre krpsim_verif</title><style>@font-face { font-family: Inter; src: url('fonts/Inter-Regular.otf'); font-weight: 400; }
+@font-face { font-family: Inter; src: url('fonts/Inter-Bold.otf'); font-weight: 700; }
+@page { size: A4 landscape; margin: 0; }
+* { box-sizing: border-box; }
+body { margin: 0; color: #182e43; font-family: Inter, sans-serif; font-size: 11pt; line-height: 1.42; }
+.page { width: 297mm; height: 210mm; padding: 12mm 14mm 13mm; position: relative; break-after: page; }
+.eyebrow { font-size: 8pt; font-weight: 700; letter-spacing: 1.3pt; color: #287b7c; margin-bottom: 4mm; }
+h1 { font-size: 23pt; line-height: 1.14; margin: 0 0 2mm; letter-spacing: -.4pt; }
+h2 { font-size: 15pt; margin: 4mm 0 2mm; }
+h3 { font-size: 12pt; margin: 3mm 0 1mm; }
+p { margin: 2mm 0; }
+.subtitle { color: #506477; font-size: 10.5pt; margin: 0 0 4mm; }
+footer { position: absolute; bottom: 6mm; left: 14mm; right: 14mm; display: flex; justify-content: space-between; border-top: 1px solid #d9e2e9; padding-top: 2mm; font-size: 8pt; color: #506477; }
+a { color: #12636b; text-decoration: none; }
+code, pre { font-family: Inter, sans-serif; font-size: 9.5pt; overflow-wrap: anywhere; }
+pre { white-space: pre-wrap; background: #eff4f8; padding: 3mm; border-radius: 2mm; line-height: 1.45; }
+.cols { display: flex; gap: 7mm; }
+.cols > div { flex: 1; min-width: 0; }
+.panel { background: #eff4f8; border-left: 3pt solid #287b7c; padding: 3mm 4mm; margin: 3mm 0; }
+.warn { background: #fff4d4; border-left-color: #b58b30; }
+.good { background: #e4f2e9; }
+.small { font-size: 9pt; color: #506477; }
+table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 10.5pt; margin: 3mm 0; }
+th { background: #182e43; color: white; padding: 2.5mm; text-align: left; font-weight: 700; }
+td { padding: 2.2mm 2.5mm; vertical-align: top; border-bottom: 1px solid #d9e2e9; overflow-wrap: anywhere; white-space: pre-line; }
+tr:nth-child(even) td { background: #f1f5f8; }
+thead { display: table-header-group; }
+tr { break-inside: avoid; }
+.decision { height: 69mm; margin-bottom: 4mm; border-bottom: 1px solid #d9e2e9; }
+.decision-top { display: flex; gap: 4mm; height: 31mm; align-items: center; }
+.question { width: 137mm; height: 30mm; position: relative; flex-shrink: 0; }
+.question svg { width: 100%; height: 100%; position: absolute; }
+.question-text { position: absolute; width: 105mm; left: 16mm; top: 50%; transform: translateY(-50%); text-align: center; font-size: 11pt; line-height: 1.2; }
+.question-text b { font-size: 9pt; color: #82601b; }
+.branches { flex: 1; }
+.branch { display: flex; gap: 2mm; align-items: center; margin: 1.5mm 0; font-size: 10.5pt; line-height: 1.25; }
+.branch span { width: 15mm; flex-shrink: 0; font-weight: 700; color: #287b7c; }
+.branch > div { border: 1px solid #adc4d4; border-radius: 2mm; padding: 2mm; width: 100%; background: #eff4f8; }
+.source { font-size: 8.5pt; line-height: 1.25; margin: 1mm 0; color: #445b70; }
+.source code { font-size: 9pt; color: #182e43; }
+.explanation { font-size: 10.5pt; line-height: 1.35; margin-top: 2mm; }
+.toc { display: grid; grid-template-columns: 1fr 1fr; gap: 0 9mm; }
+.toc a { display: flex; justify-content: space-between; gap: 4mm; border-bottom: 1px solid #d9e2e9; padding: 2.2mm 0; font-size: 10.5pt; }
+.flow { display: flex; gap: 3mm; align-items: center; margin: 5mm 0; }
+.flow > div { background: #eff4f8; border: 1px solid #9ab9ca; border-radius: 2mm; padding: 3mm; flex: 1; text-align: center; }
+.flow .end { border-radius: 50%; background: #e4f2e9; }
+.flow code { display: block; margin-top: 2mm; }
+.matrix { font-size: 9.5pt; line-height: 1.35; }
+.matrix td { padding: 2mm; }
+.cover h1 { font-size: 42pt; margin-top: 15mm; max-width: 220mm; }
+.cover .subtitle { font-size: 20pt; margin: 6mm 0; }
+.cover .eyebrow { margin-top: 4mm; }
+ul, ol { margin: 2mm 0; padding-left: 6mm; }
+li { margin: 1.5mm 0; }
+</style></head><body><section class="page cover" id="cover"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Comprendre krpsim_verif</h1><p class="subtitle">Arbre de décision expliqué pas à pas</p><main><p style="font-size:16pt;max-width:210mm">Lire les décisions en français.<br>Retrouver les fonctions et les variables dans le code.</p><div class="flow"><div>Lire les règles<code>parse_file</code></div><span>→</span><div>Lire les départs<code>parse_trace</code></div><span>→</span><div>Rejouer et contrôler<code>verify_trace</code></div><span>→</span><div class="end">Afficher le résultat<code>main</code></div></div><div class="panel"><b>La question centrale</b><br>« Chaque opération annoncée peut-elle réellement démarrer avec les ressources disponibles à ce moment-là ? »</div><p>Pour un développeur débutant qui souhaite comprendre son programme construit avec l’aide de l’IA.</p><p class="small">Édition du 7 novembre 2026 · krpsim 0.1.1 · révision 268075e<br>Sources locales examinées ; programme conservé. Les modifications locales du Makefile et des documents existants sont hors de ce guide.</p></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>1 / 52</span></footer></section><section class="page " id="sommaire"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Votre parcours de lecture</h1><p class="subtitle">Les entrées ci-dessous sont cliquables. Les identifiants D01 à D60 relient les décisions.</p><main><div class="toc"><a href="#vocabulaire"><span>Un atelier, des recettes et un carnet</span><b>3</b></a><a href="#vue"><span>Le parcours complet en une vue</span><b>5</b></a><a href="#cli"><span>Entrer dans le programme</span><b>6</b></a><a href="#trace1"><span>Lire chaque ligne de trace</span><b>8</b></a><a href="#vide"><span>Choisir le parcours : trace vide ou départs</span><b>10</b></a><a href="#fins"><span>Ajouter les résultats, puis trouver l’opération</span><b>12</b></a><a href="#besoins"><span>Quelles ressources manquent exactement ?</span><b>13</b></a><a href="#etat"><span>Ce que le programme mémorise</span><b>14</b></a><a href="#produire"><span>Consommer, produire et avancer dans la liste</span><b>15</b></a><a href="#final"><span>Construire et afficher le résultat</span><b>16</b></a><a href="#atelier"><span>L’atelier utilisé dans les exemples</span><b>18</b></a><a href="#rejeu"><span>Suivre les stocks, départ par départ</span><b>19</b></a><a href="#cas-principaux"><span>Comparer les traces : quand faut-il refuser ?</span><b>20</b></a><a href="#limites"><span>Les limites réelles du programme</span><b>24</b></a><a href="#cfg-acces"><span>Configuration : choisir le fichier</span><b>26</b></a><a href="#boucles"><span>Les boucles : où revient-on ?</span><b>42</b></a><a href="#constructeur1"><span>Annexe : préparer l’objet retourné</span><b>43</b></a><a href="#corrections"><span>Corrections apportées au document précédent</span><b>48</b></a><a href="#tracabilite"><span>Retrouver les preuves et régénérer le guide</span><b>49</b></a><a href="#validation"><span>Ce qui a été vérifié</span><b>50</b></a><a href="#exercices"><span>À vous de suivre les décisions</span><b>51</b></a></div></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>2 / 52</span></footer></section><section class="page " id="vocabulaire"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Un atelier, des recettes et un carnet</h1><p class="subtitle">Le vocabulaire français reste stable dans tous les schémas.</p><main><p>Un cycle est une unité de la simulation : ce n’est pas nécessairement une seconde. Une trace ne liste pas les fins ; le programme les calcule avec le départ et la durée.</p><table class=""><thead><tr><th>Mot du guide</th><th>Ce que cela veut dire</th><th>Nom exact dans le code</th></tr></thead><tbody><tr><td>Ressource / stock</td><td>Du bois, des clous ; leur quantité disponible.</td><td>resource / stocks</td></tr><tr><td>Opération / besoins</td><td>Une recette ; ce qu’elle consomme au démarrage.</td><td>Process / process.needs</td></tr><tr><td>Résultats / durée</td><td>Ce qu’elle produit à sa fin ; combien de cycles elle prend.</td><td>process.results / process.delay</td></tr><tr><td>Cycle / départ</td><td>Un repère de temps ; le lancement annoncé d’une opération.</td><td>entry.cycle / TraceEntry</td></tr><tr><td>Configuration</td><td>Le fichier des stocks initiaux, opérations et objectifs.</td><td>Config / config</td></tr><tr><td>Trace</td><td>Le carnet ordonné des départs annoncés : cycle:nom.</td><td>list[TraceEntry] / trace</td></tr><tr><td>Opérations en cours</td><td>Les opérations lancées dont les résultats sont encore attendus.</td><td>state.running</td></tr></tbody></table></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>3 / 52</span></footer></section><section class="page " id="legende"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Lire le schéma et le code côte à côte</h1><p class="subtitle">La question française explique le sens ; la ligne Python permet de retrouver le contrôle.</p><main><div class="cols"><div><h2>Conventions visuelles</h2><p><b>Ovale :</b> début ou fin du parcours.</p><p><b>Rectangle :</b> action à effectuer.</p><p><b>Losange :</b> question à trancher.</p><p><b>Oui / Non :</b> suivre la sortie portant cette réponse. La couleur seule n’indique jamais la réponse.</p><p><b>Dxx :</b> renvoi cliquable vers une autre décision. Les sous-schémas sont reliés par ces renvois, sans forcer un arbre géant.</p></div><div><h2>Repères du code</h2><p><b>entry.cycle</b> : moment du départ lu.</p><p><b>state.previous_cycle</b> : départ précédent ; vaut 0 au début.</p><p><b>state.last_cycle</b> : plus grand départ ou fin déjà pris en compte.</p><p><b>state.sequence</b> : compteur qui départage les fins au même moment.</p><p><b>missing</b> : ressources manquantes et quantités à ajouter pour pouvoir démarrer.</p><p><b>sim</b> : objet contenant l’état final renvoyé.</p></div></div><div class="panel"><b>Lecture d’une fiche</b> : question → réponse → action ou renvoi. La ligne « Pourquoi » explique la règle ; l’exemple aide à l’appliquer. Les références sont relatives à la racine du dépôt.</div></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>4 / 52</span></footer></section><section class="page " id="vue"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Le parcours complet en une vue</h1><p class="subtitle">main → _verify_inputs → verify_files → parse_file → parse_trace → verify_trace</p><main><div class="flow"><div class="end">Commande<code>D01 → D02</code></div><span>→</span><div>Configuration<code>D16 → D46</code></div><span>→</span><div>Trace<code>D47 → D50</code></div><span>→</span><div>Départs<code>D06 → D15</code></div><span>→</span><div class="end">Résultat<code>D03 → D05</code></div></div><div class="cols"><div><h2>Avant de rejouer</h2><p><b>1.</b> La commande lit ses arguments.</p><p><b>2.</b> Le fichier de configuration est entièrement validé.</p><p><b>3.</b> Le fichier de trace est entièrement lu et son format vérifié.</p><p><b>4.</b> Les départs valides sur la forme sont rejoués dans l’ordre.</p></div><div><h2>Après chaque départ</h2><p>Vérifier le temps → ajouter les productions terminées → trouver l’opération → vérifier ses ressources → consommer → produire ou programmer la fin.</p><p>Après le dernier départ, finaliser les productions jusqu’au seuil du code, construire <b>Simulator</b>, puis afficher les stocks.</p></div></div><div class="panel warn"><b>L’ordre change l’erreur visible.</b> Une ligne mal écrite en fin de fichier est détectée avant un manque de ressources au premier départ : le programme finit la lecture de la trace avant de la rejouer.</div><p class="small">Sources : src/krpsim_verif/cli.py:47-101 ; verifier.py:178-280. Les flèches décrivent les appels ; les exceptions reviennent au diagnostic D03 / D04.</p></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>5 / 52</span></footer></section><section class="page " id="cli"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Entrer dans le programme</h1><p class="subtitle">main / build_parser · Avant toute lecture de fichier.</p><main><article class="decision" id="D01">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D01</b><br>
+            La commande demande-t-elle l’aide ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Afficher l’aide ; arrêt normal, code 0.</div></div>
+          <div class="branch"><span>Non →</span><div>Contrôler les arguments : <a href="#D02">D02</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>main → argparse</b> · src/krpsim_verif/cli.py:94
+      <br><code>parse_args(argv) : option -h / --help</code></div>
+      <div class="explanation"><b>Pourquoi :</b> L’aide explique la commande sans ouvrir de fichier.<br>
+      <b>Exemple :</b> krpsim_verif --help affiche les deux chemins attendus.</div>
+    </article><article class="decision" id="D02">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D02</b><br>
+            Les arguments de la commande sont-ils incorrects ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Afficher usage et erreur ; arrêt, code 2.</div></div>
+          <div class="branch"><span>Non →</span><div>Appeler _verify_inputs → verify_files.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>build_parser / main</b> · src/krpsim_verif/cli.py:41-44,94
+      <br><code>parse_args(argv) : erreur d’arguments</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Il faut indiquer un fichier de configuration et un fichier de trace.<br>
+      <b>Exemple :</b> Un chemin manquant ou une option inconnue provoque une erreur.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>6 / 52</span></footer></section><section class="page " id="erreurs"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Transformer les erreurs en messages</h1><p class="subtitle">_verify_inputs · Ces questions représentent le choix des blocs except.</p><main><article class="decision" id="D03">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D03</b><br>
+            Une erreur de configuration a-t-elle été signalée ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Afficher invalid config: … ; renvoyer (None, 1) → <a href="#D05">D05</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Tester l’autre catégorie d’erreurs : <a href="#D04">D04</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_verify_inputs</b> · src/krpsim_verif/cli.py:50-55
+      <br><code>except ParseError as exc</code></div>
+      <div class="explanation"><b>Pourquoi :</b> La commande transforme une exception précise en message lisible.<br>
+      <b>Exemple :</b> Un stock déclaré deux fois produit invalid config.</div>
+    </article><article class="decision" id="D04">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D04</b><br>
+            La lecture ou la vérification a-t-elle signalé une erreur attendue ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Afficher invalid trace: … ; renvoyer (None, 1) → <a href="#D05">D05</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Sans erreur : trace is valid → <a href="#D05">D05</a>. Exception non prévue : propagation.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_verify_inputs</b> · src/krpsim_verif/cli.py:56-60
+      <br><code>except (OSError, TraceError) as exc</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Seules les exceptions prévues ici deviennent ce diagnostic.<br>
+      <b>Exemple :</b> Une trace absente déclenche OSError. Un encodage de trace invalide échappe à ce traitement.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>7 / 52</span></footer></section><section class="page " id="trace1"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Lire chaque ligne de trace</h1><p class="subtitle">parse_trace → _parse_trace_line · Ouvrir en UTF-8 ; idx compte les lignes physiques.</p><main><article class="decision" id="D47">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D47</b><br>
+            La ligne de trace est-elle vide après retrait de sa fin de ligne ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : empty trace line idx → <a href="#D04">D04</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Tester le commentaire → <a href="#D48">D48</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_parse_trace_line</b> · src/krpsim_verif/verifier.py:88,100-101
+      <br><code>not line</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Une ligne vide est une erreur, contrairement à un fichier sans aucune ligne.<br>
+      <b>Exemple :</b> Un fichier contenant seulement un saut de ligne est refusé ; un fichier de zéro octet va à D06.</div>
+    </article><article class="decision" id="D48">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D48</b><br>
+            Le tout premier caractère de la ligne est-il « # » ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Ignorer ; lire la ligne suivante. À la fin : <a href="#D06">D06</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Chercher le séparateur → <a href="#D49">D49</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_parse_trace_line</b> · src/krpsim_verif/verifier.py:102-103
+      <br><code>line.startswith(&quot;#&quot;)</code></div>
+      <div class="explanation"><b>Pourquoi :</b> La trace ne supprime pas les espaces avant de chercher un commentaire.<br>
+      <b>Exemple :</b> # atelier est ignoré ; «  # atelier » n’est pas reconnu comme commentaire.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>8 / 52</span></footer></section><section class="page " id="trace2"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Séparer le moment et le nom</h1><p class="subtitle">_parse_trace_line · Après une ligne acceptée ou ignorée, lire la suivante ; à la fin, D06.</p><main><article class="decision" id="D49">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D49</b><br>
+            Le séparateur « : » est-il absent de cette ligne ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : invalid trace line idx → <a href="#D04">D04</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Couper au premier : ; vérifier cycle et nom → <a href="#D50">D50</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_parse_trace_line</b> · src/krpsim_verif/verifier.py:104-106
+      <br><code>&quot;:&quot; not in line</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Le premier deux-points sépare le moment du départ et le nom de l’opération.<br>
+      <b>Exemple :</b> 0scier est refusé ; 0:scier:extra garde scier:extra comme nom entier.</div>
+    </article><article class="decision" id="D50">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D50</b><br>
+            Le cycle est-il mal écrit ou le nom de l’opération vide ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : invalid trace line idx → <a href="#D04">D04</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Convertir le cycle → <a href="#D51">D51</a> ; ajouter TraceEntry ; ligne suivante.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_parse_trace_line</b> · src/krpsim_verif/verifier.py:107-110
+      <br><code>not cycle_str.isdigit() or not name</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Le format est contrôlé ici ; l’existence de l’opération est vérifiée plus tard en D11.<br>
+      <b>Exemple :</b> x:scier et 0: sont refusés ; 00:scier devient le cycle 0.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>9 / 52</span></footer></section><section class="page " id="vide"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Choisir le parcours : trace vide ou départs</h1><p class="subtitle">verify_trace → _verify_empty_trace · Ne pas confondre fichier vide et ligne vide.</p><main><article class="decision" id="D06">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D06</b><br>
+            La trace ne contient-elle aucun départ à vérifier ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Appeler _verify_empty_trace → <a href="#D07">D07</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Copier les stocks ; parcourir les départs → <a href="#D09">D09</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>verify_trace</b> · src/krpsim_verif/verifier.py:237-246
+      <br><code>not trace</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Un fichier sans départ suit une règle particulière.<br>
+      <b>Exemple :</b> Un fichier vide et un fichier contenant seulement # commentaire donnent tous deux une liste vide.</div>
+    </article><article class="decision" id="D07">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D07</b><br>
+            La configuration ne demande-t-elle aucune optimisation ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Tester les opérations avec les stocks initiaux : <a href="#D08">D08</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Accepter la trace vide ; Simulator(config), temps 0.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_verify_empty_trace</b> · src/krpsim_verif/verifier.py:115-120
+      <br><code>not config.optimize</code></div>
+      <div class="explanation"><b>Pourquoi :</b> La présence d’une directive optimize non vide change la règle de trace vide.<br>
+      <b>Exemple :</b> optimize:(chaise) suffit à accepter une trace vide, même si une opération pourrait démarrer.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>10 / 52</span></footer></section><section class="page " id="demarrage"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Du stock initial au premier contrôle</h1><p class="subtitle">_verify_empty_trace pour D08 ; _verify_entry pour D09 : deux parcours distincts.</p><main><article class="decision" id="D08">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D08</b><br>
+            Cette opération peut-elle démarrer avec les stocks initiaux ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser immédiatement : TraceError(&quot;empty trace&quot;).</div></div>
+          <div class="branch"><span>Non →</span><div>Tester l’opération suivante ; si aucune ne peut démarrer, accepter.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_verify_empty_trace</b> · src/krpsim_verif/verifier.py:116-119
+      <br><code>all(config.stocks.get(n, 0) &gt;= q for n, q in proc.needs.items())</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Sans optimisation, une trace vide est refusée si du travail est déjà possible.<br>
+      <b>Exemple :</b> Il faut 1 bois : stock 2 → refus ; stock 0 et aucune autre opération possible → acceptation.</div>
+    </article><article class="decision" id="D09">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D09</b><br>
+            Le départ lu est-il prévu avant le départ précédent ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : cycle … is before cycle … → <a href="#D04">D04</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Ajouter les productions terminées : _complete_until → <a href="#D10">D10</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_verify_entry</b> · src/krpsim_verif/verifier.py:186-191
+      <br><code>entry.cycle &lt; state.previous_cycle</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Les moments annoncés ne doivent pas reculer. Au premier départ, la référence vaut 0.<br>
+      <b>Exemple :</b> Après le cycle 8 : 5 est refusé ; 8 est autorisé par ce contrôle.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>11 / 52</span></footer></section><section class="page " id="fins"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Ajouter les résultats, puis trouver l’opération</h1><p class="subtitle">_verify_entry appelle _complete_until puis _resolve_process, dans cet ordre.</p><main><article class="decision" id="D10">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D10</b><br>
+            Reste-t-il une opération dont la fin est atteinte ou dépassée ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Retirer la fin la plus proche, ajouter ses résultats ; recommencer <a href="#D10">D10</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Renvoyer last_completion : dernière fin ajoutée, ou 0.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_complete_until</b> · src/krpsim_verif/verifier.py:130-136
+      <br><code>running and running[0][0] &lt;= cycle</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Les ressources produites deviennent disponibles avant de contrôler le nouveau départ.<br>
+      <b>Exemple :</b> scier finit au cycle 2 : ses planches sont disponibles pour un départ au cycle 2.</div>
+    </article><article class="decision" id="D11">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D11</b><br>
+            Le nom demandé est-il absent des opérations configurées ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : unknown process … in trace → <a href="#D04">D04</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Renvoyer process ; vérifier ses ressources → <a href="#D12">D12</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_resolve_process</b> · src/krpsim_verif/verifier.py:142-145
+      <br><code>process is None</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Chaque départ doit citer une opération qui existe dans la configuration.<br>
+      <b>Exemple :</b> 0:inconnue est bien écrit, mais aucune opération de ce nom n’existe.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>12 / 52</span></footer></section><section class="page " id="besoins"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Quelles ressources manquent exactement ?</h1><p class="subtitle">_missing_resources calcule les manques ; _verify_entry décide ensuite du refus.</p><main><article class="decision" id="D12">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D12</b><br>
+            Le stock de cette ressource est-il inférieur à la quantité nécessaire ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Ajouter le manque : quantité nécessaire - stock ; ressource suivante.</div></div>
+          <div class="branch"><span>Non →</span><div>Ne rien ajouter ; ressource suivante. Après toutes : <a href="#D13">D13</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_missing_resources</b> · src/krpsim_verif/verifier.py:151-155
+      <br><code>stocks.get(resource, 0) &lt; quantity</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Chaque ressource est contrôlée séparément. Une ressource absente du stock vaut 0.<br>
+      <b>Exemple :</b> 3 planches nécessaires, 2 disponibles : ajouter planche: 1 à missing.</div>
+    </article><article class="decision" id="D13">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D13</b><br>
+            Manque-t-il au moins une ressource pour démarrer cette opération ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : ligne, cycle, opération et quantités manquantes → <a href="#D04">D04</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Appeler _consume_and_schedule : consommer les besoins → <a href="#D14">D14</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_verify_entry</b> · src/krpsim_verif/verifier.py:194-200
+      <br><code>if missing</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Avoir assez de clous ne compense pas un manque de planches.<br>
+      <b>Exemple :</b> Une chaise demande 3 planches et 4 clous ; avec 2 planches et 10 clous, il manque 1 planche.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>13 / 52</span></footer></section><section class="page " id="etat"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Ce que le programme mémorise</h1><p class="subtitle">_VerificationState et _consume_and_schedule · Les valeurs changent au fil du rejeu.</p><main><div class="cols"><div><h2>Au début d’une trace non vide</h2><pre>state = _VerificationState(config.stocks.copy(), [])</pre><p><b>stocks</b> : copie des quantités initiales ; la configuration est conservée.</p><p><b>running</b> : liste vide des fins attendues.</p><p><b>previous_cycle = last_cycle = sequence = 0</b>.</p><h2>Consommer au départ</h2><pre>for resource, quantity in process.needs.items():
+    state.stocks[resource] -= quantity</pre><p>On retire toutes les ressources nécessaires avant de produire quoi que ce soit, même pour une opération de durée nulle.</p></div><div><h2>Produire immédiatement ou plus tard</h2><p>Durée nulle : pour chaque résultat, ajouter sa quantité au stock courant (0 si absent).</p><pre>state.stocks[resource] = \
+    state.stocks.get(resource, 0) + quantity</pre><p>Durée positive : incrémenter <b>sequence</b>, puis ajouter la fin à la file avec <b>heapq.heappush</b> :</p><pre>(entry.cycle + process.delay,
+ state.sequence, process)</pre><p>La file donne d’abord la fin la plus proche. Si deux fins sont égales, <b>sequence</b> les départage sans comparer les objets Process. <b>heapq.heappop</b> retire la prochaine fin.</p></div></div><div class="panel">Ajouter une production terminée ne retire aucun besoin : les besoins ont déjà été consommés au départ. Une opération sans résultat peut néanmoins faire avancer le dernier cycle.</div><p class="small">Sources : src/krpsim_verif/verifier.py:51-59,123-136,158-175,242. D10 traite les fins ; D14 choisit entre production immédiate et fin programmée.</p></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>14 / 52</span></footer></section><section class="page " id="produire"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Consommer, produire et avancer dans la liste</h1><p class="subtitle">_consume_and_schedule → retour dans _verify_entry → verify_trace.</p><main><article class="decision" id="D14">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D14</b><br>
+            Cette opération produit-elle ses résultats immédiatement ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Ajouter les résultats maintenant ; terminer le départ → <a href="#D15">D15</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Programmer la fin à entry.cycle + process.delay → <a href="#D15">D15</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_consume_and_schedule</b> · src/krpsim_verif/verifier.py:165-175
+      <br><code>process.delay == 0</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Les besoins ont déjà été retirés. La durée décide quand les résultats sont ajoutés.<br>
+      <b>Exemple :</b> livrer dure 0 : son résultat est disponible au prochain départ, même au même cycle.</div>
+    </article><article class="decision" id="D15">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D15</b><br>
+            Reste-t-il un départ dans la liste à vérifier ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Appeler _verify_entry pour le suivant → <a href="#D09">D09</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Finaliser : _build_verified_simulator → <a href="#D10">D10</a>, seuil 2**63 - 1.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>verify_trace</b> · src/krpsim_verif/verifier.py:243-246
+      <br><code>for line_number, entry in enumerate(trace, start=1)</code></div>
+      <div class="explanation"><b>Pourquoi :</b> On respecte l’ordre du fichier, même lorsque plusieurs départs partagent un cycle.<br>
+      <b>Exemple :</b> E05 lance deux opérations au cycle 0 : la seconde voit le stock laissé par la première.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>15 / 52</span></footer></section><section class="page " id="final"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Construire et afficher le résultat</h1><p class="subtitle">_build_verified_simulator / Simulator.__init__ / _print_final_stocks</p><main><div class="cols"><div><h2>Après un départ accepté</h2><p><code>state.previous_cycle = entry.cycle</code><br>Mémoriser son moment pour vérifier le départ suivant.</p><p><code>state.last_cycle = max(state.last_cycle, entry.cycle)</code><br>Garder le plus grand moment pris en compte.</p><h2>Après le dernier départ</h2><p><code>_complete_until(2**63 - 1, ...)</code><br>Ajouter les résultats des fins atteignant au plus ce seuil. Voir D10.</p><p>Mettre <b>last_cycle</b> à jour avec la dernière fin ajoutée. Créer <b>Simulator(config)</b>, puis remplacer <b>sim.stocks</b>, <b>sim.time</b> et <b>sim._max_time</b> par l’état vérifié.</p></div><div><h2>Ce que le constructeur fait</h2><p>Il prépare des champs et crée <b>ProductionPlanner(config)</b>. Les décisions de cette préparation figurent en annexe D52-D60.</p><p><b>Il n’appelle pas Simulator.run.</b> Aucune recherche de meilleure trace n’est lancée ici.</p><h2>Ce qui est affiché</h2><p>Après succès : <b>trace is valid</b>, puis <b>Final Stocks:</b>. Les noms sont triés alphabétiquement, alignés sur le plus long ; un stock absent vaut 0. <b>Last cycle:</b> affiche <b>sim.time</b>.</p><p>Les noms réunissent stocks initiaux, besoins et résultats : <b>Config.all_stock_names()</b>.</p></div></div><div class="panel warn"><b>Seuil fini, pas infini.</b> Une opération finissant après 2**63 - 1 peut rester non créditée à la finalisation. Le cycle affiché est le maximum des départs et des fins effectivement ajoutées.</div><p class="small">Sources : verifier.py:200-214 ; simulator.py:61-104 ; cli.py:63-71 ; parser.py:75-100.</p></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>16 / 52</span></footer></section><section class="page " id="sortie"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Afficher seulement après une vérification réussie</h1><p class="subtitle">main contrôle la présence de sim ; la conversion numérique a une limite rare.</p><main><article class="decision" id="D05">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D05</b><br>
+            Dispose-t-on d’un état final après la vérification ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Afficher les stocks et le dernier cycle ; retourner exit_code.</div></div>
+          <div class="branch"><span>Non →</span><div>Ne pas afficher de stocks ; retourner exit_code.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>main</b> · src/krpsim_verif/cli.py:98-101
+      <br><code>sim is not None</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Un échec attendu renvoie None, pas un état final utilisable.<br>
+      <b>Exemple :</b> Avec E01, afficher les stocks et le cycle 3 ; avec E02, seulement l’erreur.</div>
+    </article><article class="decision" id="D51">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D51</b><br>
+            La conversion du cycle en entier échoue-t-elle malgré isdigit ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Exception non interceptée par la CLI ; arrêt technique.</div></div>
+          <div class="branch"><span>Non →</span><div>Créer TraceEntry et continuer la lecture.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_parse_trace_line</b> · src/krpsim_verif/verifier.py:109
+      <br><code>int(cycle_str) peut lever ValueError</code></div>
+      <div class="explanation"><b>Pourquoi :</b> isdigit accepte certains caractères que int ne sait pas convertir ; c’est une limite réelle.<br>
+      <b>Exemple :</b> ²:scier passe isdigit mais int(&#x27;²&#x27;) échoue ; ٢:scier se convertit en 2.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>17 / 52</span></footer></section><section class="page " id="atelier"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>L’atelier utilisé dans les exemples</h1><p class="subtitle">Une configuration commune ; les variantes indiquent explicitement ce qui change.</p><main><div class="cols"><div><h2>Fichier atelier.cfg</h2><pre>bois:2
+clou:8
+scier:(bois:1):(planche:3):2
+assembler:(planche:3;clou:4):(chaise:1):1
+livrer:(chaise:1):(livraison:1):0</pre><p><b>scier</b> consomme 1 bois immédiatement et donne 3 planches après 2 cycles.</p><p><b>assembler</b> consomme 3 planches et 4 clous ; la chaise arrive 1 cycle plus tard.</p><p><b>livrer</b> transforme 1 chaise en 1 livraison immédiatement.</p></div><div><h2>Une trace à suivre</h2><pre>0:scier
+2:assembler
+3:livrer</pre><p>Les planches existent à temps pour assembler ; la chaise existe à temps pour livrer.</p><p><b>Commande depuis la racine du dépôt :</b></p><pre>uv run krpsim_verif \
+  output/pdf/eli5_source/examples/E04/atelier.cfg \
+  output/pdf/eli5_source/examples/E04/trace.txt</pre><p class="small">Les fichiers de tous les exemples E01-E19 et E23-E28 sont livrés dans examples/. Les cas de commande E20-E22 sont reproduits par verify_examples.py.</p></div></div></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>18 / 52</span></footer></section><section class="page " id="rejeu"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Suivre les stocks, départ par départ</h1><p class="subtitle">Exemple E04 exécuté : scier → assembler → livrer. Les quantités absentes valent 0.</p><main><p>À chaque ligne : D09 → D10 → D11 → D12 → D13 → D14 → D15. Résultat final : code 0 et <b>Last cycle: 3</b>. Une arrivée exactement au moment du départ est déjà utilisable.</p><table class=""><thead><tr><th>Départ lu</th><th>Résultats ajoutés avant le départ</th><th>Stock disponible</th><th>Ressources nécessaires</th><th>Décision</th><th>Stock après le départ</th></tr></thead><tbody><tr><td>0:scier</td><td>Aucun</td><td>bois 2
+clou 8</td><td>bois 1</td><td>Accepté ; fin programmée à 2</td><td>bois 1
+clou 8</td></tr><tr><td>2:assembler</td><td>+3 planches
+(scier finit à 2)</td><td>bois 1
+clou 8
+planche 3</td><td>planche 3
+clou 4</td><td>Accepté ; fin programmée à 3</td><td>bois 1
+clou 4
+planche 0</td></tr><tr><td>3:livrer</td><td>+1 chaise
+(assembler finit à 3)</td><td>bois 1
+clou 4
+planche 0
+chaise 1</td><td>chaise 1</td><td>Accepté ; résultat immédiat</td><td>bois 1
+clou 4
+planche 0
+chaise 0
+livraison 1</td></tr></tbody></table></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>19 / 52</span></footer></section><section class="page " id="cas-principaux"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Comparer les traces : quand faut-il refuser ?</h1><p class="subtitle">Configuration commune de la page « L’atelier ». Tous les cas ci-dessous ont été exécutés.</p><main><table class=""><thead><tr><th>Cas / trace exacte</th><th>Configuration</th><th>Résultat observé</th><th>Ce que cela montre</th></tr></thead><tbody><tr><td>E01
+0:scier
+2:assembler</td><td>Commune</td><td>Code 0 ; cycle 3.
+bois 1, clou 4, planche 0, chaise 1.</td><td>Trace partielle acceptée : aucune livraison exigée.</td></tr><tr><td>E02
+0:assembler</td><td>Commune</td><td>Code 1 ; manque planche: 3.</td><td><a href="#D13">D13</a> : les planches ne sont pas encore produites.</td></tr><tr><td>E03
+2:scier
+1:scier</td><td>Commune</td><td>Code 1 ; cycle 1 avant cycle 2.</td><td><a href="#D09">D09</a> : les moments reculent.</td></tr><tr><td>E05
+0:scier
+0:scier</td><td>Commune</td><td>Code 0 ; cycle 2.
+bois 0, clou 8, planche 6.</td><td>Deux lancements au même cycle sont permis.</td></tr><tr><td>E13
+0:assembler</td><td>Ajouter planche:2</td><td>Code 1 ; manque planche: 1.</td><td><a href="#D12">D12</a> : manque = quantité nécessaire moins quantité disponible.</td></tr><tr><td>E27
+0:scier
+0:scier
+0:scier</td><td>Commune</td><td>Code 1 au départ 3 ; manque bois: 1.</td><td>Les deux premiers départs ont consommé tout le bois.</td></tr></tbody></table></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>20 / 52</span></footer></section><section class="page " id="vides-exemples"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Un fichier vide n’est pas une ligne vide</h1><p class="subtitle">Le test de trace vide intervient après le filtrage des commentaires.</p><main><table class=""><thead><tr><th>Cas / contenu de trace</th><th>Configuration</th><th>Résultat observé</th><th>Chemin à suivre</th></tr></thead><tbody><tr><td>E06 : zéro octet</td><td>Commune</td><td>Code 1 ; empty trace.</td><td><a href="#D06">D06</a> Oui → <a href="#D07">D07</a> Oui → <a href="#D08">D08</a> Oui.</td></tr><tr><td>E07 : zéro octet</td><td>Remplacer bois:2 par bois:0</td><td>Code 0 ; cycle 0 ; stocks initiaux.</td><td><a href="#D08">D08</a> Non pour toutes les opérations.</td></tr><tr><td>E08 : zéro octet</td><td>Ajouter optimize:(chaise)</td><td>Code 0 ; cycle 0 ; stocks initiaux.</td><td><a href="#D07">D07</a> Non : acceptation directe.</td></tr><tr><td>E09 : # commentaire suivi d’un saut de ligne</td><td>Ajouter optimize:(chaise)</td><td>Code 0 ; cycle 0.</td><td><a href="#D48">D48</a> ignore le commentaire ; même liste vide que E08.</td></tr><tr><td>E14 : un saut de ligne seul</td><td>Commune</td><td>Code 1 ; empty trace line 1.</td><td><a href="#D47">D47</a> Oui : erreur pendant la lecture.</td></tr><tr><td>E15 : deux espaces puis # commentaire</td><td>Commune</td><td>Code 1 ; invalid trace line 1.</td><td><a href="#D48">D48</a> Non → <a href="#D49">D49</a> Oui : aucun deux-points.</td></tr></tbody></table></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>21 / 52</span></footer></section><section class="page " id="instantane"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Une production immédiate peut servir au départ suivant</h1><p class="subtitle">E26 : deux opérations au cycle 0. Le fichier conserve l’ordre des départs.</p><main><div class="cols"><div><h2>Configuration E26</h2><pre>bois:1
+scier:(bois:1):(planche:3):0
+assembler:(planche:3):(chaise:1):0</pre><h2>Trace E26</h2><pre>0:scier
+0:assembler</pre><p><b>Résultat exécuté :</b> code 0 ; bois 0, planche 0, chaise 1 ; dernier cycle 0.</p></div><div><h2>Pourquoi cela fonctionne</h2><p>1. scier consomme le bois.</p><p>2. Sa durée est nulle : D14 ajoute immédiatement 3 planches.</p><p>3. Le départ suivant reste au cycle 0 : D09 l’autorise.</p><p>4. assembler trouve les planches et les consomme ; la chaise apparaît aussitôt.</p><div class="panel warn">Avec la configuration commune, la chaise n’arrive qu’au cycle 3. E28 tente livrer au cycle 2 après assembler : refus, manque chaise: 1.</div></div></div><p class="small">E28 exécuté : trace 0:scier, puis 2:assembler, puis 2:livrer. Aucun tri ne réorganise ces départs.</p></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>22 / 52</span></footer></section><section class="page " id="lecture-diagnostic"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Retrouver la première erreur et le bon numéro</h1><p class="subtitle">Une erreur de syntaxe et une erreur de rejeu n’utilisent pas le même comptage.</p><main><table class=""><thead><tr><th>Cas</th><th>Résultat exécuté</th><th>Explication</th></tr></thead><tbody><tr><td>E18
+# commentaire
+0:assembler</td><td>line 1 at cycle 0 … lacks resources</td><td>line_number compte les départs : le commentaire ne compte pas. La ligne physique est pourtant la deuxième.</td></tr><tr><td>E19
+0:assembler
+malforme</td><td>invalid trace line 2</td><td>idx compte les lignes du fichier. La lecture échoue avant de vérifier les ressources du premier départ.</td></tr><tr><td>E10
+0:inconnue</td><td>unknown process &#x27;inconnue&#x27; in trace</td><td>Le format passe ; <a href="#D11">D11</a> rejette ensuite le nom.</td></tr><tr><td>E20 : seulement le chemin de configuration</td><td>SystemExit, code 2 ; usage et erreur</td><td>La commande n’a pas reçu son fichier de trace.</td></tr><tr><td>E21 : chemin de trace inexistant</td><td>Code 1 ; invalid trace: …</td><td>OSError est interceptée en <a href="#D04">D04</a>.</td></tr><tr><td>E22 : trace contenant les octets FF 0A</td><td>UnicodeDecodeError non interceptée</td><td>La CLI ne convertit pas cette exception en diagnostic invalid trace.</td></tr></tbody></table></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>23 / 52</span></footer></section><section class="page " id="limites"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Les limites réelles du programme</h1><p class="subtitle">Ces particularités sont décrites, sans modifier le code.</p><main><table class=""><thead><tr><th>Point</th><th>Comportement vérifié ou lu dans le code</th></tr></thead><tbody><tr><td>CRLF : configuration / trace</td><td>La configuration interdit tout octet CR. La trace est ouverte en mode texte : Python normalise CRLF et CR en LF. E11 (0:scier avec CRLF) est accepté.</td></tr><tr><td>Espaces et noms</td><td>La configuration retire les espaces aux bords de la ligne ; la trace ne les retire pas. Le nom après le premier : est conservé, autres : compris. Un nom non vide n’est pas forcément connu.</td></tr><tr><td>Chiffres Unicode</td><td>E23 : ²:scier passe isdigit mais int échoue (ValueError). E24 : ٢:scier devient le cycle 2 et finit à 4. Les conversions int de la configuration ont aussi des limites.</td></tr><tr><td>Finalisation bornée</td><td>E17 : scier dure 9223372036854775808 cycles. Trace 0:scier acceptée, bois 0, aucune planche créditée, dernier cycle 0. La fin dépasse le seuil 2**63 - 1.</td></tr><tr><td>État retourné</td><td>sim.stocks, sim.time et sim._max_time sont remplacés. sim.trace et sim._running restent ceux du constructeur ; ce n’est pas un historique complet prêt à reprendre la simulation.</td></tr><tr><td>Exceptions inattendues</td><td>ValueError, UnicodeDecodeError de trace et autres erreurs hors des except ne sont pas transformées par _verify_inputs. Un échec disque pendant la lecture de config peut aussi être étiqueté invalid trace via OSError.</td></tr></tbody></table></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>24 / 52</span></footer></section><section class="page " id="garanties"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Ce que « trace is valid » garantit</h1><p class="subtitle">Valider des départs ne signifie pas certifier la meilleure solution.</p><main><div class="cols"><div><h2>Pour une trace lue depuis les fichiers</h2><p>La configuration a passé ses contrôles ; les lignes de trace ont été acceptées.</p><p>Les moments de départ ne reculent pas ; les opérations citées existent.</p><p>Chaque départ disposait des ressources nécessaires après ajout des productions terminées.</p><p>Les stocks résultent du rejeu et de la finalisation bornée du code.</p><div class="panel good">Une trace partielle peut donc être valide. E12 contient seulement 0:scier : code 0, dernier cycle 2, trois planches produites.</div></div><div><h2>Ce que le vérificateur ne contrôle pas</h2><p>Il ne compare pas la trace à celle qu’aurait choisie krpsim.</p><p>Il ne démontre pas l’optimalité et n’exige pas l’atteinte de l’objectif.</p><p>Il ne demande pas que toutes les opérations possibles aient été exécutées.</p><p>Il ne reçoit pas le délai maximal demandé à krpsim.</p><h2>Appels Python directs</h2><p><b>verify_trace(config, trace)</b> ne relit pas les fichiers : il suppose les objets cohérents. Il ne refait pas parse_file ou parse_trace.</p><p>API01 : un premier cycle -1 est refusé contre la référence initiale 0. Une Config construite manuellement peut aussi contourner les validations du fichier.</p></div></div></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>25 / 52</span></footer></section><section class="page " id="cfg-acces"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Configuration : choisir le fichier</h1><p class="subtitle">Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.</p><main><article class="decision" id="D16">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D16</b><br>
+            Le chemin de configuration contient-il un élément « .. » ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : path traversal detected → <a href="#D03">D03</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Vérifier le fichier → <a href="#D17">D17</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>parse_file</b> · src/krpsim/parser.py:592-594
+      <br><code>&quot;..&quot; in path.parts</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Le programme rejette explicitement les remontées de dossier dans ce chemin.<br>
+      <b>Exemple :</b> ../atelier.cfg est refusé avant de lire son contenu.</div>
+    </article><article class="decision" id="D17">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D17</b><br>
+            Le chemin ne désigne-t-il pas un fichier existant ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : invalid path → <a href="#D03">D03</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Vérifier les droits → <a href="#D18">D18</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>parse_file</b> · src/krpsim/parser.py:596-598
+      <br><code>not path.is_file()</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Un répertoire ou un fichier absent ne fournit pas de configuration.<br>
+      <b>Exemple :</b> Un chemin vers un dossier est refusé.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>26 / 52</span></footer></section><section class="page " id="cfg-octets"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Configuration : droits et marque invisible</h1><p class="subtitle">Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.</p><main><article class="decision" id="D18">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D18</b><br>
+            Le système refuse-t-il la lecture de la configuration ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : file is not readable → <a href="#D03">D03</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Lire les octets : _read_lines → <a href="#D19">D19</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>parse_file</b> · src/krpsim/parser.py:600-605
+      <br><code>not os.access(path, os.R_OK)</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Les droits sont vérifiés avant l’ouverture ; un échec ultérieur reste possible.<br>
+      <b>Exemple :</b> Sans droit de lecture, le contrôle échoue ; le test du dépôt simule ce refus.</div>
+    </article><article class="decision" id="D19">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D19</b><br>
+            Le fichier commence-t-il par une marque UTF-8 BOM ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : BOM detected in file → <a href="#D03">D03</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Décoder le texte → <a href="#D20">D20</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_read_lines</b> · src/krpsim/parser.py:487-491
+      <br><code>raw.startswith(UTF8_BOM)</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Cette marque invisible est interdite dans la configuration.<br>
+      <b>Exemple :</b> Les trois premiers octets EF BB BF déclenchent le refus.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>27 / 52</span></footer></section><section class="page " id="cfg-texte"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Configuration : encodage et fins de ligne</h1><p class="subtitle">Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.</p><main><article class="decision" id="D20">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D20</b><br>
+            Le contenu est-il impossible à décoder en UTF-8 ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Convertir en ParseError : file must be UTF-8 encoded → <a href="#D03">D03</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Examiner les fins de ligne → <a href="#D21">D21</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_read_lines</b> · src/krpsim/parser.py:493-499
+      <br><code>except UnicodeDecodeError as exc</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Le programme doit pouvoir lire les caractères de la configuration.<br>
+      <b>Exemple :</b> L’octet FF isolé n’est pas un texte UTF-8 valide.</div>
+    </article><article class="decision" id="D21">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D21</b><br>
+            Le fichier contient-il un caractère de retour chariot ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : CRLF line endings are not allowed → <a href="#D03">D03</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Séparer les lignes et vérifier leur longueur → <a href="#D22">D22</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_read_lines</b> · src/krpsim/parser.py:501-505
+      <br><code>b&quot;\r&quot; in raw</code></div>
+      <div class="explanation"><b>Pourquoi :</b> La configuration interdit tout retour chariot, même isolé.<br>
+      <b>Exemple :</b> Une configuration avec des fins Windows CRLF est refusée ; une trace CRLF est acceptée.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>28 / 52</span></footer></section><section class="page " id="cfg-lignes"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Configuration : longueur et commentaires</h1><p class="subtitle">Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.</p><main><article class="decision" id="D22">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D22</b><br>
+            Cette ligne dépasse-t-elle 255 caractères ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : line exceeds 255 characters → <a href="#D03">D03</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Ligne suivante ; après toutes, _parse_lines → <a href="#D23">D23</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_read_lines</b> · src/krpsim/parser.py:507-513
+      <br><code>len(raw_line) &gt; 255</code></div>
+      <div class="explanation"><b>Pourquoi :</b> La longueur est contrôlée avant de supprimer espaces ou commentaires.<br>
+      <b>Exemple :</b> Une ligne de commentaire de 256 caractères est refusée ; 255 passe ce contrôle.</div>
+    </article><article class="decision" id="D23">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D23</b><br>
+            Après retrait des espaces aux bords, la ligne est-elle vide ou commentée ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Ignorer et lire la ligne suivante ; fin du fichier → <a href="#D43">D43</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Identifier son type → <a href="#D24">D24</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_parse_lines</b> · src/krpsim/parser.py:546-552
+      <br><code>not line or line.startswith(&quot;#&quot;)</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Les lignes de décoration de la configuration ne décrivent pas de données.<br>
+      <b>Exemple :</b> Une ligne «   # atelier » est ignorée ici ; les règles de trace sont différentes.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>29 / 52</span></footer></section><section class="page " id="cfg-tri"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Configuration : reconnaître le type de ligne</h1><p class="subtitle">Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.</p><main><article class="decision" id="D24">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D24</b><br>
+            La ligne commence-t-elle par « optimize: » ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Appeler _handle_optimize → <a href="#D38">D38</a>, puis ligne suivante.</div></div>
+          <div class="branch"><span>Non →</span><div>Chercher une déclaration d’opération → <a href="#D25">D25</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_parse_lines</b> · src/krpsim/parser.py:554-556
+      <br><code>line.startswith(&quot;optimize:&quot;)</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Ce préfixe est reconnu avant les autres formes de lignes.<br>
+      <b>Exemple :</b> optimize:(chaise) indique un objectif ; sa validité sera contrôlée.</div>
+    </article><article class="decision" id="D25">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D25</b><br>
+            La ligne contient-elle « :( », signe d’une opération ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Appeler _handle_process → <a href="#D31">D31</a>, puis ligne suivante.</div></div>
+          <div class="branch"><span>Non →</span><div>Chercher une déclaration de stock → <a href="#D26">D26</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_parse_lines</b> · src/krpsim/parser.py:558-560
+      <br><code>&quot;:(&quot; in line</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Le tri initial choisit le lecteur spécialisé ; il ne valide pas encore toute la ligne.<br>
+      <b>Exemple :</b> scier:(bois:1):(planche:3):2 est envoyé au lecteur des opérations.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>30 / 52</span></footer></section><section class="page " id="cfg-stock1"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Configuration : lire un stock initial</h1><p class="subtitle">Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.</p><main><article class="decision" id="D26">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D26</b><br>
+            La ligne restante contient-elle un deux-points ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Appeler _handle_stock → <a href="#D27">D27</a>, puis ligne suivante.</div></div>
+          <div class="branch"><span>Non →</span><div>Refuser : unrecognized line → <a href="#D03">D03</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_parse_lines</b> · src/krpsim/parser.py:562-568
+      <br><code>&quot;:&quot; in line</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Sans forme reconnue, la configuration est refusée.<br>
+      <b>Exemple :</b> bois:2 décrit un stock ; bonjour seul est refusé.</div>
+    </article><article class="decision" id="D27">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D27</b><br>
+            Le nom du stock et sa quantité sont-ils impossibles à séparer ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : invalid stock line → <a href="#D03">D03</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Vérifier les deux morceaux → <a href="#D28">D28</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_parse_stock</b> · src/krpsim/parser.py:127-133
+      <br><code>except ValueError : line.split(&quot;:&quot;, 1)</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Cette protection couvre aussi les appels directs à _parse_stock.<br>
+      <b>Exemple :</b> _parse_stock(&#x27;bois&#x27;) échoue ; la commande l’aurait déjà rejeté en D26.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>31 / 52</span></footer></section><section class="page " id="cfg-stock2"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Configuration : lire la quantité initiale</h1><p class="subtitle">Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.</p><main><article class="decision" id="D28">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D28</b><br>
+            Le nom est-il vide ou la quantité contient-elle autre chose que des chiffres ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : invalid stock line → <a href="#D03">D03</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Convertir qty avec int ; contrôler <a href="#D29">D29</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_parse_stock</b> · src/krpsim/parser.py:135-139
+      <br><code>not name or not qty.isdigit()</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Un stock doit avoir un nom et une quantité lisible comme entier.<br>
+      <b>Exemple :</b> bois:x et :2 sont refusés. Certains chiffres Unicode passent isdigit mais pas int.</div>
+    </article><article class="decision" id="D29">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D29</b><br>
+            La quantité initiale obtenue est-elle négative ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : invalid stock quantity → <a href="#D03">D03</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Renvoyer (name, quantity) ; contrôler <a href="#D30">D30</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_parse_stock</b> · src/krpsim/parser.py:141-145
+      <br><code>quantity &lt; 0</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Contrôle défensif présent dans le code, normalement inaccessible après isdigit et int.<br>
+      <b>Exemple :</b> bois:-1 est déjà refusé en D28. Le test du dépôt force ce chemin avec un substitut de chaîne.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>32 / 52</span></footer></section><section class="page " id="cfg-declarations"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Configuration : stock unique et recette valide</h1><p class="subtitle">Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.</p><main><article class="decision" id="D30">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D30</b><br>
+            Ce stock initial a-t-il déjà été déclaré ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : duplicate stock → <a href="#D03">D03</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Mémoriser stocks[name] = qty ; ligne suivante → <a href="#D23">D23</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_handle_stock</b> · src/krpsim/parser.py:370-376
+      <br><code>name in stocks</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Une ressource ne doit pas avoir deux quantités initiales concurrentes.<br>
+      <b>Exemple :</b> Deux lignes bois:2 puis bois:3 sont refusées, pas additionnées.</div>
+    </article><article class="decision" id="D31">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D31</b><br>
+            La déclaration d’opération ne respecte-t-elle pas le format attendu ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : invalid process line → <a href="#D03">D03</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Lire durée ; _parse_resources pour besoins puis résultats → <a href="#D33">D33</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_parse_process</b> · src/krpsim/parser.py:219-243
+      <br><code>not match</code></div>
+      <div class="explanation"><b>Pourquoi :</b> La forme attendue est nom:(besoins):(résultats):durée ; la durée peut valoir 0.<br>
+      <b>Exemple :</b> scier:(bois:1):(planche:3):2 passe ; une durée -2 échoue.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>33 / 52</span></footer></section><section class="page " id="cfg-blocs"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Configuration : opération unique et bloc vide</h1><p class="subtitle">Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.</p><main><article class="decision" id="D32">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D32</b><br>
+            Une opération porte-t-elle déjà ce nom ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : duplicate process → <a href="#D03">D03</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Ajouter processes[process.name] ; ligne suivante → <a href="#D23">D23</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_handle_process</b> · src/krpsim/parser.py:342-348
+      <br><code>process.name in processes</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Ce contrôle arrive après la lecture complète de l’opération.<br>
+      <b>Exemple :</b> Déclarer scier deux fois est refusé, même si les recettes diffèrent.</div>
+    </article><article class="decision" id="D33">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D33</b><br>
+            Le bloc de ressources est-il vide ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Renvoyer {} au lecteur ; après besoins et résultats, contrôler <a href="#D32">D32</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Parcourir les éléments séparés par ; → <a href="#D34">D34</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_parse_resources</b> · src/krpsim/parser.py:167-173
+      <br><code>not block</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Une opération peut ne rien consommer ou ne rien produire.<br>
+      <b>Exemple :</b> cadeau:():(planche:1):0 n’a aucun besoin ; un résultat omis devient aussi un bloc vide.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>34 / 52</span></footer></section><section class="page " id="cfg-ressources"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Configuration : lire chaque ressource</h1><p class="subtitle">Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.</p><main><article class="decision" id="D34">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D34</b><br>
+            L’élément entre deux séparateurs est-il vide ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Ignorer cet élément ; passer au suivant.</div></div>
+          <div class="branch"><span>Non →</span><div>Séparer nom et quantité → <a href="#D35">D35</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_parse_resources</b> · src/krpsim/parser.py:173-179
+      <br><code>not item</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Les séparateurs supplémentaires sont tolérés dans les blocs.<br>
+      <b>Exemple :</b> bois:1;;clou:4 produit les mêmes ressources que bois:1;clou:4.</div>
+    </article><article class="decision" id="D35">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D35</b><br>
+            Le nom de ressource est-il vide ou sa quantité mal écrite ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : invalid quantity for resource → <a href="#D03">D03</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Convertir avec int ; contrôler <a href="#D36">D36</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_parse_resources</b> · src/krpsim/parser.py:179-185
+      <br><code>not name or not qty.isdigit()</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Chaque élément doit nommer une ressource et préciser sa quantité.<br>
+      <b>Exemple :</b> bois:x, :2 et bois sans quantité sont refusés.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>35 / 52</span></footer></section><section class="page " id="cfg-quantites"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Configuration : quantités et doublons</h1><p class="subtitle">Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.</p><main><article class="decision" id="D36">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D36</b><br>
+            La quantité de ressource est-elle nulle ou négative ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : invalid quantity for resource → <a href="#D03">D03</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Vérifier le doublon → <a href="#D37">D37</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_parse_resources</b> · src/krpsim/parser.py:187-189
+      <br><code>quantity &lt;= 0</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Les quantités d’une recette doivent être strictement positives, contrairement au stock initial.<br>
+      <b>Exemple :</b> bois:0 est permis comme stock initial, mais refusé dans les besoins d’une opération.</div>
+    </article><article class="decision" id="D37">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D37</b><br>
+            Cette ressource apparaît-elle déjà dans ce même bloc ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : duplicate resource → <a href="#D03">D03</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Ajouter ; élément suivant → <a href="#D34">D34</a>. Bloc terminé : retourner au lecteur.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_parse_resources</b> · src/krpsim/parser.py:191-197
+      <br><code>name in resources</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Un besoin ou un résultat ne peut pas nommer deux fois la même ressource dans son bloc.<br>
+      <b>Exemple :</b> (bois:1;bois:2) est refusé. Du bois dans les besoins ET les résultats est permis.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>36 / 52</span></footer></section><section class="page " id="cfg-opt1"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Configuration : une directive bien formée</h1><p class="subtitle">Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.</p><main><article class="decision" id="D38">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D38</b><br>
+            Une directive d’optimisation a-t-elle déjà été lue ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : duplicate optimize line → <a href="#D03">D03</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Appeler _parse_optimize → <a href="#D39">D39</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_handle_optimize</b> · src/krpsim/parser.py:316-320
+      <br><code>optimize is not None</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Le fichier ne peut déclarer qu’une seule liste d’objectifs.<br>
+      <b>Exemple :</b> Deux lignes optimize:(chaise) sont refusées.</div>
+    </article><article class="decision" id="D39">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D39</b><br>
+            La directive d’optimisation est-elle mal formée ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : invalid optimize line → <a href="#D03">D03</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Extraire le bloc ; filtrer les éléments → <a href="#D40">D40</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_parse_optimize</b> · src/krpsim/parser.py:266-274
+      <br><code>not match</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Les objectifs doivent être placés entre parenthèses.<br>
+      <b>Exemple :</b> optimize:chaise échoue ; optimize:(chaise) passe.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>37 / 52</span></footer></section><section class="page " id="cfg-opt2"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Configuration : conserver les objectifs utiles</h1><p class="subtitle">Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.</p><main><article class="decision" id="D40">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D40</b><br>
+            Cet élément de la liste d’objectifs contient-il du texte ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Conserver ; élément suivant. Après tous : <a href="#D41">D41</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Ignorer l’élément ; après filtrage → <a href="#D41">D41</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_parse_optimize</b> · src/krpsim/parser.py:274
+      <br><code>[item for item in block.split(&quot;;&quot;) if item]</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Les éléments vides entre séparateurs ne deviennent pas des objectifs.<br>
+      <b>Exemple :</b> optimize:(;chaise;;) conserve uniquement chaise.</div>
+    </article><article class="decision" id="D41">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D41</b><br>
+            La liste d’objectifs est-elle vide après ce filtrage ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : invalid optimize line → <a href="#D03">D03</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Parcourir les objectifs et chercher les doublons → <a href="#D42">D42</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_parse_optimize</b> · src/krpsim/parser.py:276-284
+      <br><code>not items</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Une directive présente doit demander au moins un objectif.<br>
+      <b>Exemple :</b> optimize:() et optimize:(;;) sont refusés.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>38 / 52</span></footer></section><section class="page " id="cfg-structure"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Configuration : objectifs uniques et sections présentes</h1><p class="subtitle">Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.</p><main><article class="decision" id="D42">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D42</b><br>
+            Cet objectif a-t-il déjà été rencontré dans la liste ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : duplicate optimize target → <a href="#D03">D03</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Ajouter à seen et result ; objectif suivant. Après tous : ligne suivante → <a href="#D23">D23</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_parse_optimize</b> · src/krpsim/parser.py:284-294
+      <br><code>item in seen</code></div>
+      <div class="explanation"><b>Pourquoi :</b> L’ordre est conservé, sans doublon.<br>
+      <b>Exemple :</b> optimize:(chaise;chaise) est refusé ; optimize:(time;chaise) conserve cet ordre.</div>
+    </article><article class="decision" id="D43">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D43</b><br>
+            Manque-t-il tout stock initial ou toute opération ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : configuration must define at least one stock and process → <a href="#D03">D03</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Contrôler les objectifs → <a href="#D44">D44</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>parse_file</b> · src/krpsim/parser.py:607-611
+      <br><code>not stocks or not processes</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Une configuration lue depuis un fichier doit contenir ces deux catégories.<br>
+      <b>Exemple :</b> bois:2 seul est insuffisant ; bois:0 compte bien comme un stock déclaré.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>39 / 52</span></footer></section><section class="page " id="cfg-cibles"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Configuration : contrôler les objectifs</h1><p class="subtitle">Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.</p><main><article class="decision" id="D44">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D44</b><br>
+            La configuration contient-elle une liste d’objectifs non vide ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Appeler _validate_optimize → <a href="#D45">D45</a>, puis <a href="#D46">D46</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Vérifier les ressources des opérations → <a href="#D46">D46</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>parse_file</b> · src/krpsim/parser.py:613-617
+      <br><code>if optimize</code></div>
+      <div class="explanation"><b>Pourquoi :</b> La validation des cibles précède celle des ressources nécessaires.<br>
+      <b>Exemple :</b> Sans ligne optimize, ce contrôle est sauté.</div>
+    </article><article class="decision" id="D45">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D45</b><br>
+            Cet objectif est-il inconnu et différent de « time » ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : unknown stock … in optimize line → <a href="#D03">D03</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Objectif suivant ; après tous, passer à <a href="#D46">D46</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_validate_optimize</b> · src/krpsim/parser.py:406-418
+      <br><code>item != &quot;time&quot; and item not in known</code></div>
+      <div class="explanation"><b>Pourquoi :</b> known réunit les stocks, besoins et résultats ; time est un nom spécial accepté.<br>
+      <b>Exemple :</b> optimize:(licorne) échoue si aucune ressource ne s’appelle licorne.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>40 / 52</span></footer></section><section class="page " id="cfg-dependances"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Configuration : une source pour chaque besoin</h1><p class="subtitle">_validate_process_resources · Après ce contrôle, retourner Config et commencer parse_trace.</p><main><div class="panel">Après la dernière ligne : D43 → D44 → éventuellement D45 → D46. L’existence d’un producteur ne prouve pas qu’il pourra démarrer : la vérification des stocks vient plus tard, à chaque départ.</div><article class="decision" id="D46">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D46</b><br>
+            Cette ressource nécessaire est-elle absente des stocks déclarés et de tous les résultats ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Refuser : unknown resource … used in process → <a href="#D03">D03</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Besoin suivant, puis opération suivante ; retourner Config après tous.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_validate_process_resources</b> · src/krpsim/parser.py:449-463
+      <br><code>res not in defined</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Ce contrôle vérifie l’existence d’une source, pas la disponibilité actuelle ni l’absence de cycle.<br>
+      <b>Exemple :</b> planche peut manquer au départ si scier sait en produire. Le départ devra encore attendre.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>41 / 52</span></footer></section><section class="page " id="boucles"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Les boucles : où revient-on ?</h1><p class="subtitle">Un renvoi « suivant » reprend le même contrôle sur un nouvel élément.</p><main><table class=""><thead><tr><th>Parcours</th><th>Action répétée</th><th>Sortie de la boucle</th></tr></thead><tbody><tr><td>_read_lines / _parse_lines</td><td>Longueur de chaque ligne ; classification et lecture des lignes utiles.</td><td>Toutes lues → contrôle global <a href="#D43">D43</a>.</td></tr><tr><td>_parse_resources / _parse_optimize</td><td>Éléments séparés par ; puis cibles conservées.</td><td>Retourner le dictionnaire / la liste au lecteur appelant.</td></tr><tr><td>_validate_optimize / _validate_process_resources</td><td>Chaque cible ; chaque besoin de chaque opération.</td><td>Retourner Config après tous les contrôles.</td></tr><tr><td>parse_trace</td><td>Chaque ligne physique : ignorer ou créer TraceEntry.</td><td>Retourner entries → <a href="#D06">D06</a>.</td></tr><tr><td>_verify_empty_trace</td><td>Chaque opération et chacun de ses besoins (all).</td><td>Premier démarrage possible : erreur ; sinon acceptation.</td></tr><tr><td>verify_trace</td><td>Chaque départ, dans l’ordre ; arrêt à la première exception.</td><td>Finalisation après le dernier départ.</td></tr><tr><td>_complete_until</td><td>Retirer la fin la plus proche, ajouter tous ses résultats.</td><td>Aucune fin restante ou prochaine fin après le seuil.</td></tr><tr><td>_missing_resources / _consume_and_schedule</td><td>Chaque besoin ; puis les résultats si durée nulle.</td><td>Dictionnaire missing / retour vers _verify_entry.</td></tr><tr><td>Constructeurs / affichage</td><td>Cibles, opérations, résultats ; noms de ressources triés.</td><td>Objet prêt / dernière ligne affichée.</td></tr></tbody></table></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>42 / 52</span></footer></section><section class="page " id="constructeur1"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Annexe : préparer l’objet retourné</h1><p class="subtitle">Simulator.__init__ → ProductionPlanner.__init__ · Préparation uniquement, sans recherche de plan.</p><main><article class="decision" id="D52">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D52</b><br>
+            Ce nom d’objectif est-il différent de « time » ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Conserver le nom dans self.targets.</div></div>
+          <div class="branch"><span>Non →</span><div>L’exclure ; continuer la liste.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>ProductionPlanner.__init__</b> · src/krpsim/optimizer.py:62
+      <br><code>t != &quot;time&quot;</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Le constructeur prépare ses données même si aucune recherche de plan n’est lancée.<br>
+      <b>Exemple :</b> [time, chaise] devient (chaise,) dans self.targets.</div>
+    </article><article class="decision" id="D53">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D53</b><br>
+            La quantité produite pour cette ressource est-elle positive ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Ajouter cette opération à self._producers[resource].</div></div>
+          <div class="branch"><span>Non →</span><div>Ne pas l’ajouter ; résultat suivant.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>ProductionPlanner.__init__</b> · src/krpsim/optimizer.py:64-68
+      <br><code>quantity &gt; 0</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Ce répertoire indique quelles opérations produisent chaque ressource.<br>
+      <b>Exemple :</b> scier produit 3 planches : scier est enregistré comme producteur de planche.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>43 / 52</span></footer></section><section class="page " id="constructeur2"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Annexe : reconnaître une conversion finale</h1><p class="subtitle">ProductionPlanner._terminal_converter · L’échec de reconnaissance renvoie None, pas une erreur de trace.</p><main><article class="decision" id="D54">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D54</b><br>
+            Le nombre d’objectifs ressources est-il différent de un ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Retourner None ; choisir goal → <a href="#D59">D59</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Chercher les producteurs de cet objectif → <a href="#D55">D55</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_terminal_converter</b> · src/krpsim/optimizer.py:84-87
+      <br><code>len(self.targets) != 1</code></div>
+      <div class="explanation"><b>Pourquoi :</b> La détection du convertisseur final ne s’applique qu’à une seule cible.<br>
+      <b>Exemple :</b> Aucun objectif, ou deux objectifs ressources : aucun convertisseur final.</div>
+    </article><article class="decision" id="D55">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D55</b><br>
+            Le nombre d’opérations produisant cette cible est-il différent de un ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Retourner None → <a href="#D59">D59</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Examiner l’unique producteur → <a href="#D56">D56</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_terminal_converter</b> · src/krpsim/optimizer.py:88-90
+      <br><code>len(candidates) != 1</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Le constructeur n’identifie un convertisseur final que s’il est unique.<br>
+      <b>Exemple :</b> Deux opérations produisant chaise empêchent cette reconnaissance.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>44 / 52</span></footer></section><section class="page " id="constructeur3"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Annexe : vérifier la forme du convertisseur</h1><p class="subtitle">ProductionPlanner._terminal_converter · Ces décisions concernent les champs du constructeur.</p><main><article class="decision" id="D56">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D56</b><br>
+            Cette opération dure-t-elle plus de zéro cycle ou a-t-elle un nombre de besoins différent de un ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Retourner None → <a href="#D59">D59</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Examiner sa seule ressource consommée → <a href="#D57">D57</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_terminal_converter</b> · src/krpsim/optimizer.py:91-93
+      <br><code>process.delay != 0 or len(process.needs) != 1</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Pour les configurations valides, le convertisseur recherché est immédiat et consomme une seule ressource.<br>
+      <b>Exemple :</b> assembler dure 1 cycle et consomme deux ressources : ce n’est pas ce convertisseur.</div>
+    </article><article class="decision" id="D57">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D57</b><br>
+            La ressource consommée est-elle aussi la cible ou est-elle reproduite ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Retourner None → <a href="#D59">D59</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Chercher un producteur de la ressource consommée → <a href="#D58">D58</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_terminal_converter</b> · src/krpsim/optimizer.py:94-95
+      <br><code>source == target or process.results.get(source, 0) &gt; 0</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Cette reconnaissance écarte les opérations qui réutilisent la même ressource de cette façon.<br>
+      <b>Exemple :</b> Une conversion qui consomme chaise et en rend aussi est écartée.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>45 / 52</span></footer></section><section class="page " id="constructeur4"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Annexe : choisir le but interne</h1><p class="subtitle">ProductionPlanner._terminal_converter → ProductionPlanner.__init__.</p><main><article class="decision" id="D58">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D58</b><br>
+            La ressource consommée n’a-t-elle aucun producteur ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>Retourner None → <a href="#D59">D59</a>.</div></div>
+          <div class="branch"><span>Non →</span><div>Retourner process comme convertisseur final → <a href="#D59">D59</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>_terminal_converter</b> · src/krpsim/optimizer.py:96-98
+      <br><code>not self._producers.get(source)</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Le constructeur recherche une étape finale alimentée par une autre opération.<br>
+      <b>Exemple :</b> livrer consomme chaise, que assembler produit : ce contrôle passe.</div>
+    </article><article class="decision" id="D59">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D59</b><br>
+            Un convertisseur final a-t-il été reconnu ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>goal = nom de son unique besoin ; finir le constructeur.</div></div>
+          <div class="branch"><span>Non →</span><div>Choisir un objectif de repli → <a href="#D60">D60</a>.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>ProductionPlanner.__init__</b> · src/krpsim/optimizer.py:68-72
+      <br><code>self.terminal is not None</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Ces champs sont initialisés, sans ordonner ni lancer des opérations pour la vérification.<br>
+      <b>Exemple :</b> Si livrer est reconnu, goal vaut chaise, sa ressource consommée.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>46 / 52</span></footer></section><section class="page " id="constructeur5"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Annexe : objectif de repli</h1><p class="subtitle">ProductionPlanner.__init__ · Ce champ n’est pas une preuve d’objectif atteint.</p><main><div class="panel">Après le constructeur, la trace vide renvoie l’état initial. La trace non vide remplace les stocks et le temps de l’objet par le résultat du rejeu. Les méthodes de recherche, de simulation et d’optimisation ne sont pas appelées par ce parcours.</div><article class="decision" id="D60">
+      <div class="decision-top">
+        <div class="question">
+          <svg viewBox="0 0 400 100" preserveAspectRatio="none">
+            <polygon points="200,1 399,50 200,99 1,50" fill="#fff4d4"
+                     stroke="#b58b30" stroke-width="1.2"/>
+          </svg>
+          <div class="question-text"><b>D60</b><br>
+            Reste-t-il au moins un objectif ressource ?</div>
+        </div>
+        <div class="branches">
+          <div class="branch"><span>Oui →</span><div>goal = self.targets[0] ; finir le constructeur.</div></div>
+          <div class="branch"><span>Non →</span><div>goal = None ; finir le constructeur.</div></div>
+        </div>
+      </div>
+      <div class="source"><b>ProductionPlanner.__init__</b> · src/krpsim/optimizer.py:72
+      <br><code>self.targets</code></div>
+      <div class="explanation"><b>Pourquoi :</b> Le repli conserve la première cible, ou aucune s’il n’y en a pas.<br>
+      <b>Exemple :</b> Sans optimize, targets est vide et goal vaut None.</div>
+    </article></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>47 / 52</span></footer></section><section class="page " id="corrections"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Corrections apportées au document précédent</h1><p class="subtitle">Comparaison avec krpsim_verif_arbre_de_decision.pdf, édition du 31 octobre 2026.</p><main><table class=""><thead><tr><th>Emplacement ancien</th><th>Correction vérifiée</th></tr></thead><tbody><tr><td>Page 2 : CRLF laisse un caractère CR</td><td>Faux pour parse_trace : l’ouverture texte normalise les fins de ligne. Le test test_parse_trace_accepts_crlf et E11 confirment l’acceptation.</td></tr><tr><td>Page 2 : ouverture / décodage → OSError</td><td>Les deux ne se confondent pas : UnicodeDecodeError de trace n’est pas interceptée par la CLI. E22 le confirme.</td></tr><tr><td>Pages 3 et 9 : trace non vide → construire Simulator</td><td>Ce raccourci doit passer par tous les départs et leur vérification avant la construction finale. Le nouveau parcours renvoie vers <a href="#D09">D09</a>-<a href="#D15">D15</a>.</td></tr><tr><td>Pages 4 et 10 : retour de Process après les besoins</td><td>Les fonctions sont distinctes : _resolve_process renvoie Process ; _missing_resources renvoie toujours un dictionnaire, éventuellement vide.</td></tr><tr><td>Page 5 : départ programmé</td><td>Après le lancement, ce qui est mis dans le tas est la fin future ; les ressources ont déjà été consommées au départ.</td></tr><tr><td>Page 11 : référence verifier.py:158-175</td><td>La boucle de complétion se trouve actuellement aux lignes 123-136 ; 158-175 décrit _consume_and_schedule.</td></tr></tbody></table></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>48 / 52</span></footer></section><section class="page " id="tracabilite"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Retrouver les preuves et régénérer le guide</h1><p class="subtitle">La matrice complète est livrée dans matrice_tracabilite.csv.</p><main><div class="cols"><div><h2>60 décisions repérées</h2><p>D01-D05 : commande et diagnostic.</p><p>D06-D15 : trace vide, chronologie, ressources et production.</p><p>D16-D46 : lecture et validation de configuration.</p><p>D47-D51 : lecture de trace et conversion numérique.</p><p>D52-D60 : initialisation du planificateur dans l’objet retourné.</p><p>Les boucles et les actions sans condition sont décrites dans les pages de parcours. D01-D04, D15, D20, D27 et D51 représentent aussi des choix de bibliothèque, parcours ou exceptions : ce ne sont pas tous des « if » littéraux.</p></div><div><h2>Fichiers éditables</h2><p><b>content.json</b> : textes, décisions, renvois et preuves.</p><p><b>style.css</b> : mise en page et charte graphique.</p><p><b>build.py / guide.html</b> : génération et version HTML consultable.</p><p><b>verify_examples.py / example_results.json</b> : exécution et observations.</p><p><b>examples/</b> : configurations et traces exactes.</p><p><b>README.md / validation.md</b> : régénération, versions et bilan des contrôles.</p></div></div><div class="panel">La matrice associe chaque question à sa condition, sa fonction, ses lignes, ses sorties et un test ou exemple. Une preuve « lecture du code » n’est pas présentée comme un test exécuté. La couverture documentaire ne remplace pas la couverture des tests.</div></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>49 / 52</span></footer></section><section class="page " id="validation"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Ce qui a été vérifié</h1><p class="subtitle">Bilan de génération · Les limites du dépôt sont distinctes de la validation documentaire.</p><main><div class="cols"><div><h2>Document et exemples</h2><p><b>60 décisions</b> inventoriées et associées à leurs sources ; matrice CSV livrée.</p><p><b>30 cas exécutés</b>, dont 28 cas E01-E28, un exercice EX02 et un appel direct API01. Les codes, erreurs attendues, stocks finaux et cycles sont contrôlés selon le cas.</p><p>Les pages sont rendues en images, relues visuellement et contrôlées pour les débordements. Les liens internes et l’intégration d’Inter sont vérifiés.</p><p>Les empreintes des sources et les versions des outils figurent dans <b>validation.md</b> et les fichiers de preuves.</p></div><div><h2>Contrôles du dépôt sous Python 3.10</h2><p>Analyse de types, lint, sécurité, complexité et construction du paquet : contrôles exécutés ; détail dans le bilan joint.</p><p><b>La CI du dépôt n’est pas entièrement validée.</b> La suite brute rencontre des chemins de ressources obsolètes : les fichiers sont dans good_resources et bad_resources.</p><p>Le contrôle Black signale aussi un formatage préexistant dans src/krpsim/cli.py. Aucun seuil ni fichier du programme n’a été modifié pour masquer ces échecs.</p><p>Aucune validation de compréhension auprès d’un lecteur débutant n’est revendiquée.</p></div></div></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>50 / 52</span></footer></section><section class="page " id="exercices"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>À vous de suivre les décisions</h1><p class="subtitle">Utilisez la configuration commune de la page « L’atelier ». Corrections sur la page suivante.</p><main><div class="cols"><div><h2>1. Cette trace est-elle acceptée ?</h2><pre>0:scier
+2:assembler
+3:livrer</pre><p>Indiquez le code de sortie et le dernier cycle. Expliquez quand les planches et la chaise deviennent disponibles.</p><h2>2. Quelle erreur arrive en premier ?</h2><pre>2:scier
+1:inconnue</pre><p>Le second départ a deux problèmes : son moment recule et son nom est inconnu. Quelle vérification arrête le programme ?</p></div><div><h2>3. Quels stocks après deux départs ?</h2><pre>0:scier
+0:scier</pre><p>Calculez les stocks immédiatement après le second départ, puis après la finalisation.</p><p>Combien de bois reste-t-il ? Combien de planches sont disponibles à chacun de ces moments ? Quel est le dernier cycle affiché ?</p><div class="panel">Pour chaque réponse, citez au moins deux identifiants Dxx et retrouvez les fonctions dans le code. L’objectif est de justifier votre réponse, pas de deviner le résultat.</div></div></div></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>51 / 52</span></footer></section><section class="page " id="corrections-exercices"><div class="eyebrow">KRPSIM / COMPRENDRE ET RETROUVER LE CODE</div><h1>Corrections des trois exercices</h1><p class="subtitle">Autoévaluation : ces exercices n’ont pas fait l’objet d’un test de compréhension avec un lecteur débutant.</p><main><h2>1. Acceptée : code 0, dernier cycle 3</h2><p>Les moments 0, 2 et 3 ne reculent pas : <b>D09</b>. Au cycle 2, <b>D10</b> ajoute les trois planches de scier ; assembler peut les consommer. Au cycle 3, la chaise est ajoutée avant livrer. Sa durée nulle fait produire la livraison immédiatement : <b>D14 Oui</b>. Exemple exécuté E04.</p><h2>2. Le recul du cycle est signalé en premier</h2><p><b>_verify_entry</b> teste <b>D09</b> avant d’appeler <b>_resolve_process</b> et <b>D11</b>. Le message est « line 2: cycle 1 is before cycle 2 ». Le programme ne recherche donc pas le nom inconnue pour ce départ. Ce cas est fourni dans le dossier EX02.</p><h2>3. Deux temps à distinguer</h2><p>Juste après le second départ : <b>bois 0, clou 8, planche 0</b> (absente du dictionnaire). Les deux sciages sont encore en cours. <b>D14 Non</b> a programmé deux fins au cycle 2.</p><p>Après finalisation : <b>bois 0, clou 8, planche 6</b>. <b>D10</b> ajoute les résultats des deux opérations. Le dernier cycle affiché vaut <b>2</b>. Exemple exécuté E05.</p><div class="panel good">Vous avez compris le parcours si vous pouvez expliquer la différence entre « consommer au départ » et « produire à la fin », puis retrouver ces actions dans _consume_and_schedule et _complete_until.</div></main><footer><span>Code 268075e · 07/11/2026 · Guide ELI5</span><span>52 / 52</span></footer></section></body></html>

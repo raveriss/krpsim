@@ -1,0 +1,11 @@
+{
+  "pages": 34,
+  "connected_graphs": 32,
+  "nodes": 272,
+  "drawn_arrows": 304,
+  "referenced_decisions": 60,
+  "minimum_question_size_pt": 11.039106145251397,
+  "graph_connectivity": "Every node reachable from its graph entry",
+  "global_navigation": "Every graph reachable from G01 through named references",
+  "visual_review": "See README.md for the separate visual inspection"
+}

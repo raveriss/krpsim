@@ -1,0 +1,20 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Aucun départ annoncé</FONT>>];
+D07 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D07 · Aucune optimisation n’est-elle<BR/>demandée ?</FONT><BR/><FONT POINT-SIZE="10.5">not config.optimize</FONT>>];
+more [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">Reste-t-il une opération configurée<BR/>à examiner ?</FONT><BR/><FONT POINT-SIZE="10.5">for proc in config.processes.values()</FONT>>];
+D08 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D08 · Cette opération peut-elle<BR/>démarrer avec les stocks initiaux ?</FONT><BR/><FONT POINT-SIZE="10.5">all(config.stocks.get(n, 0) &gt;= q for n, q in<BR/>proc.needs.items())</FONT>>];
+sim [shape=box, style="filled,rounded", fillcolor="#e3f1f3", peripheries=2, label=<<FONT POINT-SIZE="13">Construire l’état initial, au cycle 0<BR/>Détail : G24</FONT><BR/><FONT POINT-SIZE="10.5">Simulator(config)</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Accepter et revenir dans G06</FONT><BR/><FONT POINT-SIZE="10.5">return sim</FONT>>];
+error [shape=ellipse, style="filled", fillcolor="#fbe7e2", peripheries=1, label=<<FONT POINT-SIZE="13">Refuser : du travail était possible au<BR/>départ</FONT><BR/><FONT POINT-SIZE="10.5">TraceError(&quot;empty trace&quot;) → G02</FONT>>];
+start -> D07 [label=""];
+D07 -> more [label="Oui"];
+D07 -> sim [label="Non"];
+more -> D08 [label="Oui"];
+more -> sim [label="Non"];
+D08 -> error [label="Oui"];
+D08 -> more [xlabel="Non", constraint=false, tailport=w, headport=w];
+sim -> end [label=""];
+}

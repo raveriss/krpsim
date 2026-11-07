@@ -1,0 +1,22 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Recevoir un cycle seuil et les opérations<BR/>en cours</FONT>>];
+init [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Initialiser la dernière fin ajoutée</FONT><BR/><FONT POINT-SIZE="10.5">last_completion = 0</FONT>>];
+D10 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D10 · Reste-t-il une opération dont<BR/>la fin est atteinte ou dépassée ?</FONT><BR/><FONT POINT-SIZE="10.5">running and running[0][0] &lt;= cycle</FONT>>];
+pop [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Retirer la fin la plus proche de la file</FONT><BR/><FONT POINT-SIZE="10.5">completion, _, process =<BR/>heapq.heappop(running)</FONT>>];
+time [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Mémoriser la plus grande fin ajoutée</FONT><BR/><FONT POINT-SIZE="10.5">last_completion = max(last_completion,<BR/>completion)</FONT>>];
+results [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">Reste-t-il un résultat de cette<BR/>opération à ajouter ?</FONT><BR/><FONT POINT-SIZE="10.5">for resource, quantity in<BR/>process.results.items()</FONT>>];
+credit [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Ajouter sa quantité au stock</FONT><BR/><FONT POINT-SIZE="10.5">stocks[resource] = stocks.get(resource, 0) +<BR/>quantity</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Retourner la dernière fin ajoutée, ou 0</FONT><BR/><FONT POINT-SIZE="10.5">return last_completion</FONT>>];
+start -> init [label=""];
+init -> D10 [label=""];
+D10 -> pop [label="Oui"];
+D10 -> end [label="Non"];
+pop -> time [label=""];
+time -> results [label=""];
+results -> credit [label="Oui"];
+results -> D10 [xlabel="Non", constraint=false];
+credit -> results [xlabel="Résultat suivant", constraint=false, tailport=w, headport=w];
+}

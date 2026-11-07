@@ -1,0 +1,26 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">La vérification a renvoyé un état final</FONT>>];
+init [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Recenser les noms des stocks initiaux</FONT><BR/><FONT POINT-SIZE="10.5">names = set(sim.config.stocks)</FONT>>];
+proc [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">Reste-t-il une opération configurée<BR/>?</FONT><BR/><FONT POINT-SIZE="10.5">for process in sim.config.processes.values()</FONT>>];
+gather [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Ajouter les noms de ses besoins et<BR/>résultats</FONT><BR/><FONT POINT-SIZE="10.5">names.update(process.needs)<BR/>names.update(process.results)</FONT>>];
+sort [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Trier les noms et calculer la largeur des<BR/>colonnes</FONT><BR/><FONT POINT-SIZE="10.5">stock_names =<BR/>sorted(sim.config.all_stock_names())<BR/>max_len = max((len(name) for name in<BR/>stock_names), default=0)</FONT>>];
+header [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Afficher le titre des stocks</FONT><BR/><FONT POINT-SIZE="10.5">print(&quot;Final Stocks:&quot;)</FONT>>];
+stock [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">Reste-t-il un nom de ressource à<BR/>afficher ?</FONT><BR/><FONT POINT-SIZE="10.5">for name in stock_names</FONT>>];
+line [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Afficher son nom aligné et sa quantité</FONT><BR/><FONT POINT-SIZE="10.5">sim.stocks.get(name, 0)</FONT>>];
+time [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Afficher le dernier cycle pris en compte</FONT><BR/><FONT POINT-SIZE="10.5">print(f&quot;Last cycle: {sim.time}&quot;)</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Revenir dans G01 et terminer</FONT>>];
+start -> init [label=""];
+init -> proc [label=""];
+proc -> gather [label="Oui"];
+proc -> sort [label="Non"];
+gather -> proc [xlabel="Opération suivante", constraint=false, tailport=w, headport=w];
+sort -> header [label=""];
+header -> stock [label=""];
+stock -> line [label="Oui"];
+stock -> time [label="Non"];
+line -> stock [xlabel="Ressource suivante", constraint=false, tailport=w, headport=w];
+time -> end [label=""];
+}

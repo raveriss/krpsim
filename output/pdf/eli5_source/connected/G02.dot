@@ -1,0 +1,25 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Entrer dans la fonction</FONT>>];
+files [shape=box, style="filled,rounded", fillcolor="#e3f1f3", peripheries=2, label=<<FONT POINT-SIZE="13">Lire et vérifier les deux fichiers<BR/>Détail : G03</FONT><BR/><FONT POINT-SIZE="10.5">verify_files(config, trace)</FONT>>];
+success [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Afficher « trace is valid »</FONT><BR/><FONT POINT-SIZE="10.5">print(&quot;trace is valid&quot;)</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Renvoyer l’état final et le code 0 à G01</FONT><BR/><FONT POINT-SIZE="10.5">return sim, 0</FONT>>];
+D03 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D03 · Une erreur de configuration<BR/>a-t-elle été signalée ?</FONT><BR/><FONT POINT-SIZE="10.5">except ParseError as exc</FONT>>];
+D04 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D04 · La lecture ou la vérification<BR/>a-t-elle signalé une erreur attendue<BR/>?</FONT><BR/><FONT POINT-SIZE="10.5">except (OSError, TraceError) as exc</FONT>>];
+configerr [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Afficher « invalid config: … »</FONT><BR/><FONT POINT-SIZE="10.5">print(f&quot;invalid config: {exc}&quot;)</FONT>>];
+traceerr [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Afficher « invalid trace: … »</FONT><BR/><FONT POINT-SIZE="10.5">print(f&quot;invalid trace: {exc}&quot;)</FONT>>];
+rejected [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Renvoyer aucun état et le code 1 à G01</FONT><BR/><FONT POINT-SIZE="10.5">return None, 1</FONT>>];
+unexpected [shape=ellipse, style="filled", fillcolor="#fbe7e2", peripheries=1, label=<<FONT POINT-SIZE="13">Laisser remonter l’exception inattendue</FONT><BR/><FONT POINT-SIZE="10.5">Non interceptée par _verify_inputs</FONT>>];
+start -> files [label=""];
+files -> success [label="Retour normal"];
+success -> end [label=""];
+files -> D03 [label="Exception"];
+D03 -> configerr [label="Oui"];
+D03 -> D04 [label="Non"];
+D04 -> traceerr [label="Oui"];
+D04 -> unexpected [label="Non"];
+configerr -> rejected [label=""];
+traceerr -> rejected [label=""];
+}

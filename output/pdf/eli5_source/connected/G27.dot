@@ -1,0 +1,17 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Texte décodé et fins de ligne acceptées</FONT>>];
+split [shape=box, style="filled,rounded", fillcolor="#edf4fa", peripheries=1, label=<<FONT POINT-SIZE="13">Séparer les lignes</FONT><BR/><FONT POINT-SIZE="10.5">lines = text.splitlines()</FONT>>];
+more [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">Reste-t-il une ligne à mesurer ?</FONT><BR/><FONT POINT-SIZE="10.5">for raw_line in lines</FONT>>];
+D22 [shape=diamond, style="filled", fillcolor="#fff3cd", peripheries=1, label=<<FONT POINT-SIZE="13">D22 · Cette ligne dépasse-t-elle 255<BR/>caractères ?</FONT><BR/><FONT POINT-SIZE="10.5">len(raw_line) &gt; 255</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Renvoyer les lignes à G15, puis G10</FONT><BR/><FONT POINT-SIZE="10.5">return lines</FONT>>];
+error [shape=ellipse, style="filled", fillcolor="#fbe7e2", peripheries=1, label=<<FONT POINT-SIZE="13">Refuser le texte de configuration</FONT><BR/><FONT POINT-SIZE="10.5">ParseError → G02</FONT>>];
+start -> split [label=""];
+split -> more [label=""];
+more -> D22 [label="Oui"];
+more -> end [label="Non"];
+D22 -> error [label="Oui"];
+D22 -> more [xlabel="Non", constraint=false, tailport=w, headport=w];
+}

@@ -1,0 +1,18 @@
+digraph flow {
+graph [rankdir=TB, ranksep=0.28, nodesep=0.25, pad=0.12, splines=polyline, bgcolor="transparent", ordering=out];
+node [fontname="Inter", fontsize=13, color="#66869b", fontcolor="#172e43", penwidth=1.1, margin="0.13,0.09"];
+edge [fontname="Inter", fontsize=11, color="#486d84", fontcolor="#235d6d", penwidth=1.15, arrowsize=0.7];
+start [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Deux chemins de fichiers reçus</FONT>>];
+config [shape=box, style="filled,rounded", fillcolor="#e3f1f3", peripheries=2, label=<<FONT POINT-SIZE="13">Lire et valider la configuration<BR/>Détail : G10</FONT><BR/><FONT POINT-SIZE="10.5">config = parse_file(config_path)</FONT>>];
+trace [shape=box, style="filled,rounded", fillcolor="#e3f1f3", peripheries=2, label=<<FONT POINT-SIZE="13">Lire et vérifier le format de la trace<BR/>Détail : G04</FONT><BR/><FONT POINT-SIZE="10.5">trace = parse_trace(trace_path)</FONT>>];
+replay [shape=box, style="filled,rounded", fillcolor="#e3f1f3", peripheries=2, label=<<FONT POINT-SIZE="13">Rejouer les départs annoncés<BR/>Détail : G06</FONT><BR/><FONT POINT-SIZE="10.5">sim = verify_trace(config, trace)</FONT>>];
+end [shape=ellipse, style="filled", fillcolor="#e2f2e7", peripheries=1, label=<<FONT POINT-SIZE="13">Renvoyer l’état vérifié à G02</FONT><BR/><FONT POINT-SIZE="10.5">return sim</FONT>>];
+error [shape=ellipse, style="filled", fillcolor="#fbe7e2", peripheries=1, label=<<FONT POINT-SIZE="13">Transmettre l’exception à G02</FONT><BR/><FONT POINT-SIZE="10.5">Aucune conversion dans verify_files</FONT>>];
+start -> config [label=""];
+config -> trace [label="Réussite"];
+trace -> replay [label="Réussite"];
+replay -> end [label="Réussite"];
+config -> error [label="Exception"];
+trace -> error [label="Exception"];
+replay -> error [label="Exception"];
+}

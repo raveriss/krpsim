@@ -1,0 +1,1545 @@
+{
+  "date": "07/11/2026",
+  "revision": "268075e",
+  "decisions": [
+    {
+      "id": "D01",
+      "question": "La commande demande-t-elle l’aide ?",
+      "function": "main → argparse",
+      "source": "src/krpsim_verif/cli.py:94",
+      "condition": "parse_args(argv) : option -h / --help",
+      "yes": "Afficher l’aide ; arrêt normal, code 0.",
+      "no": "Contrôler les arguments : D02.",
+      "why": "L’aide explique la commande sans ouvrir de fichier.",
+      "example": "krpsim_verif --help affiche les deux chemins attendus.",
+      "proof": "tests/test_cli.py::test_verifier_cli_help"
+    },
+    {
+      "id": "D02",
+      "question": "Les arguments de la commande sont-ils incorrects ?",
+      "function": "build_parser / main",
+      "source": "src/krpsim_verif/cli.py:41-44,94",
+      "condition": "parse_args(argv) : erreur d’arguments",
+      "yes": "Afficher usage et erreur ; arrêt, code 2.",
+      "no": "Appeler _verify_inputs → verify_files.",
+      "why": "Il faut indiquer un fichier de configuration et un fichier de trace.",
+      "example": "Un chemin manquant ou une option inconnue provoque une erreur.",
+      "proof": "tests/test_cli.py::test_cli_rejects_removed_logging_options ; E20"
+    },
+    {
+      "id": "D03",
+      "question": "Une erreur de configuration a-t-elle été signalée ?",
+      "function": "_verify_inputs",
+      "source": "src/krpsim_verif/cli.py:50-55",
+      "condition": "except ParseError as exc",
+      "yes": "Afficher invalid config: … ; renvoyer (None, 1) → D05.",
+      "no": "Tester l’autre catégorie d’erreurs : D04.",
+      "why": "La commande transforme une exception précise en message lisible.",
+      "example": "Un stock déclaré deux fois produit invalid config.",
+      "proof": "tests/test_cli.py::test_verifier_cli_invalid_config"
+    },
+    {
+      "id": "D04",
+      "question": "La lecture ou la vérification a-t-elle signalé une erreur attendue ?",
+      "function": "_verify_inputs",
+      "source": "src/krpsim_verif/cli.py:56-60",
+      "condition": "except (OSError, TraceError) as exc",
+      "yes": "Afficher invalid trace: … ; renvoyer (None, 1) → D05.",
+      "no": "Sans erreur : trace is valid → D05. Exception non prévue : propagation.",
+      "why": "Seules les exceptions prévues ici deviennent ce diagnostic.",
+      "example": "Une trace absente déclenche OSError. Un encodage de trace invalide échappe à ce traitement.",
+      "proof": "E21, E22 ; tests/test_cli.py::test_verifier_cli_error"
+    },
+    {
+      "id": "D05",
+      "question": "Dispose-t-on d’un état final après la vérification ?",
+      "function": "main",
+      "source": "src/krpsim_verif/cli.py:98-101",
+      "condition": "sim is not None",
+      "yes": "Afficher les stocks et le dernier cycle ; retourner exit_code.",
+      "no": "Ne pas afficher de stocks ; retourner exit_code.",
+      "why": "Un échec attendu renvoie None, pas un état final utilisable.",
+      "example": "Avec E01, afficher les stocks et le cycle 3 ; avec E02, seulement l’erreur.",
+      "proof": "E01, E02"
+    },
+    {
+      "id": "D06",
+      "question": "La trace ne contient-elle aucun départ à vérifier ?",
+      "function": "verify_trace",
+      "source": "src/krpsim_verif/verifier.py:237-246",
+      "condition": "not trace",
+      "yes": "Appeler _verify_empty_trace → D07.",
+      "no": "Copier les stocks ; parcourir les départs → D09.",
+      "why": "Un fichier sans départ suit une règle particulière.",
+      "example": "Un fichier vide et un fichier contenant seulement # commentaire donnent tous deux une liste vide.",
+      "proof": "E06 à E09"
+    },
+    {
+      "id": "D07",
+      "question": "La configuration ne demande-t-elle aucune optimisation ?",
+      "function": "_verify_empty_trace",
+      "source": "src/krpsim_verif/verifier.py:115-120",
+      "condition": "not config.optimize",
+      "yes": "Tester les opérations avec les stocks initiaux : D08.",
+      "no": "Accepter la trace vide ; Simulator(config), temps 0.",
+      "why": "La présence d’une directive optimize non vide change la règle de trace vide.",
+      "example": "optimize:(chaise) suffit à accepter une trace vide, même si une opération pourrait démarrer.",
+      "proof": "E06, E08"
+    },
+    {
+      "id": "D08",
+      "question": "Cette opération peut-elle démarrer avec les stocks initiaux ?",
+      "function": "_verify_empty_trace",
+      "source": "src/krpsim_verif/verifier.py:116-119",
+      "condition": "all(config.stocks.get(n, 0) >= q for n, q in proc.needs.items())",
+      "yes": "Refuser immédiatement : TraceError(\"empty trace\").",
+      "no": "Tester l’opération suivante ; si aucune ne peut démarrer, accepter.",
+      "why": "Sans optimisation, une trace vide est refusée si du travail est déjà possible.",
+      "example": "Il faut 1 bois : stock 2 → refus ; stock 0 et aucune autre opération possible → acceptation.",
+      "proof": "E06, E07"
+    },
+    {
+      "id": "D09",
+      "question": "Le départ lu est-il prévu avant le départ précédent ?",
+      "function": "_verify_entry",
+      "source": "src/krpsim_verif/verifier.py:186-191",
+      "condition": "entry.cycle < state.previous_cycle",
+      "yes": "Refuser : cycle … is before cycle … → D04.",
+      "no": "Ajouter les productions terminées : _complete_until → D10.",
+      "why": "Les moments annoncés ne doivent pas reculer. Au premier départ, la référence vaut 0.",
+      "example": "Après le cycle 8 : 5 est refusé ; 8 est autorisé par ce contrôle.",
+      "proof": "E03 ; test_verify_trace_rejects_decreasing_cycles"
+    },
+    {
+      "id": "D10",
+      "question": "Reste-t-il une opération dont la fin est atteinte ou dépassée ?",
+      "function": "_complete_until",
+      "source": "src/krpsim_verif/verifier.py:130-136",
+      "condition": "running and running[0][0] <= cycle",
+      "yes": "Retirer la fin la plus proche, ajouter ses résultats ; recommencer D10.",
+      "no": "Renvoyer last_completion : dernière fin ajoutée, ou 0.",
+      "why": "Les ressources produites deviennent disponibles avant de contrôler le nouveau départ.",
+      "example": "scier finit au cycle 2 : ses planches sont disponibles pour un départ au cycle 2.",
+      "proof": "E01, E12, E17"
+    },
+    {
+      "id": "D11",
+      "question": "Le nom demandé est-il absent des opérations configurées ?",
+      "function": "_resolve_process",
+      "source": "src/krpsim_verif/verifier.py:142-145",
+      "condition": "process is None",
+      "yes": "Refuser : unknown process … in trace → D04.",
+      "no": "Renvoyer process ; vérifier ses ressources → D12.",
+      "why": "Chaque départ doit citer une opération qui existe dans la configuration.",
+      "example": "0:inconnue est bien écrit, mais aucune opération de ce nom n’existe.",
+      "proof": "E10"
+    },
+    {
+      "id": "D12",
+      "question": "Le stock de cette ressource est-il inférieur à la quantité nécessaire ?",
+      "function": "_missing_resources",
+      "source": "src/krpsim_verif/verifier.py:151-155",
+      "condition": "stocks.get(resource, 0) < quantity",
+      "yes": "Ajouter le manque : quantité nécessaire - stock ; ressource suivante.",
+      "no": "Ne rien ajouter ; ressource suivante. Après toutes : D13.",
+      "why": "Chaque ressource est contrôlée séparément. Une ressource absente du stock vaut 0.",
+      "example": "3 planches nécessaires, 2 disponibles : ajouter planche: 1 à missing.",
+      "proof": "E02, E13"
+    },
+    {
+      "id": "D13",
+      "question": "Manque-t-il au moins une ressource pour démarrer cette opération ?",
+      "function": "_verify_entry",
+      "source": "src/krpsim_verif/verifier.py:194-200",
+      "condition": "if missing",
+      "yes": "Refuser : ligne, cycle, opération et quantités manquantes → D04.",
+      "no": "Appeler _consume_and_schedule : consommer les besoins → D14.",
+      "why": "Avoir assez de clous ne compense pas un manque de planches.",
+      "example": "Une chaise demande 3 planches et 4 clous ; avec 2 planches et 10 clous, il manque 1 planche.",
+      "proof": "E02, E13"
+    },
+    {
+      "id": "D14",
+      "question": "Cette opération produit-elle ses résultats immédiatement ?",
+      "function": "_consume_and_schedule",
+      "source": "src/krpsim_verif/verifier.py:165-175",
+      "condition": "process.delay == 0",
+      "yes": "Ajouter les résultats maintenant ; terminer le départ → D15.",
+      "no": "Programmer la fin à entry.cycle + process.delay → D15.",
+      "why": "Les besoins ont déjà été retirés. La durée décide quand les résultats sont ajoutés.",
+      "example": "livrer dure 0 : son résultat est disponible au prochain départ, même au même cycle.",
+      "proof": "E04, E05"
+    },
+    {
+      "id": "D15",
+      "question": "Reste-t-il un départ dans la liste à vérifier ?",
+      "function": "verify_trace",
+      "source": "src/krpsim_verif/verifier.py:243-246",
+      "condition": "for line_number, entry in enumerate(trace, start=1)",
+      "yes": "Appeler _verify_entry pour le suivant → D09.",
+      "no": "Finaliser : _build_verified_simulator → D10, seuil 2**63 - 1.",
+      "why": "On respecte l’ordre du fichier, même lorsque plusieurs départs partagent un cycle.",
+      "example": "E05 lance deux opérations au cycle 0 : la seconde voit le stock laissé par la première.",
+      "proof": "E05 ; décision de parcours, boucle for"
+    },
+    {
+      "id": "D16",
+      "question": "Le chemin de configuration contient-il un élément « .. » ?",
+      "function": "parse_file",
+      "source": "src/krpsim/parser.py:592-594",
+      "condition": "\"..\" in path.parts",
+      "yes": "Refuser : path traversal detected → D03.",
+      "no": "Vérifier le fichier → D17.",
+      "why": "Le programme rejette explicitement les remontées de dossier dans ce chemin.",
+      "example": "../atelier.cfg est refusé avant de lire son contenu.",
+      "proof": "tests/test_parser.py::test_parse_path_traversal"
+    },
+    {
+      "id": "D17",
+      "question": "Le chemin ne désigne-t-il pas un fichier existant ?",
+      "function": "parse_file",
+      "source": "src/krpsim/parser.py:596-598",
+      "condition": "not path.is_file()",
+      "yes": "Refuser : invalid path → D03.",
+      "no": "Vérifier les droits → D18.",
+      "why": "Un répertoire ou un fichier absent ne fournit pas de configuration.",
+      "example": "Un chemin vers un dossier est refusé.",
+      "proof": "tests/test_parser.py::test_parse_nonexistent_path"
+    },
+    {
+      "id": "D18",
+      "question": "Le système refuse-t-il la lecture de la configuration ?",
+      "function": "parse_file",
+      "source": "src/krpsim/parser.py:600-605",
+      "condition": "not os.access(path, os.R_OK)",
+      "yes": "Refuser : file is not readable → D03.",
+      "no": "Lire les octets : _read_lines → D19.",
+      "why": "Les droits sont vérifiés avant l’ouverture ; un échec ultérieur reste possible.",
+      "example": "Sans droit de lecture, le contrôle échoue ; le test du dépôt simule ce refus.",
+      "proof": "tests/test_parser.py::test_parse_unreadable_file"
+    },
+    {
+      "id": "D19",
+      "question": "Le fichier commence-t-il par une marque UTF-8 BOM ?",
+      "function": "_read_lines",
+      "source": "src/krpsim/parser.py:487-491",
+      "condition": "raw.startswith(UTF8_BOM)",
+      "yes": "Refuser : BOM detected in file → D03.",
+      "no": "Décoder le texte → D20.",
+      "why": "Cette marque invisible est interdite dans la configuration.",
+      "example": "Les trois premiers octets EF BB BF déclenchent le refus.",
+      "proof": "tests/test_parser.py::test_parse_bom_rejected"
+    },
+    {
+      "id": "D20",
+      "question": "Le contenu est-il impossible à décoder en UTF-8 ?",
+      "function": "_read_lines",
+      "source": "src/krpsim/parser.py:493-499",
+      "condition": "except UnicodeDecodeError as exc",
+      "yes": "Convertir en ParseError : file must be UTF-8 encoded → D03.",
+      "no": "Examiner les fins de ligne → D21.",
+      "why": "Le programme doit pouvoir lire les caractères de la configuration.",
+      "example": "L’octet FF isolé n’est pas un texte UTF-8 valide.",
+      "proof": "tests/test_parser.py::test_parse_non_utf8_file"
+    },
+    {
+      "id": "D21",
+      "question": "Le fichier contient-il un caractère de retour chariot ?",
+      "function": "_read_lines",
+      "source": "src/krpsim/parser.py:501-505",
+      "condition": "b\"\\r\" in raw",
+      "yes": "Refuser : CRLF line endings are not allowed → D03.",
+      "no": "Séparer les lignes et vérifier leur longueur → D22.",
+      "why": "La configuration interdit tout retour chariot, même isolé.",
+      "example": "Une configuration avec des fins Windows CRLF est refusée ; une trace CRLF est acceptée.",
+      "proof": "E11 ; tests/test_parser.py::test_parse_crlf_rejected"
+    },
+    {
+      "id": "D22",
+      "question": "Cette ligne dépasse-t-elle 255 caractères ?",
+      "function": "_read_lines",
+      "source": "src/krpsim/parser.py:507-513",
+      "condition": "len(raw_line) > 255",
+      "yes": "Refuser : line exceeds 255 characters → D03.",
+      "no": "Ligne suivante ; après toutes, _parse_lines → D23.",
+      "why": "La longueur est contrôlée avant de supprimer espaces ou commentaires.",
+      "example": "Une ligne de commentaire de 256 caractères est refusée ; 255 passe ce contrôle.",
+      "proof": "tests/test_parser.py::test_parse_long_line_rejected"
+    },
+    {
+      "id": "D23",
+      "question": "Après retrait des espaces aux bords, la ligne est-elle vide ou commentée ?",
+      "function": "_parse_lines",
+      "source": "src/krpsim/parser.py:546-552",
+      "condition": "not line or line.startswith(\"#\")",
+      "yes": "Ignorer et lire la ligne suivante ; fin du fichier → D43.",
+      "no": "Identifier son type → D24.",
+      "why": "Les lignes de décoration de la configuration ne décrivent pas de données.",
+      "example": "Une ligne «   # atelier » est ignorée ici ; les règles de trace sont différentes.",
+      "proof": "tests/test_parser.py::test_parse_valid_simple"
+    },
+    {
+      "id": "D24",
+      "question": "La ligne commence-t-elle par « optimize: » ?",
+      "function": "_parse_lines",
+      "source": "src/krpsim/parser.py:554-556",
+      "condition": "line.startswith(\"optimize:\")",
+      "yes": "Appeler _handle_optimize → D38, puis ligne suivante.",
+      "no": "Chercher une déclaration d’opération → D25.",
+      "why": "Ce préfixe est reconnu avant les autres formes de lignes.",
+      "example": "optimize:(chaise) indique un objectif ; sa validité sera contrôlée.",
+      "proof": "tests/test_parser.py::test_parse_optimize"
+    },
+    {
+      "id": "D25",
+      "question": "La ligne contient-elle « :( », signe d’une opération ?",
+      "function": "_parse_lines",
+      "source": "src/krpsim/parser.py:558-560",
+      "condition": "\":(\" in line",
+      "yes": "Appeler _handle_process → D31, puis ligne suivante.",
+      "no": "Chercher une déclaration de stock → D26.",
+      "why": "Le tri initial choisit le lecteur spécialisé ; il ne valide pas encore toute la ligne.",
+      "example": "scier:(bois:1):(planche:3):2 est envoyé au lecteur des opérations.",
+      "proof": "tests/test_parser.py::test_internal_parser_functions"
+    },
+    {
+      "id": "D26",
+      "question": "La ligne restante contient-elle un deux-points ?",
+      "function": "_parse_lines",
+      "source": "src/krpsim/parser.py:562-568",
+      "condition": "\":\" in line",
+      "yes": "Appeler _handle_stock → D27, puis ligne suivante.",
+      "no": "Refuser : unrecognized line → D03.",
+      "why": "Sans forme reconnue, la configuration est refusée.",
+      "example": "bois:2 décrit un stock ; bonjour seul est refusé.",
+      "proof": "tests/test_parser.py::test_parse_unrecognized_line"
+    },
+    {
+      "id": "D27",
+      "question": "Le nom du stock et sa quantité sont-ils impossibles à séparer ?",
+      "function": "_parse_stock",
+      "source": "src/krpsim/parser.py:127-133",
+      "condition": "except ValueError : line.split(\":\", 1)",
+      "yes": "Refuser : invalid stock line → D03.",
+      "no": "Vérifier les deux morceaux → D28.",
+      "why": "Cette protection couvre aussi les appels directs à _parse_stock.",
+      "example": "_parse_stock('bois') échoue ; la commande l’aurait déjà rejeté en D26.",
+      "proof": "tests/test_parser.py::test_internal_parser_functions"
+    },
+    {
+      "id": "D28",
+      "question": "Le nom est-il vide ou la quantité contient-elle autre chose que des chiffres ?",
+      "function": "_parse_stock",
+      "source": "src/krpsim/parser.py:135-139",
+      "condition": "not name or not qty.isdigit()",
+      "yes": "Refuser : invalid stock line → D03.",
+      "no": "Convertir qty avec int ; contrôler D29.",
+      "why": "Un stock doit avoir un nom et une quantité lisible comme entier.",
+      "example": "bois:x et :2 sont refusés. Certains chiffres Unicode passent isdigit mais pas int.",
+      "proof": "tests/test_parser.py::test_internal_parser_functions ; E23"
+    },
+    {
+      "id": "D29",
+      "question": "La quantité initiale obtenue est-elle négative ?",
+      "function": "_parse_stock",
+      "source": "src/krpsim/parser.py:141-145",
+      "condition": "quantity < 0",
+      "yes": "Refuser : invalid stock quantity → D03.",
+      "no": "Renvoyer (name, quantity) ; contrôler D30.",
+      "why": "Contrôle défensif présent dans le code, normalement inaccessible après isdigit et int.",
+      "example": "bois:-1 est déjà refusé en D28. Le test du dépôt force ce chemin avec un substitut de chaîne.",
+      "proof": "tests/test_parser.py::test_parse_stock_negative"
+    },
+    {
+      "id": "D30",
+      "question": "Ce stock initial a-t-il déjà été déclaré ?",
+      "function": "_handle_stock",
+      "source": "src/krpsim/parser.py:370-376",
+      "condition": "name in stocks",
+      "yes": "Refuser : duplicate stock → D03.",
+      "no": "Mémoriser stocks[name] = qty ; ligne suivante → D23.",
+      "why": "Une ressource ne doit pas avoir deux quantités initiales concurrentes.",
+      "example": "Deux lignes bois:2 puis bois:3 sont refusées, pas additionnées.",
+      "proof": "tests/test_parser.py::test_parse_duplicate_entries"
+    },
+    {
+      "id": "D31",
+      "question": "La déclaration d’opération ne respecte-t-elle pas le format attendu ?",
+      "function": "_parse_process",
+      "source": "src/krpsim/parser.py:219-243",
+      "condition": "not match",
+      "yes": "Refuser : invalid process line → D03.",
+      "no": "Lire durée ; _parse_resources pour besoins puis résultats → D33.",
+      "why": "La forme attendue est nom:(besoins):(résultats):durée ; la durée peut valoir 0.",
+      "example": "scier:(bois:1):(planche:3):2 passe ; une durée -2 échoue.",
+      "proof": "tests/test_parser.py::test_parse_accepts_zero_delay_processes"
+    },
+    {
+      "id": "D32",
+      "question": "Une opération porte-t-elle déjà ce nom ?",
+      "function": "_handle_process",
+      "source": "src/krpsim/parser.py:342-348",
+      "condition": "process.name in processes",
+      "yes": "Refuser : duplicate process → D03.",
+      "no": "Ajouter processes[process.name] ; ligne suivante → D23.",
+      "why": "Ce contrôle arrive après la lecture complète de l’opération.",
+      "example": "Déclarer scier deux fois est refusé, même si les recettes diffèrent.",
+      "proof": "tests/test_parser.py::test_parse_duplicate_entries"
+    },
+    {
+      "id": "D33",
+      "question": "Le bloc de ressources est-il vide ?",
+      "function": "_parse_resources",
+      "source": "src/krpsim/parser.py:167-173",
+      "condition": "not block",
+      "yes": "Renvoyer {} au lecteur ; après besoins et résultats, contrôler D32.",
+      "no": "Parcourir les éléments séparés par ; → D34.",
+      "why": "Une opération peut ne rien consommer ou ne rien produire.",
+      "example": "cadeau:():(planche:1):0 n’a aucun besoin ; un résultat omis devient aussi un bloc vide.",
+      "proof": "tests/test_parser.py::test_parse_resources_edge_cases"
+    },
+    {
+      "id": "D34",
+      "question": "L’élément entre deux séparateurs est-il vide ?",
+      "function": "_parse_resources",
+      "source": "src/krpsim/parser.py:173-179",
+      "condition": "not item",
+      "yes": "Ignorer cet élément ; passer au suivant.",
+      "no": "Séparer nom et quantité → D35.",
+      "why": "Les séparateurs supplémentaires sont tolérés dans les blocs.",
+      "example": "bois:1;;clou:4 produit les mêmes ressources que bois:1;clou:4.",
+      "proof": "tests/test_parser.py::test_parse_resources_edge_cases"
+    },
+    {
+      "id": "D35",
+      "question": "Le nom de ressource est-il vide ou sa quantité mal écrite ?",
+      "function": "_parse_resources",
+      "source": "src/krpsim/parser.py:179-185",
+      "condition": "not name or not qty.isdigit()",
+      "yes": "Refuser : invalid quantity for resource → D03.",
+      "no": "Convertir avec int ; contrôler D36.",
+      "why": "Chaque élément doit nommer une ressource et préciser sa quantité.",
+      "example": "bois:x, :2 et bois sans quantité sont refusés.",
+      "proof": "tests/test_parser.py::test_parse_resources_edge_cases"
+    },
+    {
+      "id": "D36",
+      "question": "La quantité de ressource est-elle nulle ou négative ?",
+      "function": "_parse_resources",
+      "source": "src/krpsim/parser.py:187-189",
+      "condition": "quantity <= 0",
+      "yes": "Refuser : invalid quantity for resource → D03.",
+      "no": "Vérifier le doublon → D37.",
+      "why": "Les quantités d’une recette doivent être strictement positives, contrairement au stock initial.",
+      "example": "bois:0 est permis comme stock initial, mais refusé dans les besoins d’une opération.",
+      "proof": "tests/test_parser.py::test_parse_resources_edge_cases_continued"
+    },
+    {
+      "id": "D37",
+      "question": "Cette ressource apparaît-elle déjà dans ce même bloc ?",
+      "function": "_parse_resources",
+      "source": "src/krpsim/parser.py:191-197",
+      "condition": "name in resources",
+      "yes": "Refuser : duplicate resource → D03.",
+      "no": "Ajouter ; élément suivant → D34. Bloc terminé : retourner au lecteur.",
+      "why": "Un besoin ou un résultat ne peut pas nommer deux fois la même ressource dans son bloc.",
+      "example": "(bois:1;bois:2) est refusé. Du bois dans les besoins ET les résultats est permis.",
+      "proof": "tests/test_parser.py::test_parse_resources_edge_cases"
+    },
+    {
+      "id": "D38",
+      "question": "Une directive d’optimisation a-t-elle déjà été lue ?",
+      "function": "_handle_optimize",
+      "source": "src/krpsim/parser.py:316-320",
+      "condition": "optimize is not None",
+      "yes": "Refuser : duplicate optimize line → D03.",
+      "no": "Appeler _parse_optimize → D39.",
+      "why": "Le fichier ne peut déclarer qu’une seule liste d’objectifs.",
+      "example": "Deux lignes optimize:(chaise) sont refusées.",
+      "proof": "tests/test_parser.py::test_parse_optimize_errors"
+    },
+    {
+      "id": "D39",
+      "question": "La directive d’optimisation est-elle mal formée ?",
+      "function": "_parse_optimize",
+      "source": "src/krpsim/parser.py:266-274",
+      "condition": "not match",
+      "yes": "Refuser : invalid optimize line → D03.",
+      "no": "Extraire le bloc ; filtrer les éléments → D40.",
+      "why": "Les objectifs doivent être placés entre parenthèses.",
+      "example": "optimize:chaise échoue ; optimize:(chaise) passe.",
+      "proof": "tests/test_parser.py::test_parse_optimize_errors"
+    },
+    {
+      "id": "D40",
+      "question": "Cet élément de la liste d’objectifs contient-il du texte ?",
+      "function": "_parse_optimize",
+      "source": "src/krpsim/parser.py:274",
+      "condition": "[item for item in block.split(\";\") if item]",
+      "yes": "Conserver ; élément suivant. Après tous : D41.",
+      "no": "Ignorer l’élément ; après filtrage → D41.",
+      "why": "Les éléments vides entre séparateurs ne deviennent pas des objectifs.",
+      "example": "optimize:(;chaise;;) conserve uniquement chaise.",
+      "proof": "tests/test_parser.py::test_parse_optimize"
+    },
+    {
+      "id": "D41",
+      "question": "La liste d’objectifs est-elle vide après ce filtrage ?",
+      "function": "_parse_optimize",
+      "source": "src/krpsim/parser.py:276-284",
+      "condition": "not items",
+      "yes": "Refuser : invalid optimize line → D03.",
+      "no": "Parcourir les objectifs et chercher les doublons → D42.",
+      "why": "Une directive présente doit demander au moins un objectif.",
+      "example": "optimize:() et optimize:(;;) sont refusés.",
+      "proof": "tests/test_parser.py::test_parse_optimize_empty"
+    },
+    {
+      "id": "D42",
+      "question": "Cet objectif a-t-il déjà été rencontré dans la liste ?",
+      "function": "_parse_optimize",
+      "source": "src/krpsim/parser.py:284-294",
+      "condition": "item in seen",
+      "yes": "Refuser : duplicate optimize target → D03.",
+      "no": "Ajouter à seen et result ; objectif suivant. Après tous : ligne suivante → D23.",
+      "why": "L’ordre est conservé, sans doublon.",
+      "example": "optimize:(chaise;chaise) est refusé ; optimize:(time;chaise) conserve cet ordre.",
+      "proof": "tests/test_parser.py::test_parse_optimize_errors"
+    },
+    {
+      "id": "D43",
+      "question": "Manque-t-il tout stock initial ou toute opération ?",
+      "function": "parse_file",
+      "source": "src/krpsim/parser.py:607-611",
+      "condition": "not stocks or not processes",
+      "yes": "Refuser : configuration must define at least one stock and process → D03.",
+      "no": "Contrôler les objectifs → D44.",
+      "why": "Une configuration lue depuis un fichier doit contenir ces deux catégories.",
+      "example": "bois:2 seul est insuffisant ; bois:0 compte bien comme un stock déclaré.",
+      "proof": "tests/test_evaluation.py::test_invalid_or_missing_sections_are_reported_by_cli"
+    },
+    {
+      "id": "D44",
+      "question": "La configuration contient-elle une liste d’objectifs non vide ?",
+      "function": "parse_file",
+      "source": "src/krpsim/parser.py:613-617",
+      "condition": "if optimize",
+      "yes": "Appeler _validate_optimize → D45, puis D46.",
+      "no": "Vérifier les ressources des opérations → D46.",
+      "why": "La validation des cibles précède celle des ressources nécessaires.",
+      "example": "Sans ligne optimize, ce contrôle est sauté.",
+      "proof": "tests/test_parser.py::test_parse_optimize"
+    },
+    {
+      "id": "D45",
+      "question": "Cet objectif est-il inconnu et différent de « time » ?",
+      "function": "_validate_optimize",
+      "source": "src/krpsim/parser.py:406-418",
+      "condition": "item != \"time\" and item not in known",
+      "yes": "Refuser : unknown stock … in optimize line → D03.",
+      "no": "Objectif suivant ; après tous, passer à D46.",
+      "why": "known réunit les stocks, besoins et résultats ; time est un nom spécial accepté.",
+      "example": "optimize:(licorne) échoue si aucune ressource ne s’appelle licorne.",
+      "proof": "tests/test_parser.py::test_parse_optimize_errors"
+    },
+    {
+      "id": "D46",
+      "question": "Cette ressource nécessaire est-elle absente des stocks déclarés et de tous les résultats ?",
+      "function": "_validate_process_resources",
+      "source": "src/krpsim/parser.py:449-463",
+      "condition": "res not in defined",
+      "yes": "Refuser : unknown resource … used in process → D03.",
+      "no": "Besoin suivant, puis opération suivante ; retourner Config après tous.",
+      "why": "Ce contrôle vérifie l’existence d’une source, pas la disponibilité actuelle ni l’absence de cycle.",
+      "example": "planche peut manquer au départ si scier sait en produire. Le départ devra encore attendre.",
+      "proof": "tests/test_parser.py::test_parse_unknown_resource ; E01"
+    },
+    {
+      "id": "D47",
+      "question": "La ligne de trace est-elle vide après retrait de sa fin de ligne ?",
+      "function": "_parse_trace_line",
+      "source": "src/krpsim_verif/verifier.py:88,100-101",
+      "condition": "not line",
+      "yes": "Refuser : empty trace line idx → D04.",
+      "no": "Tester le commentaire → D48.",
+      "why": "Une ligne vide est une erreur, contrairement à un fichier sans aucune ligne.",
+      "example": "Un fichier contenant seulement un saut de ligne est refusé ; un fichier de zéro octet va à D06.",
+      "proof": "E14, E06"
+    },
+    {
+      "id": "D48",
+      "question": "Le tout premier caractère de la ligne est-il « # » ?",
+      "function": "_parse_trace_line",
+      "source": "src/krpsim_verif/verifier.py:102-103",
+      "condition": "line.startswith(\"#\")",
+      "yes": "Ignorer ; lire la ligne suivante. À la fin : D06.",
+      "no": "Chercher le séparateur → D49.",
+      "why": "La trace ne supprime pas les espaces avant de chercher un commentaire.",
+      "example": "# atelier est ignoré ; «  # atelier » n’est pas reconnu comme commentaire.",
+      "proof": "E09, E15"
+    },
+    {
+      "id": "D49",
+      "question": "Le séparateur « : » est-il absent de cette ligne ?",
+      "function": "_parse_trace_line",
+      "source": "src/krpsim_verif/verifier.py:104-106",
+      "condition": "\":\" not in line",
+      "yes": "Refuser : invalid trace line idx → D04.",
+      "no": "Couper au premier : ; vérifier cycle et nom → D50.",
+      "why": "Le premier deux-points sépare le moment du départ et le nom de l’opération.",
+      "example": "0scier est refusé ; 0:scier:extra garde scier:extra comme nom entier.",
+      "proof": "E15 ; tests/test_verifier.py::test_parse_trace_errors"
+    },
+    {
+      "id": "D50",
+      "question": "Le cycle est-il mal écrit ou le nom de l’opération vide ?",
+      "function": "_parse_trace_line",
+      "source": "src/krpsim_verif/verifier.py:107-110",
+      "condition": "not cycle_str.isdigit() or not name",
+      "yes": "Refuser : invalid trace line idx → D04.",
+      "no": "Convertir le cycle → D51 ; ajouter TraceEntry ; ligne suivante.",
+      "why": "Le format est contrôlé ici ; l’existence de l’opération est vérifiée plus tard en D11.",
+      "example": "x:scier et 0: sont refusés ; 00:scier devient le cycle 0.",
+      "proof": "E16, E23 ; tests/test_verifier.py::test_parse_trace_errors"
+    },
+    {
+      "id": "D51",
+      "question": "La conversion du cycle en entier échoue-t-elle malgré isdigit ?",
+      "function": "_parse_trace_line",
+      "source": "src/krpsim_verif/verifier.py:109",
+      "condition": "int(cycle_str) peut lever ValueError",
+      "yes": "Exception non interceptée par la CLI ; arrêt technique.",
+      "no": "Créer TraceEntry et continuer la lecture.",
+      "why": "isdigit accepte certains caractères que int ne sait pas convertir ; c’est une limite réelle.",
+      "example": "²:scier passe isdigit mais int('²') échoue ; ٢:scier se convertit en 2.",
+      "proof": "E23, E24"
+    },
+    {
+      "id": "D52",
+      "question": "Ce nom d’objectif est-il différent de « time » ?",
+      "function": "ProductionPlanner.__init__",
+      "source": "src/krpsim/optimizer.py:62",
+      "condition": "t != \"time\"",
+      "yes": "Conserver le nom dans self.targets.",
+      "no": "L’exclure ; continuer la liste.",
+      "why": "Le constructeur prépare ses données même si aucune recherche de plan n’est lancée.",
+      "example": "[time, chaise] devient (chaise,) dans self.targets.",
+      "proof": "Lecture __init__ ; E08"
+    },
+    {
+      "id": "D53",
+      "question": "La quantité produite pour cette ressource est-elle positive ?",
+      "function": "ProductionPlanner.__init__",
+      "source": "src/krpsim/optimizer.py:64-68",
+      "condition": "quantity > 0",
+      "yes": "Ajouter cette opération à self._producers[resource].",
+      "no": "Ne pas l’ajouter ; résultat suivant.",
+      "why": "Ce répertoire indique quelles opérations produisent chaque ressource.",
+      "example": "scier produit 3 planches : scier est enregistré comme producteur de planche.",
+      "proof": "Lecture __init__ ; E01"
+    },
+    {
+      "id": "D54",
+      "question": "Le nombre d’objectifs ressources est-il différent de un ?",
+      "function": "_terminal_converter",
+      "source": "src/krpsim/optimizer.py:84-87",
+      "condition": "len(self.targets) != 1",
+      "yes": "Retourner None ; choisir goal → D59.",
+      "no": "Chercher les producteurs de cet objectif → D55.",
+      "why": "La détection du convertisseur final ne s’applique qu’à une seule cible.",
+      "example": "Aucun objectif, ou deux objectifs ressources : aucun convertisseur final.",
+      "proof": "Lecture _terminal_converter ; E01"
+    },
+    {
+      "id": "D55",
+      "question": "Le nombre d’opérations produisant cette cible est-il différent de un ?",
+      "function": "_terminal_converter",
+      "source": "src/krpsim/optimizer.py:88-90",
+      "condition": "len(candidates) != 1",
+      "yes": "Retourner None → D59.",
+      "no": "Examiner l’unique producteur → D56.",
+      "why": "Le constructeur n’identifie un convertisseur final que s’il est unique.",
+      "example": "Deux opérations produisant chaise empêchent cette reconnaissance.",
+      "proof": "Lecture _terminal_converter ; cas illustratif"
+    },
+    {
+      "id": "D56",
+      "question": "Cette opération dure-t-elle plus de zéro cycle ou a-t-elle un nombre de besoins différent de un ?",
+      "function": "_terminal_converter",
+      "source": "src/krpsim/optimizer.py:91-93",
+      "condition": "process.delay != 0 or len(process.needs) != 1",
+      "yes": "Retourner None → D59.",
+      "no": "Examiner sa seule ressource consommée → D57.",
+      "why": "Pour les configurations valides, le convertisseur recherché est immédiat et consomme une seule ressource.",
+      "example": "assembler dure 1 cycle et consomme deux ressources : ce n’est pas ce convertisseur.",
+      "proof": "Lecture _terminal_converter ; E08"
+    },
+    {
+      "id": "D57",
+      "question": "La ressource consommée est-elle aussi la cible ou est-elle reproduite ?",
+      "function": "_terminal_converter",
+      "source": "src/krpsim/optimizer.py:94-95",
+      "condition": "source == target or process.results.get(source, 0) > 0",
+      "yes": "Retourner None → D59.",
+      "no": "Chercher un producteur de la ressource consommée → D58.",
+      "why": "Cette reconnaissance écarte les opérations qui réutilisent la même ressource de cette façon.",
+      "example": "Une conversion qui consomme chaise et en rend aussi est écartée.",
+      "proof": "Lecture _terminal_converter ; cas illustratif"
+    },
+    {
+      "id": "D58",
+      "question": "La ressource consommée n’a-t-elle aucun producteur ?",
+      "function": "_terminal_converter",
+      "source": "src/krpsim/optimizer.py:96-98",
+      "condition": "not self._producers.get(source)",
+      "yes": "Retourner None → D59.",
+      "no": "Retourner process comme convertisseur final → D59.",
+      "why": "Le constructeur recherche une étape finale alimentée par une autre opération.",
+      "example": "livrer consomme chaise, que assembler produit : ce contrôle passe.",
+      "proof": "Lecture _terminal_converter ; E25"
+    },
+    {
+      "id": "D59",
+      "question": "Un convertisseur final a-t-il été reconnu ?",
+      "function": "ProductionPlanner.__init__",
+      "source": "src/krpsim/optimizer.py:68-72",
+      "condition": "self.terminal is not None",
+      "yes": "goal = nom de son unique besoin ; finir le constructeur.",
+      "no": "Choisir un objectif de repli → D60.",
+      "why": "Ces champs sont initialisés, sans ordonner ni lancer des opérations pour la vérification.",
+      "example": "Si livrer est reconnu, goal vaut chaise, sa ressource consommée.",
+      "proof": "Lecture __init__ ; E25"
+    },
+    {
+      "id": "D60",
+      "question": "Reste-t-il au moins un objectif ressource ?",
+      "function": "ProductionPlanner.__init__",
+      "source": "src/krpsim/optimizer.py:72",
+      "condition": "self.targets",
+      "yes": "goal = self.targets[0] ; finir le constructeur.",
+      "no": "goal = None ; finir le constructeur.",
+      "why": "Le repli conserve la première cible, ou aucune s’il n’y en a pas.",
+      "example": "Sans optimize, targets est vide et goal vaut None.",
+      "proof": "Lecture __init__ ; E01"
+    }
+  ],
+  "pages": [
+    {
+      "id": "cover",
+      "title": "Comprendre krpsim_verif",
+      "subtitle": "Arbre de décision expliqué pas à pas",
+      "html": "<p style=\"font-size:16pt;max-width:210mm\">Lire les décisions en français.<br>Retrouver les fonctions et les variables dans le code.</p><div class=\"flow\"><div>Lire les règles<code>parse_file</code></div><span>→</span><div>Lire les départs<code>parse_trace</code></div><span>→</span><div>Rejouer et contrôler<code>verify_trace</code></div><span>→</span><div class=\"end\">Afficher le résultat<code>main</code></div></div><div class=\"panel\"><b>La question centrale</b><br>« Chaque opération annoncée peut-elle réellement démarrer avec les ressources disponibles à ce moment-là ? »</div><p>Pour un développeur débutant qui souhaite comprendre son programme construit avec l’aide de l’IA.</p><p class=\"small\">Édition du 7 novembre 2026 · krpsim 0.1.1 · révision 268075e<br>Sources locales examinées ; programme conservé. Les modifications locales du Makefile et des documents existants sont hors de ce guide.</p>",
+      "toc_entry": false,
+      "class": "cover"
+    },
+    {
+      "id": "sommaire",
+      "title": "Votre parcours de lecture",
+      "subtitle": "Les entrées ci-dessous sont cliquables. Les identifiants D01 à D60 relient les décisions.",
+      "html": "",
+      "toc_entry": false,
+      "toc": true
+    },
+    {
+      "id": "vocabulaire",
+      "title": "Un atelier, des recettes et un carnet",
+      "subtitle": "Le vocabulaire français reste stable dans tous les schémas.",
+      "html": "<p>Un cycle est une unité de la simulation : ce n’est pas nécessairement une seconde. Une trace ne liste pas les fins ; le programme les calcule avec le départ et la durée.</p>",
+      "toc_entry": true,
+      "table": {
+        "headers": [
+          "Mot du guide",
+          "Ce que cela veut dire",
+          "Nom exact dans le code"
+        ],
+        "rows": [
+          [
+            "Ressource / stock",
+            "Du bois, des clous ; leur quantité disponible.",
+            "resource / stocks"
+          ],
+          [
+            "Opération / besoins",
+            "Une recette ; ce qu’elle consomme au démarrage.",
+            "Process / process.needs"
+          ],
+          [
+            "Résultats / durée",
+            "Ce qu’elle produit à sa fin ; combien de cycles elle prend.",
+            "process.results / process.delay"
+          ],
+          [
+            "Cycle / départ",
+            "Un repère de temps ; le lancement annoncé d’une opération.",
+            "entry.cycle / TraceEntry"
+          ],
+          [
+            "Configuration",
+            "Le fichier des stocks initiaux, opérations et objectifs.",
+            "Config / config"
+          ],
+          [
+            "Trace",
+            "Le carnet ordonné des départs annoncés : cycle:nom.",
+            "list[TraceEntry] / trace"
+          ],
+          [
+            "Opérations en cours",
+            "Les opérations lancées dont les résultats sont encore attendus.",
+            "state.running"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "legende",
+      "title": "Lire le schéma et le code côte à côte",
+      "subtitle": "La question française explique le sens ; la ligne Python permet de retrouver le contrôle.",
+      "html": "<div class=\"cols\"><div><h2>Conventions visuelles</h2><p><b>Ovale :</b> début ou fin du parcours.</p><p><b>Rectangle :</b> action à effectuer.</p><p><b>Losange :</b> question à trancher.</p><p><b>Oui / Non :</b> suivre la sortie portant cette réponse. La couleur seule n’indique jamais la réponse.</p><p><b>Dxx :</b> renvoi cliquable vers une autre décision. Les sous-schémas sont reliés par ces renvois, sans forcer un arbre géant.</p></div><div><h2>Repères du code</h2><p><b>entry.cycle</b> : moment du départ lu.</p><p><b>state.previous_cycle</b> : départ précédent ; vaut 0 au début.</p><p><b>state.last_cycle</b> : plus grand départ ou fin déjà pris en compte.</p><p><b>state.sequence</b> : compteur qui départage les fins au même moment.</p><p><b>missing</b> : ressources manquantes et quantités à ajouter pour pouvoir démarrer.</p><p><b>sim</b> : objet contenant l’état final renvoyé.</p></div></div><div class=\"panel\"><b>Lecture d’une fiche</b> : question → réponse → action ou renvoi. La ligne « Pourquoi » explique la règle ; l’exemple aide à l’appliquer. Les références sont relatives à la racine du dépôt.</div>",
+      "toc_entry": false
+    },
+    {
+      "id": "vue",
+      "title": "Le parcours complet en une vue",
+      "subtitle": "main → _verify_inputs → verify_files → parse_file → parse_trace → verify_trace",
+      "html": "<div class=\"flow\"><div class=\"end\">Commande<code>D01 → D02</code></div><span>→</span><div>Configuration<code>D16 → D46</code></div><span>→</span><div>Trace<code>D47 → D50</code></div><span>→</span><div>Départs<code>D06 → D15</code></div><span>→</span><div class=\"end\">Résultat<code>D03 → D05</code></div></div><div class=\"cols\"><div><h2>Avant de rejouer</h2><p><b>1.</b> La commande lit ses arguments.</p><p><b>2.</b> Le fichier de configuration est entièrement validé.</p><p><b>3.</b> Le fichier de trace est entièrement lu et son format vérifié.</p><p><b>4.</b> Les départs valides sur la forme sont rejoués dans l’ordre.</p></div><div><h2>Après chaque départ</h2><p>Vérifier le temps → ajouter les productions terminées → trouver l’opération → vérifier ses ressources → consommer → produire ou programmer la fin.</p><p>Après le dernier départ, finaliser les productions jusqu’au seuil du code, construire <b>Simulator</b>, puis afficher les stocks.</p></div></div><div class=\"panel warn\"><b>L’ordre change l’erreur visible.</b> Une ligne mal écrite en fin de fichier est détectée avant un manque de ressources au premier départ : le programme finit la lecture de la trace avant de la rejouer.</div><p class=\"small\">Sources : src/krpsim_verif/cli.py:47-101 ; verifier.py:178-280. Les flèches décrivent les appels ; les exceptions reviennent au diagnostic D03 / D04.</p>",
+      "toc_entry": true
+    },
+    {
+      "id": "cli",
+      "title": "Entrer dans le programme",
+      "subtitle": "main / build_parser · Avant toute lecture de fichier.",
+      "html": "",
+      "toc_entry": true,
+      "decisions": [
+        "D01",
+        "D02"
+      ]
+    },
+    {
+      "id": "erreurs",
+      "title": "Transformer les erreurs en messages",
+      "subtitle": "_verify_inputs · Ces questions représentent le choix des blocs except.",
+      "html": "",
+      "toc_entry": false,
+      "decisions": [
+        "D03",
+        "D04"
+      ]
+    },
+    {
+      "id": "trace1",
+      "title": "Lire chaque ligne de trace",
+      "subtitle": "parse_trace → _parse_trace_line · Ouvrir en UTF-8 ; idx compte les lignes physiques.",
+      "html": "",
+      "toc_entry": true,
+      "decisions": [
+        "D47",
+        "D48"
+      ]
+    },
+    {
+      "id": "trace2",
+      "title": "Séparer le moment et le nom",
+      "subtitle": "_parse_trace_line · Après une ligne acceptée ou ignorée, lire la suivante ; à la fin, D06.",
+      "html": "",
+      "toc_entry": false,
+      "decisions": [
+        "D49",
+        "D50"
+      ]
+    },
+    {
+      "id": "vide",
+      "title": "Choisir le parcours : trace vide ou départs",
+      "subtitle": "verify_trace → _verify_empty_trace · Ne pas confondre fichier vide et ligne vide.",
+      "html": "",
+      "toc_entry": true,
+      "decisions": [
+        "D06",
+        "D07"
+      ]
+    },
+    {
+      "id": "demarrage",
+      "title": "Du stock initial au premier contrôle",
+      "subtitle": "_verify_empty_trace pour D08 ; _verify_entry pour D09 : deux parcours distincts.",
+      "html": "",
+      "toc_entry": false,
+      "decisions": [
+        "D08",
+        "D09"
+      ]
+    },
+    {
+      "id": "fins",
+      "title": "Ajouter les résultats, puis trouver l’opération",
+      "subtitle": "_verify_entry appelle _complete_until puis _resolve_process, dans cet ordre.",
+      "html": "",
+      "toc_entry": true,
+      "decisions": [
+        "D10",
+        "D11"
+      ]
+    },
+    {
+      "id": "besoins",
+      "title": "Quelles ressources manquent exactement ?",
+      "subtitle": "_missing_resources calcule les manques ; _verify_entry décide ensuite du refus.",
+      "html": "",
+      "toc_entry": true,
+      "decisions": [
+        "D12",
+        "D13"
+      ]
+    },
+    {
+      "id": "etat",
+      "title": "Ce que le programme mémorise",
+      "subtitle": "_VerificationState et _consume_and_schedule · Les valeurs changent au fil du rejeu.",
+      "toc_entry": true,
+      "html": "<div class=\"cols\"><div><h2>Au début d’une trace non vide</h2><pre>state = _VerificationState(config.stocks.copy(), [])</pre><p><b>stocks</b> : copie des quantités initiales ; la configuration est conservée.</p><p><b>running</b> : liste vide des fins attendues.</p><p><b>previous_cycle = last_cycle = sequence = 0</b>.</p><h2>Consommer au départ</h2><pre>for resource, quantity in process.needs.items():\n    state.stocks[resource] -= quantity</pre><p>On retire toutes les ressources nécessaires avant de produire quoi que ce soit, même pour une opération de durée nulle.</p></div><div><h2>Produire immédiatement ou plus tard</h2><p>Durée nulle : pour chaque résultat, ajouter sa quantité au stock courant (0 si absent).</p><pre>state.stocks[resource] = \\\n    state.stocks.get(resource, 0) + quantity</pre><p>Durée positive : incrémenter <b>sequence</b>, puis ajouter la fin à la file avec <b>heapq.heappush</b> :</p><pre>(entry.cycle + process.delay,\n state.sequence, process)</pre><p>La file donne d’abord la fin la plus proche. Si deux fins sont égales, <b>sequence</b> les départage sans comparer les objets Process. <b>heapq.heappop</b> retire la prochaine fin.</p></div></div><div class=\"panel\">Ajouter une production terminée ne retire aucun besoin : les besoins ont déjà été consommés au départ. Une opération sans résultat peut néanmoins faire avancer le dernier cycle.</div><p class=\"small\">Sources : src/krpsim_verif/verifier.py:51-59,123-136,158-175,242. D10 traite les fins ; D14 choisit entre production immédiate et fin programmée.</p>"
+    },
+    {
+      "id": "produire",
+      "title": "Consommer, produire et avancer dans la liste",
+      "subtitle": "_consume_and_schedule → retour dans _verify_entry → verify_trace.",
+      "html": "",
+      "toc_entry": true,
+      "decisions": [
+        "D14",
+        "D15"
+      ]
+    },
+    {
+      "id": "final",
+      "title": "Construire et afficher le résultat",
+      "subtitle": "_build_verified_simulator / Simulator.__init__ / _print_final_stocks",
+      "html": "<div class=\"cols\"><div><h2>Après un départ accepté</h2><p><code>state.previous_cycle = entry.cycle</code><br>Mémoriser son moment pour vérifier le départ suivant.</p><p><code>state.last_cycle = max(state.last_cycle, entry.cycle)</code><br>Garder le plus grand moment pris en compte.</p><h2>Après le dernier départ</h2><p><code>_complete_until(2**63 - 1, ...)</code><br>Ajouter les résultats des fins atteignant au plus ce seuil. Voir D10.</p><p>Mettre <b>last_cycle</b> à jour avec la dernière fin ajoutée. Créer <b>Simulator(config)</b>, puis remplacer <b>sim.stocks</b>, <b>sim.time</b> et <b>sim._max_time</b> par l’état vérifié.</p></div><div><h2>Ce que le constructeur fait</h2><p>Il prépare des champs et crée <b>ProductionPlanner(config)</b>. Les décisions de cette préparation figurent en annexe D52-D60.</p><p><b>Il n’appelle pas Simulator.run.</b> Aucune recherche de meilleure trace n’est lancée ici.</p><h2>Ce qui est affiché</h2><p>Après succès : <b>trace is valid</b>, puis <b>Final Stocks:</b>. Les noms sont triés alphabétiquement, alignés sur le plus long ; un stock absent vaut 0. <b>Last cycle:</b> affiche <b>sim.time</b>.</p><p>Les noms réunissent stocks initiaux, besoins et résultats : <b>Config.all_stock_names()</b>.</p></div></div><div class=\"panel warn\"><b>Seuil fini, pas infini.</b> Une opération finissant après 2**63 - 1 peut rester non créditée à la finalisation. Le cycle affiché est le maximum des départs et des fins effectivement ajoutées.</div><p class=\"small\">Sources : verifier.py:200-214 ; simulator.py:61-104 ; cli.py:63-71 ; parser.py:75-100.</p>",
+      "toc_entry": true
+    },
+    {
+      "id": "sortie",
+      "title": "Afficher seulement après une vérification réussie",
+      "subtitle": "main contrôle la présence de sim ; la conversion numérique a une limite rare.",
+      "html": "",
+      "toc_entry": false,
+      "decisions": [
+        "D05",
+        "D51"
+      ]
+    },
+    {
+      "id": "atelier",
+      "title": "L’atelier utilisé dans les exemples",
+      "subtitle": "Une configuration commune ; les variantes indiquent explicitement ce qui change.",
+      "html": "<div class=\"cols\"><div><h2>Fichier atelier.cfg</h2><pre>bois:2\nclou:8\nscier:(bois:1):(planche:3):2\nassembler:(planche:3;clou:4):(chaise:1):1\nlivrer:(chaise:1):(livraison:1):0</pre><p><b>scier</b> consomme 1 bois immédiatement et donne 3 planches après 2 cycles.</p><p><b>assembler</b> consomme 3 planches et 4 clous ; la chaise arrive 1 cycle plus tard.</p><p><b>livrer</b> transforme 1 chaise en 1 livraison immédiatement.</p></div><div><h2>Une trace à suivre</h2><pre>0:scier\n2:assembler\n3:livrer</pre><p>Les planches existent à temps pour assembler ; la chaise existe à temps pour livrer.</p><p><b>Commande depuis la racine du dépôt :</b></p><pre>uv run krpsim_verif \\\n  output/pdf/eli5_source/examples/E04/atelier.cfg \\\n  output/pdf/eli5_source/examples/E04/trace.txt</pre><p class=\"small\">Les fichiers de tous les exemples E01-E19 et E23-E28 sont livrés dans examples/. Les cas de commande E20-E22 sont reproduits par verify_examples.py.</p></div></div>",
+      "toc_entry": true
+    },
+    {
+      "id": "rejeu",
+      "title": "Suivre les stocks, départ par départ",
+      "subtitle": "Exemple E04 exécuté : scier → assembler → livrer. Les quantités absentes valent 0.",
+      "html": "<p>À chaque ligne : D09 → D10 → D11 → D12 → D13 → D14 → D15. Résultat final : code 0 et <b>Last cycle: 3</b>. Une arrivée exactement au moment du départ est déjà utilisable.</p>",
+      "toc_entry": true,
+      "table": {
+        "headers": [
+          "Départ lu",
+          "Résultats ajoutés avant le départ",
+          "Stock disponible",
+          "Ressources nécessaires",
+          "Décision",
+          "Stock après le départ"
+        ],
+        "rows": [
+          [
+            "0:scier",
+            "Aucun",
+            "bois 2\nclou 8",
+            "bois 1",
+            "Accepté ; fin programmée à 2",
+            "bois 1\nclou 8"
+          ],
+          [
+            "2:assembler",
+            "+3 planches\n(scier finit à 2)",
+            "bois 1\nclou 8\nplanche 3",
+            "planche 3\nclou 4",
+            "Accepté ; fin programmée à 3",
+            "bois 1\nclou 4\nplanche 0"
+          ],
+          [
+            "3:livrer",
+            "+1 chaise\n(assembler finit à 3)",
+            "bois 1\nclou 4\nplanche 0\nchaise 1",
+            "chaise 1",
+            "Accepté ; résultat immédiat",
+            "bois 1\nclou 4\nplanche 0\nchaise 0\nlivraison 1"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "cas-principaux",
+      "title": "Comparer les traces : quand faut-il refuser ?",
+      "subtitle": "Configuration commune de la page « L’atelier ». Tous les cas ci-dessous ont été exécutés.",
+      "html": "",
+      "toc_entry": true,
+      "table": {
+        "headers": [
+          "Cas / trace exacte",
+          "Configuration",
+          "Résultat observé",
+          "Ce que cela montre"
+        ],
+        "rows": [
+          [
+            "E01\n0:scier\n2:assembler",
+            "Commune",
+            "Code 0 ; cycle 3.\nbois 1, clou 4, planche 0, chaise 1.",
+            "Trace partielle acceptée : aucune livraison exigée."
+          ],
+          [
+            "E02\n0:assembler",
+            "Commune",
+            "Code 1 ; manque planche: 3.",
+            "D13 : les planches ne sont pas encore produites."
+          ],
+          [
+            "E03\n2:scier\n1:scier",
+            "Commune",
+            "Code 1 ; cycle 1 avant cycle 2.",
+            "D09 : les moments reculent."
+          ],
+          [
+            "E05\n0:scier\n0:scier",
+            "Commune",
+            "Code 0 ; cycle 2.\nbois 0, clou 8, planche 6.",
+            "Deux lancements au même cycle sont permis."
+          ],
+          [
+            "E13\n0:assembler",
+            "Ajouter planche:2",
+            "Code 1 ; manque planche: 1.",
+            "D12 : manque = quantité nécessaire moins quantité disponible."
+          ],
+          [
+            "E27\n0:scier\n0:scier\n0:scier",
+            "Commune",
+            "Code 1 au départ 3 ; manque bois: 1.",
+            "Les deux premiers départs ont consommé tout le bois."
+          ]
+        ]
+      }
+    },
+    {
+      "id": "vides-exemples",
+      "title": "Un fichier vide n’est pas une ligne vide",
+      "subtitle": "Le test de trace vide intervient après le filtrage des commentaires.",
+      "html": "",
+      "toc_entry": false,
+      "table": {
+        "headers": [
+          "Cas / contenu de trace",
+          "Configuration",
+          "Résultat observé",
+          "Chemin à suivre"
+        ],
+        "rows": [
+          [
+            "E06 : zéro octet",
+            "Commune",
+            "Code 1 ; empty trace.",
+            "D06 Oui → D07 Oui → D08 Oui."
+          ],
+          [
+            "E07 : zéro octet",
+            "Remplacer bois:2 par bois:0",
+            "Code 0 ; cycle 0 ; stocks initiaux.",
+            "D08 Non pour toutes les opérations."
+          ],
+          [
+            "E08 : zéro octet",
+            "Ajouter optimize:(chaise)",
+            "Code 0 ; cycle 0 ; stocks initiaux.",
+            "D07 Non : acceptation directe."
+          ],
+          [
+            "E09 : # commentaire suivi d’un saut de ligne",
+            "Ajouter optimize:(chaise)",
+            "Code 0 ; cycle 0.",
+            "D48 ignore le commentaire ; même liste vide que E08."
+          ],
+          [
+            "E14 : un saut de ligne seul",
+            "Commune",
+            "Code 1 ; empty trace line 1.",
+            "D47 Oui : erreur pendant la lecture."
+          ],
+          [
+            "E15 : deux espaces puis # commentaire",
+            "Commune",
+            "Code 1 ; invalid trace line 1.",
+            "D48 Non → D49 Oui : aucun deux-points."
+          ]
+        ]
+      }
+    },
+    {
+      "id": "instantane",
+      "title": "Une production immédiate peut servir au départ suivant",
+      "subtitle": "E26 : deux opérations au cycle 0. Le fichier conserve l’ordre des départs.",
+      "html": "<div class=\"cols\"><div><h2>Configuration E26</h2><pre>bois:1\nscier:(bois:1):(planche:3):0\nassembler:(planche:3):(chaise:1):0</pre><h2>Trace E26</h2><pre>0:scier\n0:assembler</pre><p><b>Résultat exécuté :</b> code 0 ; bois 0, planche 0, chaise 1 ; dernier cycle 0.</p></div><div><h2>Pourquoi cela fonctionne</h2><p>1. scier consomme le bois.</p><p>2. Sa durée est nulle : D14 ajoute immédiatement 3 planches.</p><p>3. Le départ suivant reste au cycle 0 : D09 l’autorise.</p><p>4. assembler trouve les planches et les consomme ; la chaise apparaît aussitôt.</p><div class=\"panel warn\">Avec la configuration commune, la chaise n’arrive qu’au cycle 3. E28 tente livrer au cycle 2 après assembler : refus, manque chaise: 1.</div></div></div><p class=\"small\">E28 exécuté : trace 0:scier, puis 2:assembler, puis 2:livrer. Aucun tri ne réorganise ces départs.</p>",
+      "toc_entry": false
+    },
+    {
+      "id": "lecture-diagnostic",
+      "title": "Retrouver la première erreur et le bon numéro",
+      "subtitle": "Une erreur de syntaxe et une erreur de rejeu n’utilisent pas le même comptage.",
+      "html": "",
+      "toc_entry": false,
+      "table": {
+        "headers": [
+          "Cas",
+          "Résultat exécuté",
+          "Explication"
+        ],
+        "rows": [
+          [
+            "E18\n# commentaire\n0:assembler",
+            "line 1 at cycle 0 … lacks resources",
+            "line_number compte les départs : le commentaire ne compte pas. La ligne physique est pourtant la deuxième."
+          ],
+          [
+            "E19\n0:assembler\nmalforme",
+            "invalid trace line 2",
+            "idx compte les lignes du fichier. La lecture échoue avant de vérifier les ressources du premier départ."
+          ],
+          [
+            "E10\n0:inconnue",
+            "unknown process 'inconnue' in trace",
+            "Le format passe ; D11 rejette ensuite le nom."
+          ],
+          [
+            "E20 : seulement le chemin de configuration",
+            "SystemExit, code 2 ; usage et erreur",
+            "La commande n’a pas reçu son fichier de trace."
+          ],
+          [
+            "E21 : chemin de trace inexistant",
+            "Code 1 ; invalid trace: …",
+            "OSError est interceptée en D04."
+          ],
+          [
+            "E22 : trace contenant les octets FF 0A",
+            "UnicodeDecodeError non interceptée",
+            "La CLI ne convertit pas cette exception en diagnostic invalid trace."
+          ]
+        ]
+      }
+    },
+    {
+      "id": "limites",
+      "title": "Les limites réelles du programme",
+      "subtitle": "Ces particularités sont décrites, sans modifier le code.",
+      "html": "",
+      "toc_entry": true,
+      "table": {
+        "headers": [
+          "Point",
+          "Comportement vérifié ou lu dans le code"
+        ],
+        "rows": [
+          [
+            "CRLF : configuration / trace",
+            "La configuration interdit tout octet CR. La trace est ouverte en mode texte : Python normalise CRLF et CR en LF. E11 (0:scier avec CRLF) est accepté."
+          ],
+          [
+            "Espaces et noms",
+            "La configuration retire les espaces aux bords de la ligne ; la trace ne les retire pas. Le nom après le premier : est conservé, autres : compris. Un nom non vide n’est pas forcément connu."
+          ],
+          [
+            "Chiffres Unicode",
+            "E23 : ²:scier passe isdigit mais int échoue (ValueError). E24 : ٢:scier devient le cycle 2 et finit à 4. Les conversions int de la configuration ont aussi des limites."
+          ],
+          [
+            "Finalisation bornée",
+            "E17 : scier dure 9223372036854775808 cycles. Trace 0:scier acceptée, bois 0, aucune planche créditée, dernier cycle 0. La fin dépasse le seuil 2**63 - 1."
+          ],
+          [
+            "État retourné",
+            "sim.stocks, sim.time et sim._max_time sont remplacés. sim.trace et sim._running restent ceux du constructeur ; ce n’est pas un historique complet prêt à reprendre la simulation."
+          ],
+          [
+            "Exceptions inattendues",
+            "ValueError, UnicodeDecodeError de trace et autres erreurs hors des except ne sont pas transformées par _verify_inputs. Un échec disque pendant la lecture de config peut aussi être étiqueté invalid trace via OSError."
+          ]
+        ]
+      }
+    },
+    {
+      "id": "garanties",
+      "title": "Ce que « trace is valid » garantit",
+      "subtitle": "Valider des départs ne signifie pas certifier la meilleure solution.",
+      "html": "<div class=\"cols\"><div><h2>Pour une trace lue depuis les fichiers</h2><p>La configuration a passé ses contrôles ; les lignes de trace ont été acceptées.</p><p>Les moments de départ ne reculent pas ; les opérations citées existent.</p><p>Chaque départ disposait des ressources nécessaires après ajout des productions terminées.</p><p>Les stocks résultent du rejeu et de la finalisation bornée du code.</p><div class=\"panel good\">Une trace partielle peut donc être valide. E12 contient seulement 0:scier : code 0, dernier cycle 2, trois planches produites.</div></div><div><h2>Ce que le vérificateur ne contrôle pas</h2><p>Il ne compare pas la trace à celle qu’aurait choisie krpsim.</p><p>Il ne démontre pas l’optimalité et n’exige pas l’atteinte de l’objectif.</p><p>Il ne demande pas que toutes les opérations possibles aient été exécutées.</p><p>Il ne reçoit pas le délai maximal demandé à krpsim.</p><h2>Appels Python directs</h2><p><b>verify_trace(config, trace)</b> ne relit pas les fichiers : il suppose les objets cohérents. Il ne refait pas parse_file ou parse_trace.</p><p>API01 : un premier cycle -1 est refusé contre la référence initiale 0. Une Config construite manuellement peut aussi contourner les validations du fichier.</p></div></div>",
+      "toc_entry": false
+    },
+    {
+      "id": "cfg-acces",
+      "title": "Configuration : choisir le fichier",
+      "subtitle": "Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.",
+      "html": "",
+      "toc_entry": true,
+      "decisions": [
+        "D16",
+        "D17"
+      ]
+    },
+    {
+      "id": "cfg-octets",
+      "title": "Configuration : droits et marque invisible",
+      "subtitle": "Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.",
+      "html": "",
+      "toc_entry": false,
+      "decisions": [
+        "D18",
+        "D19"
+      ]
+    },
+    {
+      "id": "cfg-texte",
+      "title": "Configuration : encodage et fins de ligne",
+      "subtitle": "Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.",
+      "html": "",
+      "toc_entry": false,
+      "decisions": [
+        "D20",
+        "D21"
+      ]
+    },
+    {
+      "id": "cfg-lignes",
+      "title": "Configuration : longueur et commentaires",
+      "subtitle": "Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.",
+      "html": "",
+      "toc_entry": false,
+      "decisions": [
+        "D22",
+        "D23"
+      ]
+    },
+    {
+      "id": "cfg-tri",
+      "title": "Configuration : reconnaître le type de ligne",
+      "subtitle": "Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.",
+      "html": "",
+      "toc_entry": false,
+      "decisions": [
+        "D24",
+        "D25"
+      ]
+    },
+    {
+      "id": "cfg-stock1",
+      "title": "Configuration : lire un stock initial",
+      "subtitle": "Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.",
+      "html": "",
+      "toc_entry": false,
+      "decisions": [
+        "D26",
+        "D27"
+      ]
+    },
+    {
+      "id": "cfg-stock2",
+      "title": "Configuration : lire la quantité initiale",
+      "subtitle": "Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.",
+      "html": "",
+      "toc_entry": false,
+      "decisions": [
+        "D28",
+        "D29"
+      ]
+    },
+    {
+      "id": "cfg-declarations",
+      "title": "Configuration : stock unique et recette valide",
+      "subtitle": "Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.",
+      "html": "",
+      "toc_entry": false,
+      "decisions": [
+        "D30",
+        "D31"
+      ]
+    },
+    {
+      "id": "cfg-blocs",
+      "title": "Configuration : opération unique et bloc vide",
+      "subtitle": "Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.",
+      "html": "",
+      "toc_entry": false,
+      "decisions": [
+        "D32",
+        "D33"
+      ]
+    },
+    {
+      "id": "cfg-ressources",
+      "title": "Configuration : lire chaque ressource",
+      "subtitle": "Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.",
+      "html": "",
+      "toc_entry": false,
+      "decisions": [
+        "D34",
+        "D35"
+      ]
+    },
+    {
+      "id": "cfg-quantites",
+      "title": "Configuration : quantités et doublons",
+      "subtitle": "Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.",
+      "html": "",
+      "toc_entry": false,
+      "decisions": [
+        "D36",
+        "D37"
+      ]
+    },
+    {
+      "id": "cfg-opt1",
+      "title": "Configuration : une directive bien formée",
+      "subtitle": "Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.",
+      "html": "",
+      "toc_entry": false,
+      "decisions": [
+        "D38",
+        "D39"
+      ]
+    },
+    {
+      "id": "cfg-opt2",
+      "title": "Configuration : conserver les objectifs utiles",
+      "subtitle": "Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.",
+      "html": "",
+      "toc_entry": false,
+      "decisions": [
+        "D40",
+        "D41"
+      ]
+    },
+    {
+      "id": "cfg-structure",
+      "title": "Configuration : objectifs uniques et sections présentes",
+      "subtitle": "Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.",
+      "html": "",
+      "toc_entry": false,
+      "decisions": [
+        "D42",
+        "D43"
+      ]
+    },
+    {
+      "id": "cfg-cibles",
+      "title": "Configuration : contrôler les objectifs",
+      "subtitle": "Sous-schémas de parse_file et de ses fonctions déléguées · Tout ParseError revient à D03.",
+      "html": "",
+      "toc_entry": false,
+      "decisions": [
+        "D44",
+        "D45"
+      ]
+    },
+    {
+      "id": "cfg-dependances",
+      "title": "Configuration : une source pour chaque besoin",
+      "subtitle": "_validate_process_resources · Après ce contrôle, retourner Config et commencer parse_trace.",
+      "html": "<div class=\"panel\">Après la dernière ligne : D43 → D44 → éventuellement D45 → D46. L’existence d’un producteur ne prouve pas qu’il pourra démarrer : la vérification des stocks vient plus tard, à chaque départ.</div>",
+      "toc_entry": false,
+      "decisions": [
+        "D46"
+      ]
+    },
+    {
+      "id": "boucles",
+      "title": "Les boucles : où revient-on ?",
+      "subtitle": "Un renvoi « suivant » reprend le même contrôle sur un nouvel élément.",
+      "html": "",
+      "toc_entry": true,
+      "table": {
+        "headers": [
+          "Parcours",
+          "Action répétée",
+          "Sortie de la boucle"
+        ],
+        "rows": [
+          [
+            "_read_lines / _parse_lines",
+            "Longueur de chaque ligne ; classification et lecture des lignes utiles.",
+            "Toutes lues → contrôle global D43."
+          ],
+          [
+            "_parse_resources / _parse_optimize",
+            "Éléments séparés par ; puis cibles conservées.",
+            "Retourner le dictionnaire / la liste au lecteur appelant."
+          ],
+          [
+            "_validate_optimize / _validate_process_resources",
+            "Chaque cible ; chaque besoin de chaque opération.",
+            "Retourner Config après tous les contrôles."
+          ],
+          [
+            "parse_trace",
+            "Chaque ligne physique : ignorer ou créer TraceEntry.",
+            "Retourner entries → D06."
+          ],
+          [
+            "_verify_empty_trace",
+            "Chaque opération et chacun de ses besoins (all).",
+            "Premier démarrage possible : erreur ; sinon acceptation."
+          ],
+          [
+            "verify_trace",
+            "Chaque départ, dans l’ordre ; arrêt à la première exception.",
+            "Finalisation après le dernier départ."
+          ],
+          [
+            "_complete_until",
+            "Retirer la fin la plus proche, ajouter tous ses résultats.",
+            "Aucune fin restante ou prochaine fin après le seuil."
+          ],
+          [
+            "_missing_resources / _consume_and_schedule",
+            "Chaque besoin ; puis les résultats si durée nulle.",
+            "Dictionnaire missing / retour vers _verify_entry."
+          ],
+          [
+            "Constructeurs / affichage",
+            "Cibles, opérations, résultats ; noms de ressources triés.",
+            "Objet prêt / dernière ligne affichée."
+          ]
+        ]
+      }
+    },
+    {
+      "id": "constructeur1",
+      "title": "Annexe : préparer l’objet retourné",
+      "subtitle": "Simulator.__init__ → ProductionPlanner.__init__ · Préparation uniquement, sans recherche de plan.",
+      "html": "",
+      "toc_entry": true,
+      "decisions": [
+        "D52",
+        "D53"
+      ]
+    },
+    {
+      "id": "constructeur2",
+      "title": "Annexe : reconnaître une conversion finale",
+      "subtitle": "ProductionPlanner._terminal_converter · L’échec de reconnaissance renvoie None, pas une erreur de trace.",
+      "html": "",
+      "toc_entry": false,
+      "decisions": [
+        "D54",
+        "D55"
+      ]
+    },
+    {
+      "id": "constructeur3",
+      "title": "Annexe : vérifier la forme du convertisseur",
+      "subtitle": "ProductionPlanner._terminal_converter · Ces décisions concernent les champs du constructeur.",
+      "html": "",
+      "toc_entry": false,
+      "decisions": [
+        "D56",
+        "D57"
+      ]
+    },
+    {
+      "id": "constructeur4",
+      "title": "Annexe : choisir le but interne",
+      "subtitle": "ProductionPlanner._terminal_converter → ProductionPlanner.__init__.",
+      "html": "",
+      "toc_entry": false,
+      "decisions": [
+        "D58",
+        "D59"
+      ]
+    },
+    {
+      "id": "constructeur5",
+      "title": "Annexe : objectif de repli",
+      "subtitle": "ProductionPlanner.__init__ · Ce champ n’est pas une preuve d’objectif atteint.",
+      "html": "<div class=\"panel\">Après le constructeur, la trace vide renvoie l’état initial. La trace non vide remplace les stocks et le temps de l’objet par le résultat du rejeu. Les méthodes de recherche, de simulation et d’optimisation ne sont pas appelées par ce parcours.</div>",
+      "toc_entry": false,
+      "decisions": [
+        "D60"
+      ]
+    },
+    {
+      "id": "corrections",
+      "title": "Corrections apportées au document précédent",
+      "subtitle": "Comparaison avec krpsim_verif_arbre_de_decision.pdf, édition du 31 octobre 2026.",
+      "html": "",
+      "toc_entry": true,
+      "table": {
+        "headers": [
+          "Emplacement ancien",
+          "Correction vérifiée"
+        ],
+        "rows": [
+          [
+            "Page 2 : CRLF laisse un caractère CR",
+            "Faux pour parse_trace : l’ouverture texte normalise les fins de ligne. Le test test_parse_trace_accepts_crlf et E11 confirment l’acceptation."
+          ],
+          [
+            "Page 2 : ouverture / décodage → OSError",
+            "Les deux ne se confondent pas : UnicodeDecodeError de trace n’est pas interceptée par la CLI. E22 le confirme."
+          ],
+          [
+            "Pages 3 et 9 : trace non vide → construire Simulator",
+            "Ce raccourci doit passer par tous les départs et leur vérification avant la construction finale. Le nouveau parcours renvoie vers D09-D15."
+          ],
+          [
+            "Pages 4 et 10 : retour de Process après les besoins",
+            "Les fonctions sont distinctes : _resolve_process renvoie Process ; _missing_resources renvoie toujours un dictionnaire, éventuellement vide."
+          ],
+          [
+            "Page 5 : départ programmé",
+            "Après le lancement, ce qui est mis dans le tas est la fin future ; les ressources ont déjà été consommées au départ."
+          ],
+          [
+            "Page 11 : référence verifier.py:158-175",
+            "La boucle de complétion se trouve actuellement aux lignes 123-136 ; 158-175 décrit _consume_and_schedule."
+          ]
+        ]
+      }
+    },
+    {
+      "id": "tracabilite",
+      "title": "Retrouver les preuves et régénérer le guide",
+      "subtitle": "La matrice complète est livrée dans matrice_tracabilite.csv.",
+      "html": "<div class=\"cols\"><div><h2>60 décisions repérées</h2><p>D01-D05 : commande et diagnostic.</p><p>D06-D15 : trace vide, chronologie, ressources et production.</p><p>D16-D46 : lecture et validation de configuration.</p><p>D47-D51 : lecture de trace et conversion numérique.</p><p>D52-D60 : initialisation du planificateur dans l’objet retourné.</p><p>Les boucles et les actions sans condition sont décrites dans les pages de parcours. D01-D04, D15, D20, D27 et D51 représentent aussi des choix de bibliothèque, parcours ou exceptions : ce ne sont pas tous des « if » littéraux.</p></div><div><h2>Fichiers éditables</h2><p><b>content.json</b> : textes, décisions, renvois et preuves.</p><p><b>style.css</b> : mise en page et charte graphique.</p><p><b>build.py / guide.html</b> : génération et version HTML consultable.</p><p><b>verify_examples.py / example_results.json</b> : exécution et observations.</p><p><b>examples/</b> : configurations et traces exactes.</p><p><b>README.md / validation.md</b> : régénération, versions et bilan des contrôles.</p></div></div><div class=\"panel\">La matrice associe chaque question à sa condition, sa fonction, ses lignes, ses sorties et un test ou exemple. Une preuve « lecture du code » n’est pas présentée comme un test exécuté. La couverture documentaire ne remplace pas la couverture des tests.</div>",
+      "toc_entry": true
+    },
+    {
+      "id": "validation",
+      "title": "Ce qui a été vérifié",
+      "subtitle": "Bilan de génération · Les limites du dépôt sont distinctes de la validation documentaire.",
+      "toc_entry": true,
+      "html": "<div class=\"cols\"><div><h2>Document et exemples</h2><p><b>60 décisions</b> inventoriées et associées à leurs sources ; matrice CSV livrée.</p><p><b>30 cas exécutés</b>, dont 28 cas E01-E28, un exercice EX02 et un appel direct API01. Les codes, erreurs attendues, stocks finaux et cycles sont contrôlés selon le cas.</p><p>Les pages sont rendues en images, relues visuellement et contrôlées pour les débordements. Les liens internes et l’intégration d’Inter sont vérifiés.</p><p>Les empreintes des sources et les versions des outils figurent dans <b>validation.md</b> et les fichiers de preuves.</p></div><div><h2>Contrôles du dépôt sous Python 3.10</h2><p>Analyse de types, lint, sécurité, complexité et construction du paquet : contrôles exécutés ; détail dans le bilan joint.</p><p><b>La CI du dépôt n’est pas entièrement validée.</b> La suite brute rencontre des chemins de ressources obsolètes : les fichiers sont dans good_resources et bad_resources.</p><p>Le contrôle Black signale aussi un formatage préexistant dans src/krpsim/cli.py. Aucun seuil ni fichier du programme n’a été modifié pour masquer ces échecs.</p><p>Aucune validation de compréhension auprès d’un lecteur débutant n’est revendiquée.</p></div></div>"
+    },
+    {
+      "id": "exercices",
+      "title": "À vous de suivre les décisions",
+      "subtitle": "Utilisez la configuration commune de la page « L’atelier ». Corrections sur la page suivante.",
+      "html": "<div class=\"cols\"><div><h2>1. Cette trace est-elle acceptée ?</h2><pre>0:scier\n2:assembler\n3:livrer</pre><p>Indiquez le code de sortie et le dernier cycle. Expliquez quand les planches et la chaise deviennent disponibles.</p><h2>2. Quelle erreur arrive en premier ?</h2><pre>2:scier\n1:inconnue</pre><p>Le second départ a deux problèmes : son moment recule et son nom est inconnu. Quelle vérification arrête le programme ?</p></div><div><h2>3. Quels stocks après deux départs ?</h2><pre>0:scier\n0:scier</pre><p>Calculez les stocks immédiatement après le second départ, puis après la finalisation.</p><p>Combien de bois reste-t-il ? Combien de planches sont disponibles à chacun de ces moments ? Quel est le dernier cycle affiché ?</p><div class=\"panel\">Pour chaque réponse, citez au moins deux identifiants Dxx et retrouvez les fonctions dans le code. L’objectif est de justifier votre réponse, pas de deviner le résultat.</div></div></div>",
+      "toc_entry": true
+    },
+    {
+      "id": "corrections-exercices",
+      "title": "Corrections des trois exercices",
+      "subtitle": "Autoévaluation : ces exercices n’ont pas fait l’objet d’un test de compréhension avec un lecteur débutant.",
+      "html": "<h2>1. Acceptée : code 0, dernier cycle 3</h2><p>Les moments 0, 2 et 3 ne reculent pas : <b>D09</b>. Au cycle 2, <b>D10</b> ajoute les trois planches de scier ; assembler peut les consommer. Au cycle 3, la chaise est ajoutée avant livrer. Sa durée nulle fait produire la livraison immédiatement : <b>D14 Oui</b>. Exemple exécuté E04.</p><h2>2. Le recul du cycle est signalé en premier</h2><p><b>_verify_entry</b> teste <b>D09</b> avant d’appeler <b>_resolve_process</b> et <b>D11</b>. Le message est « line 2: cycle 1 is before cycle 2 ». Le programme ne recherche donc pas le nom inconnue pour ce départ. Ce cas est fourni dans le dossier EX02.</p><h2>3. Deux temps à distinguer</h2><p>Juste après le second départ : <b>bois 0, clou 8, planche 0</b> (absente du dictionnaire). Les deux sciages sont encore en cours. <b>D14 Non</b> a programmé deux fins au cycle 2.</p><p>Après finalisation : <b>bois 0, clou 8, planche 6</b>. <b>D10</b> ajoute les résultats des deux opérations. Le dernier cycle affiché vaut <b>2</b>. Exemple exécuté E05.</p><div class=\"panel good\">Vous avez compris le parcours si vous pouvez expliquer la différence entre « consommer au départ » et « produire à la fin », puis retrouver ces actions dans _consume_and_schedule et _complete_until.</div>",
+      "toc_entry": false
+    }
+  ]
+}
