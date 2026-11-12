@@ -872,7 +872,7 @@
       {
         "id": "complete",
         "text": "Ajouter les résultats déjà terminés à ce cycle\nDétail : G09",
-        "code": "_complete_until(entry.cycle, state.running, state.stocks)",
+        "code": "_update_stock_from_finished_jobs(entry.cycle, state.running, state.stocks)",
         "kind": "call"
       },
       {
@@ -1002,7 +1002,7 @@
   {
     "id": "G09",
     "title": "Ajouter les résultats des opérations terminées",
-    "function": "_complete_until",
+    "function": "_update_stock_from_finished_jobs",
     "source": "src/krpsim_verif/verifier.py:123-136",
     "note": "Une fin exactement au cycle demandé est incluse. Une ressource absente du dictionnaire stocks est considérée comme disponible en quantité 0.",
     "calls": [
@@ -1277,7 +1277,7 @@
       {
         "id": "complete",
         "text": "Ajouter les résultats des fins jusqu’au seuil final\nDétail : G09",
-        "code": "completion = _complete_until(2**63 - 1, state.running, state.stocks)",
+        "code": "completion = _update_stock_from_finished_jobs(2**63 - 1, state.running, state.stocks)",
         "kind": "call"
       },
       {

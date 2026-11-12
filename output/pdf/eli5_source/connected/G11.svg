@@ -22,7 +22,7 @@
 <text xml:space="preserve" text-anchor="start" x="48.32" y="-350.87" font-family="Inter" font-size="13.00" fill="#172e43">Ajouter les résultats des fins jusqu’au</text>
 <text xml:space="preserve" text-anchor="start" x="132.7" y="-337.87" font-family="Inter" font-size="13.00" fill="#172e43">seuil final</text>
 <text xml:space="preserve" text-anchor="start" x="125.2" y="-324.87" font-family="Inter" font-size="13.00" fill="#172e43">Détail : G09</text>
-<text xml:space="preserve" text-anchor="start" x="66.7" y="-314.72" font-family="Inter" font-size="10.00" fill="#172e43">completion = _complete_until(2**63 &#45; 1,</text>
+<text xml:space="preserve" text-anchor="start" x="66.7" y="-314.72" font-family="Inter" font-size="10.00" fill="#172e43">completion = _update_stock_from_finished_jobs(2**63 &#45; 1,</text>
 <text xml:space="preserve" text-anchor="start" x="95.2" y="-304.72" font-family="Inter" font-size="10.00" fill="#172e43">state.running, state.stocks)</text>
 </g>
 <!-- start&#45;&gt;complete -->

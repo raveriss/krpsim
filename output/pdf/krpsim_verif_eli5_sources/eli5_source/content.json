@@ -105,7 +105,7 @@
       "source": "src/krpsim_verif/verifier.py:186-191",
       "condition": "entry.cycle < state.previous_cycle",
       "yes": "Refuser : cycle … is before cycle … → D04.",
-      "no": "Ajouter les productions terminées : _complete_until → D10.",
+      "no": "Ajouter les productions terminées : _update_stock_from_finished_jobs → D10.",
       "why": "Les moments annoncés ne doivent pas reculer. Au premier départ, la référence vaut 0.",
       "example": "Après le cycle 8 : 5 est refusé ; 8 est autorisé par ce contrôle.",
       "proof": "E03 ; test_verify_trace_rejects_decreasing_cycles"
@@ -113,7 +113,7 @@
     {
       "id": "D10",
       "question": "Reste-t-il une opération dont la fin est atteinte ou dépassée ?",
-      "function": "_complete_until",
+      "function": "_update_stock_from_finished_jobs",
       "source": "src/krpsim_verif/verifier.py:130-136",
       "condition": "running and running[0][0] <= cycle",
       "yes": "Retirer la fin la plus proche, ajouter ses résultats ; recommencer D10.",
@@ -874,7 +874,7 @@
     {
       "id": "fins",
       "title": "Ajouter les résultats, puis trouver l’opération",
-      "subtitle": "_verify_entry appelle _complete_until puis _resolve_process, dans cet ordre.",
+      "subtitle": "_verify_entry appelle _update_stock_from_finished_jobs puis _resolve_process, dans cet ordre.",
       "html": "",
       "toc_entry": true,
       "decisions": [
@@ -915,7 +915,7 @@
       "id": "final",
       "title": "Construire et afficher le résultat",
       "subtitle": "_build_verified_simulator / Simulator.__init__ / _print_final_stocks",
-      "html": "<div class=\"cols\"><div><h2>Après un départ accepté</h2><p><code>state.previous_cycle = entry.cycle</code><br>Mémoriser son moment pour vérifier le départ suivant.</p><p><code>state.last_cycle = max(state.last_cycle, entry.cycle)</code><br>Garder le plus grand moment pris en compte.</p><h2>Après le dernier départ</h2><p><code>_complete_until(2**63 - 1, ...)</code><br>Ajouter les résultats des fins atteignant au plus ce seuil. Voir D10.</p><p>Mettre <b>last_cycle</b> à jour avec la dernière fin ajoutée. Créer <b>Simulator(config)</b>, puis remplacer <b>sim.stocks</b>, <b>sim.time</b> et <b>sim._max_time</b> par l’état vérifié.</p></div><div><h2>Ce que le constructeur fait</h2><p>Il prépare des champs et crée <b>ProductionPlanner(config)</b>. Les décisions de cette préparation figurent en annexe D52-D60.</p><p><b>Il n’appelle pas Simulator.run.</b> Aucune recherche de meilleure trace n’est lancée ici.</p><h2>Ce qui est affiché</h2><p>Après succès : <b>trace is valid</b>, puis <b>Final Stocks:</b>. Les noms sont triés alphabétiquement, alignés sur le plus long ; un stock absent vaut 0. <b>Last cycle:</b> affiche <b>sim.time</b>.</p><p>Les noms réunissent stocks initiaux, besoins et résultats : <b>Config.all_stock_names()</b>.</p></div></div><div class=\"panel warn\"><b>Seuil fini, pas infini.</b> Une opération finissant après 2**63 - 1 peut rester non créditée à la finalisation. Le cycle affiché est le maximum des départs et des fins effectivement ajoutées.</div><p class=\"small\">Sources : verifier.py:200-214 ; simulator.py:61-104 ; cli.py:63-71 ; parser.py:75-100.</p>",
+      "html": "<div class=\"cols\"><div><h2>Après un départ accepté</h2><p><code>state.previous_cycle = entry.cycle</code><br>Mémoriser son moment pour vérifier le départ suivant.</p><p><code>state.last_cycle = max(state.last_cycle, entry.cycle)</code><br>Garder le plus grand moment pris en compte.</p><h2>Après le dernier départ</h2><p><code>_update_stock_from_finished_jobs(2**63 - 1, ...)</code><br>Ajouter les résultats des fins atteignant au plus ce seuil. Voir D10.</p><p>Mettre <b>last_cycle</b> à jour avec la dernière fin ajoutée. Créer <b>Simulator(config)</b>, puis remplacer <b>sim.stocks</b>, <b>sim.time</b> et <b>sim._max_time</b> par l’état vérifié.</p></div><div><h2>Ce que le constructeur fait</h2><p>Il prépare des champs et crée <b>ProductionPlanner(config)</b>. Les décisions de cette préparation figurent en annexe D52-D60.</p><p><b>Il n’appelle pas Simulator.run.</b> Aucune recherche de meilleure trace n’est lancée ici.</p><h2>Ce qui est affiché</h2><p>Après succès : <b>trace is valid</b>, puis <b>Final Stocks:</b>. Les noms sont triés alphabétiquement, alignés sur le plus long ; un stock absent vaut 0. <b>Last cycle:</b> affiche <b>sim.time</b>.</p><p>Les noms réunissent stocks initiaux, besoins et résultats : <b>Config.all_stock_names()</b>.</p></div></div><div class=\"panel warn\"><b>Seuil fini, pas infini.</b> Une opération finissant après 2**63 - 1 peut rester non créditée à la finalisation. Le cycle affiché est le maximum des départs et des fins effectivement ajoutées.</div><p class=\"small\">Sources : verifier.py:200-214 ; simulator.py:61-104 ; cli.py:63-71 ; parser.py:75-100.</p>",
       "toc_entry": true
     },
     {
@@ -1403,7 +1403,7 @@
             "Finalisation après le dernier départ."
           ],
           [
-            "_complete_until",
+            "_update_stock_from_finished_jobs",
             "Retirer la fin la plus proche, ajouter tous ses résultats.",
             "Aucune fin restante ou prochaine fin après le seuil."
           ],
@@ -1538,7 +1538,7 @@
       "id": "corrections-exercices",
       "title": "Corrections des trois exercices",
       "subtitle": "Autoévaluation : ces exercices n’ont pas fait l’objet d’un test de compréhension avec un lecteur débutant.",
-      "html": "<h2>1. Acceptée : code 0, dernier cycle 3</h2><p>Les moments 0, 2 et 3 ne reculent pas : <b>D09</b>. Au cycle 2, <b>D10</b> ajoute les trois planches de scier ; assembler peut les consommer. Au cycle 3, la chaise est ajoutée avant livrer. Sa durée nulle fait produire la livraison immédiatement : <b>D14 Oui</b>. Exemple exécuté E04.</p><h2>2. Le recul du cycle est signalé en premier</h2><p><b>_verify_entry</b> teste <b>D09</b> avant d’appeler <b>_resolve_process</b> et <b>D11</b>. Le message est « line 2: cycle 1 is before cycle 2 ». Le programme ne recherche donc pas le nom inconnue pour ce départ. Ce cas est fourni dans le dossier EX02.</p><h2>3. Deux temps à distinguer</h2><p>Juste après le second départ : <b>bois 0, clou 8, planche 0</b> (absente du dictionnaire). Les deux sciages sont encore en cours. <b>D14 Non</b> a programmé deux fins au cycle 2.</p><p>Après finalisation : <b>bois 0, clou 8, planche 6</b>. <b>D10</b> ajoute les résultats des deux opérations. Le dernier cycle affiché vaut <b>2</b>. Exemple exécuté E05.</p><div class=\"panel good\">Vous avez compris le parcours si vous pouvez expliquer la différence entre « consommer au départ » et « produire à la fin », puis retrouver ces actions dans _consume_and_schedule et _complete_until.</div>",
+      "html": "<h2>1. Acceptée : code 0, dernier cycle 3</h2><p>Les moments 0, 2 et 3 ne reculent pas : <b>D09</b>. Au cycle 2, <b>D10</b> ajoute les trois planches de scier ; assembler peut les consommer. Au cycle 3, la chaise est ajoutée avant livrer. Sa durée nulle fait produire la livraison immédiatement : <b>D14 Oui</b>. Exemple exécuté E04.</p><h2>2. Le recul du cycle est signalé en premier</h2><p><b>_verify_entry</b> teste <b>D09</b> avant d’appeler <b>_resolve_process</b> et <b>D11</b>. Le message est « line 2: cycle 1 is before cycle 2 ». Le programme ne recherche donc pas le nom inconnue pour ce départ. Ce cas est fourni dans le dossier EX02.</p><h2>3. Deux temps à distinguer</h2><p>Juste après le second départ : <b>bois 0, clou 8, planche 0</b> (absente du dictionnaire). Les deux sciages sont encore en cours. <b>D14 Non</b> a programmé deux fins au cycle 2.</p><p>Après finalisation : <b>bois 0, clou 8, planche 6</b>. <b>D10</b> ajoute les résultats des deux opérations. Le dernier cycle affiché vaut <b>2</b>. Exemple exécuté E05.</p><div class=\"panel good\">Vous avez compris le parcours si vous pouvez expliquer la différence entre « consommer au départ » et « produire à la fin », puis retrouver ces actions dans _consume_and_schedule et _update_stock_from_finished_jobs.</div>",
       "toc_entry": false
     }
   ]

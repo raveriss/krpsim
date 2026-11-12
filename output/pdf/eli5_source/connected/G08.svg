@@ -36,7 +36,7 @@
 <text xml:space="preserve" text-anchor="start" x="284.72" y="-776.4" font-family="Inter" font-size="13.00" fill="#172e43">Ajouter les résultats déjà terminés à ce</text>
 <text xml:space="preserve" text-anchor="start" x="387.09" y="-763.4" font-family="Inter" font-size="13.00" fill="#172e43">cycle</text>
 <text xml:space="preserve" text-anchor="start" x="367.22" y="-750.4" font-family="Inter" font-size="13.00" fill="#172e43">Détail : G09</text>
-<text xml:space="preserve" text-anchor="start" x="302.34" y="-740.25" font-family="Inter" font-size="10.00" fill="#172e43">_complete_until(entry.cycle, state.running,</text>
+<text xml:space="preserve" text-anchor="start" x="302.34" y="-740.25" font-family="Inter" font-size="10.00" fill="#172e43">_update_stock_from_finished_jobs(entry.cycle, state.running,</text>
 <text xml:space="preserve" text-anchor="start" x="372.09" y="-730.25" font-family="Inter" font-size="10.00" fill="#172e43">state.stocks)</text>
 </g>
 <!-- D09&#45;&gt;complete -->

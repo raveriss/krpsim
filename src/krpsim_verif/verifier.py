@@ -170,42 +170,42 @@ def _verify_empty_trace(simulation_config: Config) -> Simulator:
 
 
 # Ce point central définit quand les productions deviennent disponibles.
-def _complete_until(
+def _update_stock_from_finished_jobs(
     # La borne est inclusive pour autoriser un départ au cycle d'achèvement.
-    target_cycle: int,
+    current_cycle: int,
     # Cette file est ordonnée par cycle de fin puis numéro de départage.
-    scheduled_processes: list[tuple[int, int, Process]],
+    ongoing_jobs: list[tuple[int, int, Process]],
     # Les productions terminées sont créditées directement dans ces stocks.
-    resource_stocks: dict[str, int],
+    stock: dict[str, int],
     # Le cycle renvoyé permet de mettre à jour le temps du rejeu.
 ) -> int:
     # Les effets sur les collections fournies font partie du contrat.
-    """Crédite les achèvements jusqu'à target_cycle inclus, sur place.
+    """Crédite les achèvements jusqu'à current_cycle inclus, sur place.
 
-    Retire ces opérations de scheduled_processes et augmente resource_stocks.
+    Retire ces opérations de ongoing_jobs et augmente stock.
     Renvoie le dernier cycle achevé, ou zéro si aucune opération ne termine.
     """
     # Zéro représente l'absence d'achèvement durant cet appel.
-    last_completion_cycle = 0
+    latest_finish_cycle = 0
     # Seules les opérations déjà terminées peuvent alimenter les stocks.
-    while scheduled_processes and scheduled_processes[0][0] <= target_cycle:
+    while ongoing_jobs and ongoing_jobs[0][0] <= current_cycle:
         # Le numéro de départage n'a plus d'utilité après extraction de la file.
-        completion_cycle, _, completed_process = heapq.heappop(scheduled_processes)
+        finish_cycle, _, finished_job = heapq.heappop(ongoing_jobs)
         # Cette date contribue au temps final même sans nouveau démarrage.
-        last_completion_cycle = max(last_completion_cycle, completion_cycle)
+        latest_finish_cycle = max(latest_finish_cycle, finish_cycle)
         # Un processus peut produire plusieurs ressources à son achèvement.
-        for resource_name, produced_quantity in completed_process.results.items():
+        for resource_name, produced_quantity in finished_job.results.items():
             # Une ressource produite pour la première fois part d'un stock nul.
-            resource_stocks[resource_name] = (
+            stock[resource_name] = (
                 # La quantité produite s'ajoute au reliquat des opérations
                 # passées.
-                resource_stocks.get(resource_name, 0)
+                stock.get(resource_name, 0)
                 # La production terminée augmente la quantité disponible.
                 + produced_quantity
                 # Le stock est disponible pour les démarrages suivants.
             )
     # L'appelant conserve la date maximale entre démarrages et achèvements.
-    return last_completion_cycle
+    return latest_finish_cycle
 
 
 # La résolution des noms évite de rejouer une opération non configurée.
@@ -336,7 +336,7 @@ def _verify_entry(
             # Le rejet intervient avant tout débit de ressources.
         )
     # Les résultats achevés à ce cycle sont disponibles pour ce démarrage.
-    completion_cycle = _complete_until(
+    completion_cycle = _update_stock_from_finished_jobs(
         # La borne inclut les achèvements simultanés au départ.
         # Le démarrage courant est également un événement temporel.
         trace_entry.cycle,
@@ -407,7 +407,7 @@ def _build_verified_simulator(
     borne ne sont pas crédités ; cette limite conserve le comportement établi.
     """
     # La borne historique fixe jusqu'où les productions finales sont créditées.
-    completion_cycle = _complete_until(
+    completion_cycle = _update_stock_from_finished_jobs(
         # Cette valeur est la limite de finalisation, pas une durée de
         # processus.
         2**63 - 1,
