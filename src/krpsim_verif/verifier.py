@@ -254,60 +254,79 @@ def _calculate_missing_stock_quantities(
 
 
 # Cette étape applique un démarrage dont les besoins ont déjà été contrôlés.
-def _consume_and_schedule(
+def _update_used_and_produced_stocks(
     # Le cycle de l'entrée sert d'origine au calcul de l'achèvement.
-    trace_entry: TraceEntry,
+    process_name_and_start_cycle_from_trace: TraceEntry,
     # La définition résolue fournit les consommations et productions.
-    process: Process,
+    needs_production_and_duration_of_process: Process,
     # L'état du rejeu reçoit les débits et les opérations programmées.
-    verification_state: _VerificationState,
+    available_stocks_ongoing_processes_and_cycles: _VerificationState,
     # Le rejeu se poursuit avec l'état modifié, sans résultat indépendant.
 ) -> None:
     # La précondition évite qu'un appel direct crée des stocks négatifs.
-    """Débite les besoins et programme les résultats dans verification_state.
+    """Débite les besoins et programme les résultats dans l’état du rejeu.
 
     Précondition : les besoins du processus sont disponibles. Un délai nul
     crédite les résultats immédiatement ; sinon, une opération est programmée.
     """
     # Les ressources sont réservées dès le départ, avant toute production.
-    for resource_name, required_quantity in process.needs.items():
+    for (
+        stock_name,
+        quantity_needed_to_start,
+    ) in needs_production_and_duration_of_process.needs.items():
         # Le débit empêche un démarrage suivant de réutiliser les mêmes
         # ressources.
-        verification_state.resource_stocks[resource_name] -= required_quantity
+        available_stocks_ongoing_processes_and_cycles.resource_stocks[
+            stock_name
+        ] -= quantity_needed_to_start
     # Une production immédiate doit être utilisable par l'entrée suivante.
-    if process.delay == 0:
+    if needs_production_and_duration_of_process.delay == 0:
         # Tous les résultats de ce processus deviennent disponibles ensemble.
-        for resource_name, produced_quantity in process.results.items():
-            # Le stock précédent est nul si cette ressource n'existait pas
-            # encore.
-            available_quantity = verification_state.resource_stocks.get(
-                # Le nom cible la ressource ; zéro couvre son absence initiale.
-                resource_name,
-                # Une ressource absente ne possède aucune unité disponible.
-                0,
-                # Cette quantité sert de base au crédit immédiat.
+        for (
+            stock_name,
+            quantity_produced,
+        ) in needs_production_and_duration_of_process.results.items():
+            quantity_already_in_this_stock = (
+                # Le stock précédent est nul si cette ressource n'existait pas
+                # encore.
+                available_stocks_ongoing_processes_and_cycles.resource_stocks.get(
+                    # Le nom cible la ressource ; zéro couvre son absence initiale.
+                    stock_name,
+                    # Une ressource absente ne possède aucune unité disponible.
+                    0,
+                    # Cette quantité sert de base au crédit immédiat.
+                )
             )
             # Le stock inclut désormais cette production sans délai.
-            verification_state.resource_stocks[resource_name] = (
+            available_stocks_ongoing_processes_and_cycles.resource_stocks[
+                stock_name
+            ] = (
                 # Le reliquat disponible est conservé lors du crédit.
-                available_quantity
+                quantity_already_in_this_stock
                 # La production terminée augmente la quantité disponible.
-                + produced_quantity
+                + quantity_produced
                 # La quantité sera visible par le prochain démarrage de la
                 # trace.
             )
         # Cette sortie évite de programmer une seconde fois la production.
         return
     # Un numéro unique départage les fins simultanées sans comparer des Process.
-    verification_state.scheduled_process_count += 1
+    available_stocks_ongoing_processes_and_cycles.scheduled_process_count += 1
     # L'achèvement est relatif au cycle demandé dans la trace.
-    completion_cycle = trace_entry.cycle + process.delay
+    end_cycle_from_start_and_duration = (
+        process_name_and_start_cycle_from_trace.cycle
+        + needs_production_and_duration_of_process.delay
+    )
     # La file maintient les opérations en ordre de fin croissant.
     heapq.heappush(
         # Cette file sera consommée avant les prochains démarrages.
-        verification_state.scheduled_processes,
+        available_stocks_ongoing_processes_and_cycles.scheduled_processes,
         # Le numéro préserve l'ordre d'insertion pour les dates identiques.
-        (completion_cycle, verification_state.scheduled_process_count, process),
+        (
+            end_cycle_from_start_and_duration,
+            available_stocks_ongoing_processes_and_cycles.scheduled_process_count,
+            needs_production_and_duration_of_process,
+        ),
         # La production reste en attente jusqu'à ce que son cycle soit atteint.
     )
 
@@ -388,7 +407,9 @@ def _verify_and_apply_process_start_instruction(
         )
     # Les contrôles terminés autorisent le débit et la programmation des
     # résultats.
-    _consume_and_schedule(process_start_instruction, process, current_stock_state)
+    _update_used_and_produced_stocks(
+        process_start_instruction, process, current_stock_state
+    )
     # Le prochain démarrage devra respecter cette nouvelle borne chronologique.
     current_stock_state.previous_start_cycle = process_start_instruction.cycle
     # Un démarrage tardif compte dans la durée même sans achèvement à cet
