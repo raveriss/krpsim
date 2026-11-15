@@ -27,6 +27,11 @@ from krpsim.parser import Config, Process, parse_file
 # Le résultat utilise le même objet d'état que le moteur de simulation.
 from krpsim.simulator import Simulator
 
+# Si un travail finit après ce cycle, sa production n'est pas ajoutée.
+# Le dernier cycle de fin pris en compte est le 9 223 372 036 854 775 807.
+# Ce nombre est le plus grand entier signé sur 64 bits.
+MAX_FINISH_CYCLE_FOR_FINAL_STOCKS = 2**63 - 1
+
 
 # Ce type distingue les incohérences de trace des erreurs d'accès aux fichiers.
 class TraceError(Exception):
@@ -140,7 +145,7 @@ def _parse_trace_line(
 
 
 # La trace vide suit une règle distincte de celle des démarrages individuels.
-def _verify_empty_trace(simulation_config: Config) -> Simulator:
+def _return_initial_state_if_empty_trace_allowed(simulation_config: Config) -> Simulator:
     # Le contrat décrit la condition exacte de rejet de ce cas particulier.
     """Renvoie l'état initial si la trace vide est admissible.
 
@@ -224,11 +229,11 @@ def _resolve_process(simulation_config: Config, process_name: str) -> Process:
 
 
 # Les déficits servent à la fois au refus de démarrage et à son explication.
-def _compute_missing_resources(
+def _calculate_missing_stock_quantities(
     # Les besoins du processus fixent les quantités requises pour un démarrage.
     process: Process,
     # Les stocks incluent les productions achevées au cycle demandé.
-    resource_stocks: dict[str, int],
+    available_stock_quantities: dict[str, int],
     # Chaque nom renvoyé est associé à sa quantité manquante strictement
     # positive.
 ) -> dict[str, int]:
@@ -237,11 +242,12 @@ def _compute_missing_resources(
     # Seules les ressources bloquantes doivent figurer dans le diagnostic.
     return {
         # La différence exprime le complément nécessaire, pas le besoin total.
-        resource_name: required_quantity - resource_stocks.get(resource_name, 0)
+        stock_name: quantity_needed_to_start
+        - available_stock_quantities.get(stock_name, 0)
         # Chaque besoin est comparé au stock de la même ressource.
-        for resource_name, required_quantity in process.needs.items()
+        for stock_name, quantity_needed_to_start in process.needs.items()
         # Les ressources déjà suffisantes ne sont pas des causes de rejet.
-        if resource_stocks.get(resource_name, 0) < required_quantity
+        if available_stock_quantities.get(stock_name, 0) < quantity_needed_to_start
         # Le dictionnaire obtenu permet également de décider si le départ est
         # valide.
     }
@@ -307,61 +313,64 @@ def _consume_and_schedule(
 
 
 # Chaque entrée passe les mêmes contrôles avant de modifier les stocks.
-def _verify_entry(
+def _verify_and_apply_process_start_instruction(
     # La configuration constitue le catalogue des processus autorisés.
-    simulation_config: Config,
+    krpsim_config: Config,
     # L'entrée décrit le démarrage à valider.
-    trace_entry: TraceEntry,
+    process_start_instruction: TraceEntry,
     # Ce numéro désigne le rang de l'entrée, hors commentaires du fichier.
-    entry_number: int,
+    which_instruction_rank_in_trace: int,
     # L'état reflète les entrées déjà acceptées dans leur ordre source.
-    verification_state: _VerificationState,
+    current_stock_state: _VerificationState,
     # Les erreurs interrompent le rejeu ; un succès met l'état à jour sur place.
 ) -> None:
     # La numérotation des diagnostics est distincte des lignes du fichier
     # source.
-    """Valide et applique trace_entry, numérotée depuis un par entry_number.
+    """Valide et applique process_start_instruction.
+
+    which_instruction_rank_in_trace numérote les instructions depuis un.
 
     Lève TraceError pour un cycle décroissant, un processus inconnu ou un
     manque de ressources. Les achèvements antérieurs sont crédités sur place.
     """
     # Revenir en arrière invaliderait la disponibilité calculée des ressources.
-    if trace_entry.cycle < verification_state.previous_start_cycle:
+    if process_start_instruction.cycle < current_stock_state.previous_start_cycle:
         # Le diagnostic présente les deux cycles incompatibles.
         raise TraceError(
             # Le rang repère le démarrage qui rompt la chronologie.
-            f"line {entry_number}: cycle {trace_entry.cycle} is before "
+            f"line {which_instruction_rank_in_trace}: "
+            f"cycle {process_start_instruction.cycle} is before "
             # Le cycle précédent donne la borne minimale autorisée.
-            f"cycle {verification_state.previous_start_cycle}"
+            f"cycle {current_stock_state.previous_start_cycle}"
             # Le rejet intervient avant tout débit de ressources.
         )
     # Les résultats achevés à ce cycle sont disponibles pour ce démarrage.
-    completion_cycle = _update_stock_from_finished_jobs(
+    latest_processed_finish_cycle = _update_stock_from_finished_jobs(
         # La borne inclut les achèvements simultanés au départ.
         # Le démarrage courant est également un événement temporel.
-        trace_entry.cycle,
+        process_start_instruction.cycle,
         # Les opérations terminées seront retirées de la file.
-        verification_state.scheduled_processes,
+        current_stock_state.scheduled_processes,
         # Les stocks reçoivent les productions désormais disponibles.
-        verification_state.resource_stocks,
+        current_stock_state.resource_stocks,
         # Le dernier achèvement contribue au temps final du rejeu.
     )
     # Les achèvements peuvent avancer le temps sans entrée supplémentaire.
-    verification_state.last_event_cycle = max(
+    current_stock_state.last_event_cycle = max(
         # La date déjà observée ne doit jamais être diminuée.
-        verification_state.last_event_cycle,
+        current_stock_state.last_event_cycle,
         # La fin traitée peut être postérieure au dernier démarrage.
-        completion_cycle,
+        latest_processed_finish_cycle,
         # Cette borne sera utilisée pour matérialiser le simulateur final.
     )
     # Le nom public de l'entrée désigne une définition du catalogue.
-    process = _resolve_process(simulation_config, trace_entry.process)
+    process = _resolve_process(krpsim_config, process_start_instruction.process)
     # Les déficits sont évalués après les crédits et avant toute consommation.
-    missing_quantities = _compute_missing_resources(
+    missing_quantities = _calculate_missing_stock_quantities(
         # Les besoins viennent du processus résolu, pas de la trace.
         process,
         # Les stocks consultés incluent les productions déjà terminées.
-        verification_state.resource_stocks,
+        current_stock_state.resource_stocks,
         # Un dictionnaire vide signifie que toutes les ressources sont
         # disponibles.
     )
@@ -371,33 +380,34 @@ def _verify_entry(
         # départ.
         raise TraceError(
             # Le rang et le cycle situent l'échec dans le rejeu.
-            f"line {entry_number} at cycle {trace_entry.cycle}: process "
+            f"line {which_instruction_rank_in_trace} "
+            f"at cycle {process_start_instruction.cycle}: process "
             # Le nom et les déficits précisent les ressources à examiner.
             f"'{process.name}' lacks resources {missing_quantities}"
             # Le rejet empêche toute consommation partielle des besoins.
         )
     # Les contrôles terminés autorisent le débit et la programmation des
     # résultats.
-    _consume_and_schedule(trace_entry, process, verification_state)
+    _consume_and_schedule(process_start_instruction, process, current_stock_state)
     # Le prochain démarrage devra respecter cette nouvelle borne chronologique.
-    verification_state.previous_start_cycle = trace_entry.cycle
+    current_stock_state.previous_start_cycle = process_start_instruction.cycle
     # Un démarrage tardif compte dans la durée même sans achèvement à cet
     # instant.
-    verification_state.last_event_cycle = max(
+    current_stock_state.last_event_cycle = max(
         # Le maximum conserve le dernier événement effectivement observé.
-        verification_state.last_event_cycle,
+        current_stock_state.last_event_cycle,
         # Le démarrage courant est également un événement temporel.
-        trace_entry.cycle,
+        process_start_instruction.cycle,
         # Le temps reste ainsi cohérent pour les processus à délai nul.
     )
 
 
 # Cette fonction adapte l'état du rejeu à l'interface publique Simulator.
-def _build_verified_simulator(
+def _prepare_final_stocks_and_last_cycle(
     # La configuration fournit les paramètres d'origine du simulateur résultat.
-    simulation_config: Config,
+    validated_config: Config,
     # L'état contient les stocks et opérations de la trace acceptée.
-    verification_state: _VerificationState,
+    available_stocks_ongoing_processes_and_cycles: _VerificationState,
     # Le résultat est un simulateur distinct de la configuration source.
 ) -> Simulator:
     # La borne de finalisation est explicitée plutôt que supposée infinie.
@@ -407,67 +417,69 @@ def _build_verified_simulator(
     borne ne sont pas crédités ; cette limite conserve le comportement établi.
     """
     # La borne historique fixe jusqu'où les productions finales sont créditées.
-    completion_cycle = _update_stock_from_finished_jobs(
+    cycle_of_last_finished_job = _update_stock_from_finished_jobs(
         # Cette valeur est la limite de finalisation, pas une durée de
         # processus.
-        2**63 - 1,
+        MAX_FINISH_CYCLE_FOR_FINAL_STOCKS,
         # Les opérations restantes représentent les productions encore
         # attendues.
-        verification_state.scheduled_processes,
+        available_stocks_ongoing_processes_and_cycles.scheduled_processes,
         # Les crédits finaux complètent les stocks reconstruits.
-        verification_state.resource_stocks,
+        available_stocks_ongoing_processes_and_cycles.resource_stocks,
         # La date renvoyée est celle du dernier achèvement traité.
     )
     # La durée doit couvrir les productions après le dernier démarrage.
-    verification_state.last_event_cycle = max(
+    available_stocks_ongoing_processes_and_cycles.last_event_cycle = max(
         # L'absence d'achèvement ne doit pas ramener la durée à zéro.
-        verification_state.last_event_cycle,
+        available_stocks_ongoing_processes_and_cycles.last_event_cycle,
         # La fin traitée peut être postérieure au dernier démarrage.
-        completion_cycle,
+        cycle_of_last_finished_job,
         # La date retenue servira aux deux champs temporels du simulateur.
     )
     # L'objet standard conserve l'interface attendue par les appelants.
-    verified_simulator = Simulator(simulation_config)
+    final_stocks_and_last_cycle = Simulator(validated_config)
     # Le rejeu remplace les stocks initiaux par les quantités réellement
     # obtenues.
-    verified_simulator.stocks = verification_state.resource_stocks
+    final_stocks_and_last_cycle.stocks = available_stocks_ongoing_processes_and_cycles.resource_stocks
     # Le temps public indique la dernière date observée lors de la vérification.
-    verified_simulator.time = verification_state.last_event_cycle
+    final_stocks_and_last_cycle.time = available_stocks_ongoing_processes_and_cycles.last_event_cycle
     # Le temps maximal doit correspondre au temps reconstruit, comme dans le
     # moteur.
-    verified_simulator._max_time = verification_state.last_event_cycle
+    final_stocks_and_last_cycle._max_time = available_stocks_ongoing_processes_and_cycles.last_event_cycle
     # L'appelant reçoit un état directement utilisable pour son compte rendu.
-    return verified_simulator
+    return final_stocks_and_last_cycle
 
 
 # Cette entrée publique coordonne le rejeu complet d'une trace structurée.
 def verify_trace(
     # Les règles du rejeu proviennent de cette configuration.
-    simulation_config: Config,
+    validated_config: Config,
     # La séquence conserve l’ordre demandé, même pour les cycles identiques.
-    trace_entries: list[TraceEntry],
+    trace_with_valid_format_and_unverified_starts: list[TraceEntry],
     # L’état final est exposé via l’interface du simulateur.
 ) -> Simulator:
     # Le contrat distingue la faisabilité d'une exigence d'optimalité.
-    """Rejoue trace_entries selon simulation_config et renvoie l'état final.
+    """Rejoue trace_with_valid_format_and_unverified_starts selon validated_config et renvoie l'état final.
 
     Les stocks de configuration sont copiés. Les entrées sont traitées dans
     leur ordre fourni, sans tri. Le premier démarrage impossible lève
     TraceError ; une trace réalisable n'a pas à être optimale ni exhaustive.
     """
     # La trace vide nécessite une règle métier propre à l'absence de démarrages.
-    if not trace_entries:
+    if not trace_with_valid_format_and_unverified_starts:
         # Le résultat représente alors l'état initial accepté par cette règle.
-        return _verify_empty_trace(simulation_config)
+        return _return_initial_state_if_empty_trace_allowed(validated_config)
     # La copie protège les stocks source contre les débits et crédits du rejeu.
-    verification_state = _VerificationState(simulation_config.stocks.copy(), [])
+    available_stocks_ongoing_processes_and_cycles = _VerificationState(validated_config.stocks.copy(), [])
     # Le rang commence à un et conserve l'ordre source des départs simultanés.
-    for entry_number, trace_entry in enumerate(trace_entries, start=1):
+    for which_instruction_rank_in_trace, process_start_instruction in enumerate(trace_with_valid_format_and_unverified_starts, start=1):
         # Chaque contrôle s'appuie sur l'état laissé par l'entrée précédente.
-        _verify_entry(simulation_config, trace_entry, entry_number, verification_state)
+        _verify_and_apply_process_start_instruction(
+            validated_config, process_start_instruction, which_instruction_rank_in_trace, available_stocks_ongoing_processes_and_cycles
+        )
     # Les opérations encore en cours doivent produire avant la restitution
     # finale.
-    return _build_verified_simulator(simulation_config, verification_state)
+    return _prepare_final_stocks_and_last_cycle(validated_config, available_stocks_ongoing_processes_and_cycles)
 
 
 # Cette entrée relie la lecture des fichiers à la vérification métier.
@@ -483,9 +495,9 @@ def verify_files(configuration_file_path: Path, trace_file_path: Path) -> Simula
     """
     # Le parseur partagé garantit les mêmes règles que la commande de
     # simulation.
-    simulation_config = parse_file(configuration_file_path)
+    validated_config = parse_file(configuration_file_path)
     # La syntaxe complète est validée avant la vérification des ressources.
-    trace_entries = parse_trace(trace_file_path)
+    trace_with_valid_format_and_unverified_starts = parse_trace(trace_file_path)
     # Le rejeu structuré fournit le même résultat que l'entrée publique en
     # mémoire.
-    return verify_trace(simulation_config, trace_entries)
+    return verify_trace(validated_config, trace_with_valid_format_and_unverified_starts)

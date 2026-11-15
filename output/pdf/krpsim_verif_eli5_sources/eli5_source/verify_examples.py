@@ -11,7 +11,7 @@ from krpsim_verif.verifier import (
     TraceEntry,
     TraceError,
     _VerificationState,
-    _verify_entry,
+    _verify_and_apply_process_start_instruction,
     parse_trace,
     verify_files,
     verify_trace,
@@ -161,7 +161,7 @@ def main_examples():
     replay = []
     for rank, entry in enumerate(parse_trace(HERE / "examples/E04/trace.txt"), start=1):
         before = state.stocks.copy()
-        _verify_entry(config, entry, rank, state)
+        _verify_and_apply_process_start_instruction(config, entry, rank, state)
         replay.append(
             dict(
                 entry=f"{entry.cycle}:{entry.process}",
